@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "ProjektZespolowyGr3/1.0.0": {
+        "runtime": {
+          "ProjektZespolowyGr3.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "ProjektZespolowyGr3/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
