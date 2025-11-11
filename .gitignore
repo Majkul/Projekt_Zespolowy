@@ -360,3 +360,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+ProjektZespolowyGr3/bin/
+ProjektZespolowyGr3/obj/
+ProjektZespolowyGr3/appsettings.json
+docker/

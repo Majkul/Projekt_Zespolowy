@@ -1,0 +1,78 @@
+﻿@model ProjektZespolowyGr3.Models.ViewModels.CreateListingViewModel
+
+@{
+    ViewData["Title"] = "Create Listing";
+}
+
+<h1>Create</h1>
+
+<h4>Listing</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Title"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label for="SelectedTagIds">Tags</label>
+                <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control"></select>
+                <span asp-validation-for="SelectedTagIds" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PhotoFiles">Upload Photos (max 5)</label>
+                <input asp-for="PhotoFiles" type="file" multiple class="form-control" />
+                <span asp-validation-for="PhotoFiles" class="text-danger"></span>
+                <small class="form-text text-muted">The first uploaded photo will be featured by default. You can reorder later.</small>
+            </div>
+            <div class="form-group">
+                <label asp-for="Type"></label>
+                <select asp-for="Type" class="form-control" asp-items="Html.GetEnumSelectList<ListingType>()" id="type-select"></select>
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+            <div class="form-group" id="price-group">
+                <label asp-for="Price"></label>
+                <input asp-for="Price" class="form-control" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        const typeSelect = document.getElementById('type-select');
+        const priceGroup = document.getElementById('price-group');
+
+        function togglePriceInput() {
+            console.log(typeSelect.value);
+            if (typeSelect.value === '1') {
+                priceGroup.style.display = 'none';
+            } else {
+                priceGroup.style.display = 'block';
+            }
+        }
+        typeSelect.addEventListener('change', togglePriceInput);
+        togglePriceInput();
+    </script>
+}
