@@ -8,6 +8,7 @@ namespace ProjektZespolowyGr3.Models
         {
         }
         public DbSet<User> Users { get; set; }
+        public DbSet<UserAuth> UserAuths { get; set; }
         public DbSet<Listing> Listings { get; set; }
     }
 }

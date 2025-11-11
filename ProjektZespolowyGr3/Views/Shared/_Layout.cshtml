@@ -25,6 +25,31 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
+                        @if (!User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Register">Register</a>
+                            </li>
+                        }
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="/Images/Icons/user-icon.png" alt="User" width="16" height="16" />
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button class="dropdown-item  text-dark border-0 w-100 text-start" style="cursor: pointer;" type="submit" class="btn">Logout</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>

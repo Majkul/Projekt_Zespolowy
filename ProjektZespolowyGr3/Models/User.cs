@@ -1,7 +1,10 @@
-﻿namespace ProjektZespolowyGr3.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ProjektZespolowyGr3.Models
 {
     public class User
     {
+        [Required, Key]
         public int Id { get; set; }
         public string Username { get; set; }
         public string? FirstName { get; set; }
