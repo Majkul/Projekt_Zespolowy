@@ -22,7 +22,7 @@ namespace ProjektZespolowyGr3.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.Listing", b =>
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -62,7 +62,102 @@ namespace ProjektZespolowyGr3.Migrations
                     b.ToTable("Listings");
                 });
 
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.User", b =>
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingPhoto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ListingId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UploadId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
+
+                    b.HasIndex("UploadId");
+
+                    b.ToTable("ListingPhotos");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingTag", b =>
+                {
+                    b.Property<int>("ListingId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ListingId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("ListingTags");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Tag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Upload", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Extension")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UploaderId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploaderId");
+
+                    b.ToTable("Uploads");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -131,9 +226,9 @@ namespace ProjektZespolowyGr3.Migrations
                     b.ToTable("UserAuths");
                 });
 
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.Listing", b =>
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
                 {
-                    b.HasOne("ProjektZespolowyGr3.Models.User", "Seller")
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Seller")
                         .WithMany()
                         .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -142,15 +237,76 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Seller");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingPhoto", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
+                        .WithMany("Photos")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Upload", "Upload")
+                        .WithMany()
+                        .HasForeignKey("UploadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+
+                    b.Navigation("Upload");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingTag", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
+                        .WithMany("Tags")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Tag", "Tag")
+                        .WithMany("ListingTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Upload", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Uploader")
+                        .WithMany()
+                        .HasForeignKey("UploaderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Uploader");
+                });
+
             modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
                 {
-                    b.HasOne("ProjektZespolowyGr3.Models.User", "User")
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
+                {
+                    b.Navigation("Photos");
+
+                    b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Tag", b =>
+                {
+                    b.Navigation("ListingTags");
                 });
 #pragma warning restore 612, 618
         }
