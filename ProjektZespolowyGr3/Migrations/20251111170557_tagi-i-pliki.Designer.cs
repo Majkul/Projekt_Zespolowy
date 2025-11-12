@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjektZespolowyGr3.Models;
@@ -11,9 +12,11 @@ using ProjektZespolowyGr3.Models;
 namespace ProjektZespolowyGr3.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    partial class MyDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251111170557_tagi-i-pliki")]
+    partial class tagiipliki
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,34 +202,7 @@ namespace ProjektZespolowyGr3.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("FailedAttempts")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("LastLogin")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("LockedUntil")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PasswordSalt")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("UserAuths");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.Listing", b =>
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
                 {
                     b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Seller")
                         .WithMany()
@@ -237,15 +213,65 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Seller");
                 });
 
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingPhoto", b =>
                 {
-                    b.HasOne("ProjektZespolowyGr3.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
+                        .WithMany("Photos")
+                        .HasForeignKey("ListingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Upload", "Upload")
+                        .WithMany()
+                        .HasForeignKey("UploadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+
+                    b.Navigation("Upload");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingTag", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
+                        .WithMany("Tags")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Tag", "Tag")
+                        .WithMany("ListingTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+
+                    b.Navigation("Tag");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Upload", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Uploader")
+                        .WithMany()
+                        .HasForeignKey("UploaderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Uploader");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
+                {
+                    b.Navigation("Photos");
+
+                    b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Tag", b =>
+                {
+                    b.Navigation("ListingTags");
                 });
 #pragma warning restore 612, 618
         }
