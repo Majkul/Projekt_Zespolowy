@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -8,19 +7,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ProjektZespolowyGr3.Migrations
 {
     /// <inheritdoc />
-    public partial class tagiipliki : Migration
+    public partial class newInit : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Photos",
-                table: "Listings");
-
-            migrationBuilder.DropColumn(
-                name: "Tags",
-                table: "Listings");
-
             migrationBuilder.CreateTable(
                 name: "Tags",
                 columns: table => new
@@ -32,6 +23,53 @@ namespace ProjektZespolowyGr3.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Tags", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Username = table.Column<string>(type: "text", nullable: false),
+                    FirstName = table.Column<string>(type: "text", nullable: true),
+                    LastName = table.Column<string>(type: "text", nullable: true),
+                    Email = table.Column<string>(type: "text", nullable: false),
+                    Address = table.Column<string>(type: "text", nullable: true),
+                    IsBanned = table.Column<bool>(type: "boolean", nullable: false),
+                    IsAdmin = table.Column<bool>(type: "boolean", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Listings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    SellerId = table.Column<int>(type: "integer", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
+                    Price = table.Column<decimal>(type: "numeric", nullable: true),
+                    IsFeatured = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Listings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Listings_Users_SellerId",
+                        column: x => x.SellerId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -53,6 +91,28 @@ namespace ProjektZespolowyGr3.Migrations
                     table.ForeignKey(
                         name: "FK_Uploads_Users_UploaderId",
                         column: x => x.UploaderId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserAuths",
+                columns: table => new
+                {
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    Password = table.Column<string>(type: "text", nullable: false),
+                    PasswordSalt = table.Column<string>(type: "text", nullable: false),
+                    LastLogin = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    FailedAttempts = table.Column<int>(type: "integer", nullable: false),
+                    LockedUntil = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserAuths", x => x.UserId);
+                    table.ForeignKey(
+                        name: "FK_UserAuths_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -120,6 +180,11 @@ namespace ProjektZespolowyGr3.Migrations
                 column: "UploadId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Listings_SellerId",
+                table: "Listings",
+                column: "SellerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ListingTags_TagId",
                 table: "ListingTags",
                 column: "TagId");
@@ -140,22 +205,19 @@ namespace ProjektZespolowyGr3.Migrations
                 name: "ListingTags");
 
             migrationBuilder.DropTable(
+                name: "UserAuths");
+
+            migrationBuilder.DropTable(
                 name: "Uploads");
+
+            migrationBuilder.DropTable(
+                name: "Listings");
 
             migrationBuilder.DropTable(
                 name: "Tags");
 
-            migrationBuilder.AddColumn<List<string>>(
-                name: "Photos",
-                table: "Listings",
-                type: "text[]",
-                nullable: false);
-
-            migrationBuilder.AddColumn<List<string>>(
-                name: "Tags",
-                table: "Listings",
-                type: "text[]",
-                nullable: false);
+            migrationBuilder.DropTable(
+                name: "Users");
         }
     }
 }
