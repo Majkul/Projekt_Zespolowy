@@ -17,8 +17,17 @@ namespace ProjektZespolowyGr3.Models
         [RegularExpression("^(oddaję|sprzedam)$", ErrorMessage = "Typ musi być 'oddaję' lub 'sprzedam'.")]
         public string Type { get; set; }  // "oddaję" or "sprzedam"
 
-        [Range(0.01, double.MaxValue, ErrorMessage = "Cena musi być większa od 0.")]
-        public decimal? Price { get; set; }  // optional
+        [Range(0.01, double.MaxValue, ErrorMessage = "Cena brutto musi być większa od 0.")]
+        public decimal? GrossPrice { get; set; }  // Price including VAT
+
+        [Required(ErrorMessage = "Stawka VAT jest wymagana.")]
+        [Range(0, 23, ErrorMessage = "Stawka VAT musi być poprawna (np. 23, 8, 5).")]
+        public decimal VatRate { get; set; } = 23;  // Default to 23%
+
+        // Computed property: Net price
+        public decimal? NetPrice => GrossPrice.HasValue
+            ? GrossPrice.Value / (1 + VatRate / 100)
+            : null;
 
         [MaxLength(10, ErrorMessage = "Możesz podać maksymalnie 10 tagów.")]
         public List<string> Tags { get; set; }
@@ -32,18 +41,18 @@ namespace ProjektZespolowyGr3.Models
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             // Rule: Cena > 0 tylko przy "sprzedam"
-            if (Type == "oddaję" && Price.HasValue && Price.Value > 0)
+            if (Type == "oddaję" && GrossPrice.HasValue && GrossPrice.Value > 0)
             {
                 yield return new ValidationResult(
                     "Cena nie może być ustawiona dla oferty typu 'oddaję'.",
-                    new[] { nameof(Price) });
+                    new[] { nameof(GrossPrice) });
             }
 
-            if (Type == "sprzedam" && (!Price.HasValue || Price.Value <= 0))
+            if (Type == "sprzedam" && (!GrossPrice.HasValue || GrossPrice.Value <= 0))
             {
                 yield return new ValidationResult(
-                    "Cena musi być większa od 0 dla oferty typu 'sprzedam'.",
-                    new[] { nameof(Price) });
+                    "Cena brutto musi być większa od 0 dla oferty typu 'sprzedam'.",
+                    new[] { nameof(GrossPrice) });
             }
 
             // Rule: zdjęcia max 2 MB i poprawny MIME
