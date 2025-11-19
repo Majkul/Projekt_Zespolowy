@@ -12,8 +12,8 @@ using ProjektZespolowyGr3.Models;
 namespace ProjektZespolowyGr3.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    [Migration("20251111170557_tagi-i-pliki")]
-    partial class tagiipliki
+    [Migration("20251117203801_newInit")]
+    partial class newInit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -202,6 +202,33 @@ namespace ProjektZespolowyGr3.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FailedAttempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("LastLogin")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PasswordSalt")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserAuths");
+                });
+
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
                 {
                     b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Seller")
@@ -260,6 +287,17 @@ namespace ProjektZespolowyGr3.Migrations
                         .IsRequired();
 
                     b.Navigation("Uploader");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>

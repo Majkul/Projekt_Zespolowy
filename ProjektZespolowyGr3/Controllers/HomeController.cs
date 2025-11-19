@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using ProjektZespolowyGr3.Models;
+using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.System;
 using ProjektZespolowyGr3.Models.ViewModels;
 
@@ -82,7 +83,7 @@ public class HomeController : Controller
             return View(model);
         }
 
-        var user = new User
+        var user = new Models.DbModels.User
         {
             Username = model.Login,
             Email = model.Email,

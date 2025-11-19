@@ -11,6 +11,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+//Authentication
 builder.Services.AddAuthorization();
 builder.Services.AddTransient<AuthService>();
 builder.Services.AddHttpContextAccessor();
@@ -49,7 +50,6 @@ builder.Services.AddScoped(s =>
     var client = s.GetRequiredService<IMongoClient>();
     return client.GetDatabase(mongoSettings.DatabaseName);
 });
-
 
 var app = builder.Build();
 
