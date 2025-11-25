@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -8,35 +7,32 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
-using ProjektZespolowyGr3.Models.ViewModels;
-using ProjektZespolowyGr3.Controllers;
 using ProjektZespolowyGr3.Models.System;
+using ProjektZespolowyGr3.Models.ViewModels;
 
 namespace ProjektZespolowyGr3.Controllers.User
 {
-    public class ListingsController : Controller
+    public class ReviewsController : Controller
     {
         private readonly MyDBContext _context;
         private readonly IWebHostEnvironment _env;
-        private readonly AuthService _auth;
         private readonly HelperService _helper;
 
-        public ListingsController(MyDBContext context, IWebHostEnvironment env, AuthService auth, HelperService helper)
+        public ReviewsController(MyDBContext context, IWebHostEnvironment env, HelperService helper)
         {
             _context = context;
             _env = env;
-            _auth = auth;
             _helper = helper;
         }
 
-        // GET: Listings
+        // GET: Reviews
         public async Task<IActionResult> Index()
         {
-            var myDBContext = _context.Listings.Include(l => l.Seller);
+            var myDBContext = _context.Review.Include(r => r.Listing).Include(r => r.Reviewer);
             return View(await myDBContext.ToListAsync());
         }
 
-        // GET: Listings/Details/5
+        // GET: Reviews/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -44,62 +40,54 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return NotFound();
             }
 
-            var listing = await _context.Listings
-                .Include(l => l.Seller)
-                .Include(l => l.Photos)
-                    .ThenInclude(lp => lp.Upload)
-                .Include(l => l.Tags)
-                    .ThenInclude(lt => lt.Tag)
-                .Include(l => l.Reviews)
-                    .ThenInclude(r => r.Reviewer)
-                .Include(l => l.Reviews)
-                    .ThenInclude(r => r.Photos)
-                        .ThenInclude(rp => rp.Upload)
+            var review = await _context.Review
+                .Include(r => r.Listing)
+                .Include(r => r.Reviewer)
                 .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (listing == null)
+            if (review == null)
             {
                 return NotFound();
             }
 
-            return View(listing);
+            return View(review);
         }
 
-        // GET: Listings/Create
-        [HttpGet]
+        // GET: Reviews/Create
         public IActionResult Create()
         {
-            _helper.MakeSomeTags();
-            var model = new CreateListingViewModel
+            ViewData["ListingId"] = new SelectList(_context.Listings, "Id", "Id");
+            ViewData["ReviewerId"] = new SelectList(_context.Users, "Id", "Id");
+            return View();
+        }
+
+        // GET: Reviews/Create?listingId=5
+        [HttpGet]
+        public IActionResult Create(int listingId)
+        {
+            var listing = _context.Listings.FirstOrDefault(l => l.Id == listingId);
+
+            if (listing == null)
+                return NotFound();
+
+            var model = new CreateReviewViewModel
             {
-                AvailableTags = _context.Tags
-                    .OrderBy(t => t.Name)
-                    .Select(t => new SelectListItem
-                    {
-                        Text = t.Name,
-                        Value = t.Id.ToString()
-                    })
-                    .ToList()
+                ListingId = listingId
             };
+
             return View(model);
         }
 
-        // POST: Listings/Create
+        // POST: Reviews/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateListingViewModel model)
+        public async Task<IActionResult> Create(CreateReviewViewModel model)
         {
-            // cena tylko dla sprzedazy
-            if (model.Type == ListingType.Sale && (!model.Price.HasValue || model.Price <= 0))
-            {
-                ModelState.AddModelError("Price", "Price must be greater than zero.");
-            }
+            // ZMIENIC TODO tylko ogloszenia ktore zakupil i ogolnie nieprototypowy review system
 
             if (!ModelState.IsValid)
             {
-                _helper.PopulateAvailableTags(model);
                 return View(model);
             }
 
@@ -112,32 +100,32 @@ namespace ProjektZespolowyGr3.Controllers.User
             // ZMIENIC POTEM
             var userId = _helper.GetCurrentUserId();
 
-            var listing = new Listing
-            {
-                Title = model.Title,
-                Description = model.Description,
-                Type = model.Type,
-                Price = model.Type == ListingType.Trade ? null : model.Price,
-                SellerId = userId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            var listing = _context.Listings.FirstOrDefault(l => l.Id == model.ListingId);
 
-            if (model.SelectedTagIds != null && model.SelectedTagIds.Any())
+            if (listing == null)
             {
-                foreach (var tagId in model.SelectedTagIds)
-                {
-                    var tag = _context.Tags.Find(tagId);
-                    if (tag != null)
-                    {
-                        listing.Tags.Add(new ListingTag
-                        {
-                            TagId = tag.Id,
-                            Listing = listing
-                        });
-                    }
-                }
+                ModelState.AddModelError("", "Listing not found.");
+                return View(model);
             }
+
+            // czy uzytkownik juz dodal recenzje do ogloszenia
+            var existingReview = _context.Reviews.FirstOrDefault(r => r.ListingId == model.ListingId && r.ReviewerId == userId);
+
+            if (existingReview != null)
+            {
+                ModelState.AddModelError("", "You have already reviewed this listing.");
+                return View(model);
+            }
+
+            var review = new Review
+            {
+                ListingId = model.ListingId,
+                Listing = listing,
+                ReviewerId = userId,
+                Rating = model.Rating,
+                Description = model.Description,
+                CreatedAt = DateTime.UtcNow
+            };
 
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
 
@@ -148,7 +136,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                     if (file.Length > 5 * 1024 * 1024)
                     {
                         ModelState.AddModelError("PhotoFiles", "Each photo must be less than 5 MB.");
-                        _helper.PopulateAvailableTags(model);
                         return View(model);
                     }
 
@@ -156,7 +143,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                     if (!allowedExtensions.Contains(ext))
                     {
                         ModelState.AddModelError("PhotoFiles", "Only .jpg, .jpeg, .png files are allowed.");
-                        _helper.PopulateAvailableTags(model);
                         return View(model);
                     }
 
@@ -166,8 +152,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                         return View(model);
                     }
                 }
-
-                bool first = true; // pierwsze staje sie featured
 
                 var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
                 if (!Directory.Exists(uploadsPath))
@@ -195,26 +179,23 @@ namespace ProjektZespolowyGr3.Controllers.User
                     };
                     _context.Uploads.Add(upload);
 
-                    var listingPhoto = new ListingPhoto
+                    var reviewPhoto = new ReviewPhoto
                     {
-                        Listing = listing,
-                        Upload = upload,
-                        IsFeatured = first
+                        Review = review,
+                        Upload = upload
                     };
 
-                    listing.Photos.Add(listingPhoto);
-
-                    first = false;
+                    review.Photos.Add(reviewPhoto);
                 }
             }
 
-            _context.Listings.Add(listing);
+            _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Details", new { id = listing.Id });
+            return RedirectToAction("Details", "Listings", new { id = listing.Id });
         }
 
-        // GET: Listings/Edit/5
+        // GET: Reviews/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -222,23 +203,24 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return NotFound();
             }
 
-            var listing = await _context.Listings.FindAsync(id);
-            if (listing == null)
+            var review = await _context.Review.FindAsync(id);
+            if (review == null)
             {
                 return NotFound();
             }
-            ViewData["SellerId"] = new SelectList(_context.Users, "Id", "Id", listing.SellerId);
-            return View(listing);
+            ViewData["ListingId"] = new SelectList(_context.Listings, "Id", "Id", review.ListingId);
+            ViewData["ReviewerId"] = new SelectList(_context.Users, "Id", "Id", review.ReviewerId);
+            return View(review);
         }
 
-        // POST: Listings/Edit/5
+        // POST: Reviews/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,SellerId,Type,Photos,Tags,IsFeatured,CreatedAt,UpdatedAt,Price")] Listing listing)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,ListingId,Rating,ReviewerId,Description,CreatedAt,Upvotes,Downvotes")] Review review)
         {
-            if (id != listing.Id)
+            if (id != review.Id)
             {
                 return NotFound();
             }
@@ -247,12 +229,12 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 try
                 {
-                    _context.Update(listing);
+                    _context.Update(review);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ListingExists(listing.Id))
+                    if (!ReviewExists(review.Id))
                     {
                         return NotFound();
                     }
@@ -263,11 +245,12 @@ namespace ProjektZespolowyGr3.Controllers.User
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["SellerId"] = new SelectList(_context.Users, "Id", "Id", listing.SellerId);
-            return View(listing);
+            ViewData["ListingId"] = new SelectList(_context.Listings, "Id", "Id", review.ListingId);
+            ViewData["ReviewerId"] = new SelectList(_context.Users, "Id", "Id", review.ReviewerId);
+            return View(review);
         }
 
-        // GET: Listings/Delete/5
+        // GET: Reviews/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -275,35 +258,36 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return NotFound();
             }
 
-            var listing = await _context.Listings
-                .Include(l => l.Seller)
+            var review = await _context.Review
+                .Include(r => r.Listing)
+                .Include(r => r.Reviewer)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (listing == null)
+            if (review == null)
             {
                 return NotFound();
             }
 
-            return View(listing);
+            return View(review);
         }
 
-        // POST: Listings/Delete/5
+        // POST: Reviews/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var listing = await _context.Listings.FindAsync(id);
-            if (listing != null)
+            var review = await _context.Review.FindAsync(id);
+            if (review != null)
             {
-                _context.Listings.Remove(listing);
+                _context.Review.Remove(review);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool ListingExists(int id)
+        private bool ReviewExists(int id)
         {
-            return _context.Listings.Any(e => e.Id == id);
+            return _context.Review.Any(e => e.Id == id);
         }
     }
 }

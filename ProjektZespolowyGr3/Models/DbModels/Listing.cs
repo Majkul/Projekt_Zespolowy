@@ -19,6 +19,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
         public ICollection<ListingPhoto> Photos { get; set; } = new List<ListingPhoto>();
         public ICollection<ListingTag> Tags { get; set; } = new List<ListingTag>();
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 }
 
