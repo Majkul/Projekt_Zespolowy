@@ -11,6 +11,9 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// TODO ZMIENIC potem wywalic
+builder.Services.AddTransient<HelperService>();
+
 //Authentication
 builder.Services.AddAuthorization();
 builder.Services.AddTransient<AuthService>();

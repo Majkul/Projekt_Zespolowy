@@ -27,7 +27,7 @@
             @Html.DisplayNameFor(model => model.Seller)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Seller.Id)
+            @Html.DisplayFor(model => model.Seller.Username)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Type)
@@ -39,13 +39,24 @@
             @Html.DisplayNameFor(model => model.Photos)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Photos)
+            <p>Photos count: @Model.Photos?.Count()</p>
+            @foreach (var photo in Model.Photos)
+            {
+                <img src="@photo.Upload.Url" alt="Photo" style="max-width:200px; max-height:200px;" />
+
+                <br />
+            }
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Tags)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Tags)
+            <p>Tags count: @Model.Tags?.Count()</p>
+            @foreach (var tag in Model.Tags)
+            {
+                @tag.Tag.Name <br />
+            }
+            
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.IsFeatured)
@@ -72,6 +83,39 @@
             @Html.DisplayFor(model => model.Price)
         </dd>
     </dl>
+
+    <h4>Reviews</h4>
+    <hr />
+    <a asp-controller="Reviews" asp-action="Create" asp-route-listingId="@Model.Id" class="btn btn-primary mb-3">Add Review</a>
+
+    @if (Model.Reviews != null && Model.Reviews.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Reviewer</th>
+                    <th>Rating</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var review in Model.Reviews)
+                {
+                    <tr>
+                        <td>@review.Reviewer.Username</td>
+                        <td>@review.Rating</td>
+                        <td>@review.Description</td>
+                        <td>@review.CreatedAt.ToString("g")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>no reviews yet</p>
+    }
 </div>
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |

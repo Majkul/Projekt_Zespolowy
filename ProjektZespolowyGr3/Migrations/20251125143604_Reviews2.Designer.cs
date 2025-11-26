@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjektZespolowyGr3.Models;
@@ -11,9 +12,11 @@ using ProjektZespolowyGr3.Models;
 namespace ProjektZespolowyGr3.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    partial class MyDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251125143604_Reviews2")]
+    partial class Reviews2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -298,16 +301,20 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Seller");
                 });
 
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingPhoto", b =>
                 {
-                    b.HasOne("ProjektZespolowyGr3.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
+                        .WithMany("Photos")
+                        .HasForeignKey("ListingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
-                    
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Upload", "Upload")
+                        .WithMany()
+                        .HasForeignKey("UploadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Listing");
 
                     b.Navigation("Upload");
