@@ -90,27 +90,27 @@
 
     @if (Model.Reviews != null && Model.Reviews.Any())
     {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Reviewer</th>
-                    <th>Rating</th>
-                    <th>Description</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var review in Model.Reviews)
-                {
-                    <tr>
-                        <td>@review.Reviewer.Username</td>
-                        <td>@review.Rating</td>
-                        <td>@review.Description</td>
-                        <td>@review.CreatedAt.ToString("g")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <hr />
+        
+        @foreach (var review in Model.Reviews)
+        {
+            <h5>@review.Reviewer.Username • @review.Rating</h5>
+            <p>@review.Description</p>
+
+            @if (review.Photos != null && review.Photos.Any())
+            {
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    @foreach (var photo in review.Photos)
+                    {
+                        <img src="@photo.Upload.Url" alt="Review Photo" style="max-width:100px; max-height:100px;" />
+                    }
+                </div>
+            }
+
+            <small>@review.CreatedAt</small>
+
+            <hr />
+        }
     }
     else
     {
