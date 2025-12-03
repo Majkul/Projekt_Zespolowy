@@ -6,6 +6,8 @@
 
 }
 <form asp-action="Login">
+    <h2 class="mb-4">Login</h2>
+    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
     <div class="form-group">
         <label asp-for="Login" class="control-label"></label>
         <input asp-for="Login" class="form-control" />

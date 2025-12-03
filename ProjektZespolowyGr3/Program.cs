@@ -1,3 +1,4 @@
+using DomPogrzebowyProjekt.Models.System;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
@@ -18,6 +19,10 @@ builder.Services.AddTransient<HelperService>();
 builder.Services.AddAuthorization();
 builder.Services.AddTransient<AuthService>();
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<EmailService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddAuthentication(options =>
 {

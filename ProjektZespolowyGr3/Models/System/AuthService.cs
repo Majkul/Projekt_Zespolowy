@@ -46,7 +46,7 @@ namespace ProjektZespolowyGr3.Models.System
         {
             var user = _context.Users.FirstOrDefault(x => x.Username == login);
             var userAuth = _context.UserAuths.FirstOrDefault(x => x.UserId == user.Id);
-            if (user != null && VerifyPassword(password, userAuth.Password))
+            if (user != null && VerifyPassword(password, userAuth.PasswordSalt, userAuth.Password))
             {
                 return user;
             }
@@ -58,11 +58,26 @@ namespace ProjektZespolowyGr3.Models.System
             return _context.Users.Any(u => u.Username == login);
         }
 
-        public string HashPassword(string password)
+        public bool EmailTaken(string email)
+        {
+            return _context.Users.Any(u => u.Email == email);
+        }
+
+        public string GenerateSalt()
+        {
+            byte[] saltBytes = new byte[16];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(saltBytes);
+            }
+            return Convert.ToBase64String(saltBytes);
+        }
+
+        public string HashPassword(string password, string salt)
         {
             using (var sha256 = SHA256.Create())
             {
-                var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + salt));
                 var builder = new StringBuilder();
                 foreach (var b in bytes)
                 {
@@ -71,9 +86,9 @@ namespace ProjektZespolowyGr3.Models.System
                 return builder.ToString();
             }
         }
-        private bool VerifyPassword(string inputPassword, string storedHash)
+        private bool VerifyPassword(string inputPassword, string salt, string storedHash)
         {
-            var inputHash = HashPassword(inputPassword);
+            var inputHash = HashPassword(inputPassword, salt);
             return inputHash == storedHash;
         }
         public async Task LogOut(HttpContext httpContext)

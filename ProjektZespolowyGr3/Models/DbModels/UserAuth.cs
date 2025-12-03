@@ -17,5 +17,7 @@ namespace ProjektZespolowyGr3.Models
         public DateTime LastLogin { get; set; }
         public int FailedAttempts { get; set; }
         public DateTime? LockedUntil { get; set; }
+        public bool EmailVerified { get; set; } = false;
+        public string? EmailVerificationToken { get; set; }
     }
 }

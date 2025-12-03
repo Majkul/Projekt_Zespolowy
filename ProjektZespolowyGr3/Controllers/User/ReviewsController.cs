@@ -117,6 +117,13 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return View(model);
             }
 
+            // czy nie jestes wlascicielem zgloszenia
+            if (listing.SellerId == userId)
+            {
+                ModelState.AddModelError("", "You cannot review your own listing.");
+                return View(model);
+            }
+
             var review = new Review
             {
                 ListingId = model.ListingId,

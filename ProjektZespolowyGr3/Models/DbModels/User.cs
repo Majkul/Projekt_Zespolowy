@@ -13,5 +13,8 @@
         public bool IsAdmin { get; set; } = false;
         public string? PhoneNumber { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        public ICollection<Listing> Listings { get; set; }
+        public ICollection<Review> Reviews { get; set; }
     }
 }

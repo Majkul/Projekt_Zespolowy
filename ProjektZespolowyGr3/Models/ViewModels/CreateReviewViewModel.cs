@@ -13,6 +13,6 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         [StringLength(1000)]
         public string? Description { get; set; }
 
-        public List<IFormFile> PhotoFiles { get; set; } = new();
+        public List<IFormFile>? PhotoFiles { get; set; } = new();
     }
 }

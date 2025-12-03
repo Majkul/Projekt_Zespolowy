@@ -32,8 +32,31 @@ namespace ProjektZespolowyGr3.Controllers.User
         // GET: Listings
         public async Task<IActionResult> Index()
         {
-            var myDBContext = _context.Listings.Include(l => l.Seller);
-            return View(await myDBContext.ToListAsync());
+            var listings = await _context.Listings
+                .Include(l => l.Photos)
+                    .ThenInclude(lp => lp.Upload)
+                .Include(l => l.Reviews)
+                .Include(l => l.Seller)
+                    .ThenInclude(s => s.Listings)
+                        .ThenInclude(sl => sl.Reviews)
+                .ToListAsync();
+
+            var model = listings.Select(l => new BrowseListingsViewModel
+            {
+                Listing = l,
+                ListingId = l.Id,
+                Seller = l.Seller,
+                SellerId = l.SellerId,
+                PhotoUrl = l.Photos.FirstOrDefault(lp => lp.IsFeatured)?.Upload.Url,
+                AverageRating = l.Seller.Listings
+                        .SelectMany(sl => sl.Reviews)
+                        .Any()
+                        ? l.Seller.Listings.SelectMany(sl => sl.Reviews).Average(r => r.Rating)
+                        : 0,
+                ReviewCount = l.Seller.Listings.SelectMany(sl => sl.Reviews).Count(),
+            }).ToList();
+
+            return View(model);
         }
 
         // GET: Listings/Details/5
