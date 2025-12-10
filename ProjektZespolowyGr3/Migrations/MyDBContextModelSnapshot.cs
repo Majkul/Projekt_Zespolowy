@@ -304,20 +304,16 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Seller");
                 });
 
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingPhoto", b =>
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
                 {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
-                        .WithMany("Photos")
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Upload", "Upload")
+                    b.HasOne("ProjektZespolowyGr3.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UploadId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("User");
+                    
                     b.Navigation("Listing");
 
                     b.Navigation("Upload");

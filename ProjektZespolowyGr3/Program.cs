@@ -1,6 +1,7 @@
 using DomPogrzebowyProjekt.Models.System;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.System;
 
@@ -44,6 +45,19 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Bind settings
+builder.Services.Configure<MongoSettings>(builder.Configuration.GetSection("MongoSettings"));
+var mongoSettings = builder.Configuration.GetSection("MongoSettings").Get<MongoSettings>();
+
+// Register MongoClient
+builder.Services.AddSingleton<IMongoClient>(s => new MongoClient(mongoSettings.ConnectionString));
+
+// Register database
+builder.Services.AddScoped(s =>
+{
+    var client = s.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(mongoSettings.DatabaseName);
+});
 
 var app = builder.Build();
 
