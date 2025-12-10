@@ -37,6 +37,22 @@ namespace ProjektZespolowyGr3.Models
         [MaxLength(5, ErrorMessage = "Możesz dodać maksymalnie 5 zdjęć.")]
         public List<IFormFile> Photos { get; set; }
 
+        [Required(ErrorMessage = "Numer karty jest wymagany.")]
+        [CreditCard(ErrorMessage = "Nieprawidłowy numer karty.")]
+        public string CardNumber { get; set; }
+
+        [Required(ErrorMessage = "Data ważności jest wymagana.")]
+        [RegularExpression(@"^(0[1-9]|1[0-2])\/([0-9]{2})$", ErrorMessage = "Data ważności musi być w formacie MM/YY.")]
+        public string Expiration { get; set; }
+
+        [Required(ErrorMessage = "Kod CVV jest wymagany.")]
+        [RegularExpression(@"^[0-9]{3,4}$", ErrorMessage = "CVV musi mieć 3 lub 4 cyfry.")]
+        public string CVV { get; set; }
+
+        [Required(ErrorMessage = "Imię i nazwisko posiadacza karty jest wymagane.")]
+        [StringLength(100)]
+        public string CardHolderName { get; set; }
+        
         // Custom validation rules
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
@@ -73,6 +89,24 @@ namespace ProjektZespolowyGr3.Models
                         yield return new ValidationResult(
                             "Dozwolone są tylko zdjęcia JPEG, PNG lub GIF.",
                             new[] { nameof(Photos) });
+                    }
+                }
+            }
+            
+            // Custom rule: Expiration must be in the future
+            if (!string.IsNullOrEmpty(Expiration))
+            {
+                var parts = Expiration.Split('/');
+                if (parts.Length == 2 &&
+                    int.TryParse(parts[0], out int month) &&
+                    int.TryParse(parts[1], out int year))
+                {
+                    var expDate = new DateTime(2000 + year, month, 1).AddMonths(1).AddDays(-1);
+                    if (expDate < DateTime.UtcNow.Date)
+                    {
+                        yield return new ValidationResult(
+                            "Karta jest przeterminowana.",
+                            new[] { nameof(Expiration) });
                     }
                 }
             }
