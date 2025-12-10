@@ -17,6 +17,8 @@ namespace ProjektZespolowyGr3.Models
         public DbSet<ListingPhoto> ListingPhotos { get; set; }
         public DbSet<ListingTag> ListingTags { get; set; }
         public DbSet<ReviewPhoto> ReviewPhotos { get; set; }
+        public DbSet<UserProfile> UserProfiles { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
