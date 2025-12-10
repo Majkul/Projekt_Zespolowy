@@ -41,28 +41,6 @@
             </select>
 
             <label for="roleFilter" class="mb-0 ms-3 me-2 small text-muted">Filter by role:</label>
-            <select id="roleFilter"
-                    name="roleFilter"
-                    class="form-select form-select-sm"
-                    style="width: 140px;"
-                    onchange="this.form.submit()">
-                @{
-                    string currentRole = ViewBag.CurrentRole as string ?? "";
-                    string[] roles = new[] { "", "Admin" };
-                }
-                @foreach (var role in roles)
-                {
-                    var label = string.IsNullOrEmpty(role) ? "-- All --" : role;
-                    if (role == currentRole)
-                    {
-                        <option value="@role" selected="selected">@label</option>
-                    }
-                    else
-                    {
-                        <option value="@role">@label</option>
-                    }
-                }
-            </select>
         </div>
     </form>
 }

@@ -12,7 +12,6 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
         public int UploaderId { get; set; }
         public User Uploader { get; set; }
-
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
     }
 }

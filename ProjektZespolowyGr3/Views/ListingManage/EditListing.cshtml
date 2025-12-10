@@ -1,0 +1,87 @@
+﻿@model ProjektZespolowyGr3.Models.ViewModels.EditListingViewModel
+@{
+    ViewBag.Title = "Edit listing";
+    var modelId = ViewBag.ModelId;
+}
+
+<h2 class="mb-4">Edit listing</h2>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<form asp-action="EditListing" asp-route-id="@modelId" method="post" enctype="multipart/form-data" class="w-75">
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label">Title</label>
+        <input asp-for="Title" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Type" class="form-label">Type</label>
+        <select asp-for="Type" class="form-control">
+            @foreach (var type in Enum.GetValues(typeof(ListingType)))
+            {
+                <option value="@type">@type</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Price" class="form-label">Price</label>
+        <input asp-for="Price" type="number" class="form-control" step="0.01" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tags</label>
+        <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control">
+        </select>
+        <small class="text-muted">Hold CTRL to select multiple</small>
+    </div>
+
+    <h4 class="mt-4">Existing Photos</h4>
+    <div class="row">
+        @if (Model.Photos != null && Model.Photos.Any())
+        {
+            foreach (var photo in Model.Photos)
+            {
+                <div class="col-3 text-center mb-4">
+                    <img src="@photo.Upload.Url" class="img-fluid rounded mb-2" style="max-height: 150px;" />
+
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="PhotosToDelete" value="@photo.Id" />
+                        <label class="form-check-label">Delete</label>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="text-muted">No photos uploaded.</p>
+        }
+    </div>
+
+    <div class="mb-3 mt-4">
+        <label class="form-label">Add new photos</label>
+        <input asp-for="PhotoFiles" type="file" class="form-control" multiple />
+        <small class="text-muted">Max 5 photos, only .jpg/.jpeg/.png</small>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a class="btn btn-danger" asp-action="Index">Cancel</a>
+    </div>
+</form>
