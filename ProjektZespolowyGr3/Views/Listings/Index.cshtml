@@ -20,7 +20,7 @@
                 <p>@browseListing.Listing.Description</p>
                 <small>@browseListing.Seller?.Username</small>
                 <small>@browseListing.ReviewCount rating@(browseListing.ReviewCount != 1 ? "s" : ""), @browseListing.AverageRating.ToString("0.00") average</small>
-                <strong>@browseListing.Listing.Price</strong>
+                <strong>@browseListing.Listing.Price?.ToString("0.00")</strong>
             </div>
         </div>
     </a>
