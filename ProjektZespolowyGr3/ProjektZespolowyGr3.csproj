@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Views\ListingManage - Copy\" />
     <Folder Include="wwwroot\Images\Icons\" />
     <Folder Include="wwwroot\uploads\" />
   </ItemGroup>

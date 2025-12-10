@@ -1,0 +1,98 @@
+﻿@model List<ProjektZespolowyGr3.Models.ViewModels.BrowseListingsViewModel>
+
+<h2 class="mb-4">Listings</h2>
+
+
+<form asp-action="Index" method="get" class="form-inline d-flex justify-content-between align-items-center mb-4 w-100">
+
+    <div class="d-flex align-items-center flex-wrap gap-2 flex-grow-1">
+        <input type="text"
+               name="searchString"
+               class="form-control"
+               placeholder="Search user..."
+               value="@ViewBag.CurrentFilter"
+               style="min-width: 250px;" />
+
+        <button type="submit" class="btn btn-primary">Search</button>
+
+        <label for="pageSize" class="mb-0 ms-3 me-2 small text-muted">Show limit:</label>
+        <select id="pageSize"
+                name="pageSize"
+                class="form-select form-select-sm"
+                style="width: 80px;"
+                onchange="this.form.submit()">
+            @{
+                int currentPageSize = ViewBag.CurrentPageSize ?? 25;
+                int[] sizes = new[] { 25, 50, 100, 500, 1000 };
+            }
+            @foreach (var size in sizes)
+            {
+                if (size == currentPageSize)
+                {
+                    <option value="@size" selected="selected">@size</option>
+                }
+                else
+                {
+                    <option value="@size">@size</option>
+                }
+            }
+        </select>
+        <label for="tagFilter" class="mb-0 ms-3 me-2 small text-muted">Filter by tag:</label>
+        <select id="tagFilter"
+                name="tagFilter"
+                class="form-select form-select-sm"
+                style="width: 140px;"
+                onchange="this.form.submit()">
+            @{
+                string currentTag = ViewBag.CurrentTag as string ?? "";
+                string[] tags = new[] { "", "Books", "Electronics"}; @*Dwa testowe potem dodać żeby automatycznie z bazy brało *@
+            }
+            @foreach (var tag in tags)
+            {
+                var label = string.IsNullOrEmpty(tag) ? "-- All --" : tag;
+                if (tag == currentTag)
+                {
+                    <option value="@tag" selected="selected">@label</option>
+                }
+                else
+                {
+                    <option value="@tag">@label</option>
+                }
+            }
+        </select>
+    </div>
+</form>
+
+
+<table class="table table-striped table-bordered table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Description</th>
+            <th scope="col">Username</th>
+            <th scope="col">Rating</th>
+            <th scope="col">Price</th>
+            <th scope="col" style="width: 140px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Listing.Title</td>
+                <td>@item.Listing.Description</td>
+                <td>@item.Seller?.Username</td>
+                <td>
+                    @item.ReviewCount rating@(item.ReviewCount != 1 ? "s" : ""), @item.AverageRating.ToString("0.00") average
+                </td>
+                <td>@item.Listing.Price</td>
+                <td>
+                    <a asp-action="EditListing" asp-route-id="@item.Listing.Id" class="btn btn-sm btn-warning me-2">Edit</a>
+                    <form asp-action="DeleteListing" asp-route-id="@item.Listing.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this listing?');">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
