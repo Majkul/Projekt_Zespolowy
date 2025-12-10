@@ -1,4 +1,5 @@
-﻿namespace ProjektZespolowyGr3.Models.DbModels
+﻿using System.ComponentModel.DataAnnotations;
+namespace ProjektZespolowyGr3.Models.DbModels
 {
     public class User
     {

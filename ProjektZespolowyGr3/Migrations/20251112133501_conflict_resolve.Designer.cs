@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjektZespolowyGr3.Models;
@@ -11,9 +12,11 @@ using ProjektZespolowyGr3.Models;
 namespace ProjektZespolowyGr3.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    partial class MyDBContextModelSnapshot : ModelSnapshot
+    [Migration("20251112133501_conflict_resolve")]
+    partial class conflict_resolve
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -101,67 +104,6 @@ namespace ProjektZespolowyGr3.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("ListingTags");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Review", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<int>("Downvotes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ListingId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ReviewerId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Upvotes")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ListingId");
-
-                    b.HasIndex("ReviewerId");
-
-                    b.ToTable("Review");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ReviewPhoto", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ReviewId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UploadId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReviewId");
-
-                    b.HasIndex("UploadId");
-
-                    b.ToTable("ReviewPhotos");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Tag", b =>
@@ -260,45 +202,10 @@ namespace ProjektZespolowyGr3.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.UserProfile", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("_UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("base64Avatar")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("base64Banner")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("_UserId");
-
-                    b.ToTable("UserProfiles");
-                });
-
             modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
                 {
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
-
-                    b.Property<string>("EmailVerificationToken")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("EmailVerified")
-                        .HasColumnType("boolean");
 
                     b.Property<int>("FailedAttempts")
                         .HasColumnType("integer");
@@ -325,7 +232,7 @@ namespace ProjektZespolowyGr3.Migrations
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
                 {
                     b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Seller")
-                        .WithMany("Listings")
+                        .WithMany()
                         .HasForeignKey("SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -391,126 +298,6 @@ namespace ProjektZespolowyGr3.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                    
-                    b.Navigation("Listing");
-
-                    b.Navigation("Upload");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingTag", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
-                        .WithMany("Tags")
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Tag", "Tag")
-                        .WithMany("ListingTags")
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Listing");
-
-                    b.Navigation("Tag");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Review", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
-                        .WithMany("Reviews")
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Reviewer")
-                        .WithMany("Reviews")
-                        .HasForeignKey("ReviewerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Listing");
-
-                    b.Navigation("Reviewer");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ReviewPhoto", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Review", "Review")
-                        .WithMany("Photos")
-                        .HasForeignKey("ReviewId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Upload", "Upload")
-                        .WithMany()
-                        .HasForeignKey("UploadId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Review");
-
-                    b.Navigation("Upload");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Upload", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Uploader")
-                        .WithMany()
-                        .HasForeignKey("UploaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Uploader");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.UserProfile", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "_User")
-                        .WithMany()
-                        .HasForeignKey("_UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("_User");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
-                {
-                    b.Navigation("Photos");
-
-                    b.Navigation("Reviews");
-
-                    b.Navigation("Tags");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Review", b =>
-                {
-                    b.Navigation("Photos");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Tag", b =>
-                {
-                    b.Navigation("ListingTags");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.User", b =>
-                {
-                    b.Navigation("Listings");
-
-                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
