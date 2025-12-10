@@ -37,6 +37,20 @@ public class OfferController : Controller
                 savedFiles.Add("/uploads/" + fileName);
             }
         }
+        
+        bool paymentSuccess = FakePaymentGateway.ProcessPayment(
+            model.CardNumber,
+            model.Expiration,
+            model.CVV,
+            model.CardHolderName,
+            model.GrossPrice ?? 0
+        );
+
+        if (!paymentSuccess)
+        {
+            ModelState.AddModelError("", "Płatność nie powiodła się.");
+            return BadRequest(ModelState);
+        }
 
         // TODO: Save offer metadata (title, description, tags, etc.) in DB
         // and associate with savedFiles paths.
