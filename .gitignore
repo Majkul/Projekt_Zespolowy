@@ -365,3 +365,4 @@ ProjektZespolowyGr3/bin/
 ProjektZespolowyGr3/obj/
 ProjektZespolowyGr3/appsettings.json
 docker/
+/ProjektZespolowyGr3/wwwroot/uploads

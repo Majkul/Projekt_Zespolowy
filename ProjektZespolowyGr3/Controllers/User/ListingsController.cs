@@ -92,6 +92,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         [HttpGet]
         public IActionResult Create()
         {
+            // TODO: usunac
             _helper.MakeSomeTags();
             var model = new CreateListingViewModel
             {

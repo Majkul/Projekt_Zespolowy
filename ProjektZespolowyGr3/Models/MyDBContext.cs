@@ -17,6 +17,8 @@ namespace ProjektZespolowyGr3.Models
         public DbSet<ListingPhoto> ListingPhotos { get; set; }
         public DbSet<ListingTag> ListingTags { get; set; }
         public DbSet<ReviewPhoto> ReviewPhotos { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<TicketAttachment> TicketAttachments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +37,5 @@ namespace ProjektZespolowyGr3.Models
                 .WithMany(t => t.ListingTags)
                 .HasForeignKey(lt => lt.TagId);
         }
-        public DbSet<ProjektZespolowyGr3.Models.DbModels.Review> Review { get; set; } = default!;
     }
 }

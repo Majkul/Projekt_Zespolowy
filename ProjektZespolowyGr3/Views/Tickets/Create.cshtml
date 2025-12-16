@@ -1,0 +1,90 @@
+﻿@model ProjektZespolowyGr3.Models.ViewModels.CreateTicketViewModel
+
+@{
+    ViewData["Title"] = "Create Ticket";
+}
+
+@{
+    var allowedCategories = Enum.GetValues(typeof(TicketCategory))
+        .Cast<TicketCategory>()
+        .Where(c => c != TicketCategory.User_Report && c != TicketCategory.Listing_Report)
+        .Select(c => new SelectListItem
+            {
+                Text = c.ToString().Replace("_", " "),
+                Value = ((int)c).ToString(),
+                Selected = Model?.Category == c
+            });
+}
+
+<h1>Create</h1>
+
+<h4>Ticket</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Category" class="control-label"></label>
+
+                @if (Model.Category == TicketCategory.User_Report || Model.Category == TicketCategory.Listing_Report)
+                {
+                    <input asp-for="Category" class="form-control" disabled value="@Model.Category.ToString().Replace("_", " ")" />
+                }
+                else
+                {
+                    <select asp-for="Category" class="form-control">
+                        @foreach (var item in allowedCategories)
+                        {
+                            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                        }
+                    </select>
+                }
+
+                <span asp-validation-for="Category" class="text-danger"></span>
+            </div>
+
+            @if (Model.ReportedUserId.HasValue)
+            {
+                <div class="form-group">
+                    <label>Reported User</label>
+                    <input class="form-control" value="@Model.ReportedUserName" disabled />
+                </div>
+            }
+
+            @if (Model.ReportedListingId.HasValue)
+            {
+                <div class="form-group">
+                    <label>Reported Listing</label>
+                    <input class="form-control" value="@Model.ReportedListingTitle" disabled />
+                </div>
+            }
+
+            <div class="form-group">
+                <label asp-for="Subject" class="control-label"></label>
+                <input asp-for="Subject" class="form-control" />
+                <span asp-validation-for="Subject" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <textarea asp-for="Description"
+                          class="form-control"
+                          rows="6"
+                          placeholder="Please describe the issue"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Attachments">Upload Attachments (max 10)</label>
+                <input asp-for="Attachments" type="file" multiple class="form-control" />
+                <span asp-validation-for="Attachments" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
