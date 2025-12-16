@@ -84,6 +84,8 @@
         </dd>
     </dl>
 
+    <a asp-controller="Tickets" asp-action="ReportListing" asp-route-listingId="@Model.Id" class="btn btn-danger">Report Listing</a>
+
     <h4>Reviews</h4>
     <hr />
     <a asp-controller="Reviews" asp-action="Create" asp-route-listingId="@Model.Id" class="btn btn-primary mb-3">Add Review</a>
