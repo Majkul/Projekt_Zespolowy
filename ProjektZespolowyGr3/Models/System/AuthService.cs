@@ -20,6 +20,7 @@ namespace ProjektZespolowyGr3.Models.System
         {
             var result = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
             result.AddClaim(new Claim(ClaimTypes.Name, user.Username));
+            result.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
             if (user.IsAdmin)
             {
                 result.AddClaim(new Claim(ClaimTypes.Role, "Admin"));

@@ -10,23 +10,39 @@ using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pag
 using System.Net;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
 
 namespace DomPogrzebowyProjekt.Controllers.Admin
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Client")]
     public class ListingManageController : Controller
     {
         public MyDBContext _context;
         private readonly IWebHostEnvironment _env;
-        public ListingManageController(MyDBContext context, IWebHostEnvironment env)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public ListingManageController(MyDBContext context, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _env = env;
+            _httpContextAccessor = httpContextAccessor;
         }
         public async Task<IActionResult> Index(string? searchString = null, int pageSize = 25, int pageNumber = 1, string tagFilter = null)
         {
-            object? model = await GetFilteredListingsAsync(searchString, pageSize, pageNumber, tagFilter);
-            int totalClients = await GetListingsCountAsync(searchString, tagFilter);
+            int userId = 0;
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (!string.IsNullOrEmpty(userIdClaim))
+                {
+                    int.TryParse(userIdClaim, out userId);
+                }
+            }
+
+            object? model = await GetFilteredListingsAsync(searchString, pageSize, pageNumber, tagFilter, userId, isAdmin);
+            int totalClients = await GetListingsCountAsync(searchString, tagFilter, userId, isAdmin);
 
             ViewBag.CurrentFilter = searchString;
             ViewBag.CurrentPageSize = pageSize;
@@ -37,18 +53,19 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             return View(model);
         }
 
-        private async Task<List<BrowseListingsViewModel>> GetFilteredListingsAsync(string? searchString, int pageSize, int pageNumber, string tagFilter)
+        private async Task<List<BrowseListingsViewModel>> GetFilteredListingsAsync(string? searchString, int pageSize, int pageNumber, string tagFilter, int userId, bool isAdmin)
         {
             var listings = _context.Listings
-                    .Include(l => l.Photos)
-                        .ThenInclude(lp => lp.Upload)
-                    .Include(l => l.Reviews)
-                    .Include(l => l.Seller)
-                        .ThenInclude(s => s.Listings)
-                            .ThenInclude(sl => sl.Reviews)
-                    .Include(l => l.Tags)
-                        .ThenInclude(lt => lt.Tag)
-                    .AsQueryable();
+                        .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
+                        .Include(l => l.Reviews)
+                        .Include(l => l.Seller)
+                        .Include(l => l.Tags).ThenInclude(lt => lt.Tag)
+                        .AsQueryable();
+
+            if (!isAdmin)
+            {
+                listings = listings.Where(l => l.SellerId == userId);
+            }
             var tags = _context.ListingTags.AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
@@ -83,9 +100,14 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 })
                 .ToListAsync();
         }
-        private async Task<int> GetListingsCountAsync(string? searchString, string tagFilter)
+        private async Task<int> GetListingsCountAsync(string? searchString, string tagFilter, int userId, bool isAdmin)
         {
             var listings = _context.Listings.AsQueryable();
+
+            if (!isAdmin)
+            {
+                listings = listings.Where(l => l.SellerId == userId);
+            }
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -105,6 +127,19 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
         [HttpGet]
         public IActionResult EditListing(int id)
         {
+            int userId = 0;
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (!string.IsNullOrEmpty(userIdClaim))
+                {
+                    int.TryParse(userIdClaim, out userId);
+                }
+            }
+
             var listing = _context.Listings
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags)
@@ -112,6 +147,9 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
             if (listing == null)
                 return NotFound();
+
+            if (!isAdmin && listing.SellerId != userId)
+                return Forbid();
 
             var vm = new EditListingViewModel
             {
@@ -137,6 +175,19 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
         [HttpPost]
         public async Task<IActionResult> EditListing(int id, EditListingViewModel vm)
         {
+            int userId = 0;
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (!string.IsNullOrEmpty(userIdClaim))
+                {
+                    int.TryParse(userIdClaim, out userId);
+                }
+            }
+
             var listing = _context.Listings
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags)
@@ -144,6 +195,9 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
             if (listing == null)
                 return NotFound();
+
+            if (!isAdmin && listing.SellerId != userId)
+                return Forbid();
 
             if (!ModelState.IsValid)
             {
@@ -234,8 +288,24 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
         [HttpPost]
         public IActionResult DeleteListing(int id)
         {
+            int userId = 0;
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (!string.IsNullOrEmpty(userIdClaim))
+                {
+                    int.TryParse(userIdClaim, out userId);
+                }
+            }
+
             var listing = _context.Listings.Find(id);
             if (listing == null) return NotFound();
+
+            if (!isAdmin && listing.SellerId != userId)
+                return Forbid();
 
             _context.ListingPhotos.Where(lp => lp.ListingId == id)
                 .Include(lp => lp.Upload)
