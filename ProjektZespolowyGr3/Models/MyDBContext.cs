@@ -19,6 +19,7 @@ namespace ProjektZespolowyGr3.Models
         public DbSet<ReviewPhoto> ReviewPhotos { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketAttachment> TicketAttachments { get; set; }
+        public DbSet<Order> Orders { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

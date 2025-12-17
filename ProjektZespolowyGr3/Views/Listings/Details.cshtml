@@ -83,7 +83,19 @@
             @Html.DisplayFor(model => model.Price)
         </dd>
     </dl>
-
+    @if (!Model.IsSold && Model.Type == ListingType.Sale)
+    {
+        <form asp-controller="Payment" asp-action="Buy" method="post">
+            <input type="hidden" name="listingId" value="@Model.Id" />
+            <button type="submit" class="btn btn-primary">
+                Kup teraz
+            </button>
+        </form>
+    }
+    else if (Model.IsSold)
+    {
+        <span class="text-danger">Sprzedane</span>
+    }
     <a asp-controller="Tickets" asp-action="ReportListing" asp-route-listingId="@Model.Id" class="btn btn-danger">Report Listing</a>
 
     <h4>Reviews</h4>
