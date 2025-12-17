@@ -13,6 +13,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public ListingType Type { get; set; }
         public decimal? Price { get; set; }
         public bool IsFeatured { get; set; } = false;
+        public bool IsSold { get; set; } = false;
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
