@@ -28,7 +28,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         // GET: Reviews
         public async Task<IActionResult> Index()
         {
-            var myDBContext = _context.Review.Include(r => r.Listing).Include(r => r.Reviewer);
+            var myDBContext = _context.Reviews.Include(r => r.Listing).Include(r => r.Reviewer);
             return View(await myDBContext.ToListAsync());
         }
 
@@ -40,7 +40,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return NotFound();
             }
 
-            var review = await _context.Review
+            var review = await _context.Reviews
                 .Include(r => r.Listing)
                 .Include(r => r.Reviewer)
                 .FirstOrDefaultAsync(m => m.Id == id);
@@ -210,7 +210,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return NotFound();
             }
 
-            var review = await _context.Review.FindAsync(id);
+            var review = await _context.Reviews.FindAsync(id);
             if (review == null)
             {
                 return NotFound();
@@ -265,7 +265,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return NotFound();
             }
 
-            var review = await _context.Review
+            var review = await _context.Reviews
                 .Include(r => r.Listing)
                 .Include(r => r.Reviewer)
                 .FirstOrDefaultAsync(m => m.Id == id);
@@ -282,10 +282,10 @@ namespace ProjektZespolowyGr3.Controllers.User
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var review = await _context.Review.FindAsync(id);
+            var review = await _context.Reviews.FindAsync(id);
             if (review != null)
             {
-                _context.Review.Remove(review);
+                _context.Reviews.Remove(review);
             }
 
             await _context.SaveChangesAsync();
@@ -294,7 +294,7 @@ namespace ProjektZespolowyGr3.Controllers.User
 
         private bool ReviewExists(int id)
         {
-            return _context.Review.Any(e => e.Id == id);
+            return _context.Reviews.Any(e => e.Id == id);
         }
     }
 }

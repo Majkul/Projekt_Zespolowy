@@ -1,0 +1,23 @@
+﻿@model ProjektZespolowyGr3.Models.DbModels.Order
+
+@{
+    ViewData["Title"] = "Płatność przyjęta";
+}
+
+<h2>Płatność została rozpoczęta</h2>
+
+<p>
+    Dziękujemy za złożenie zamówienia.
+</p>
+
+<p>
+    Numer zamówienia: <strong>@Model.Id</strong>
+</p>
+
+<p>
+    Status płatności zostanie potwierdzony automatycznie.
+</p>
+
+<a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+    Wróć na stronę główną
+</a>
