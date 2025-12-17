@@ -28,9 +28,7 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Listings" asp-action="Index">Oferty</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Listings" asp-action="Create">Stwórz ofertę</a>
-                        </li>
+                        
                         @if (!User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
@@ -53,6 +51,9 @@
                                             <button class="dropdown-item  text-dark border-0 w-100 text-start" style="cursor: pointer;" type="submit" class="btn">Logout</button>
                                         </form>
                                     </li>
+                                    <li><a class="dropdown-item  text-dark" asp-controller="ListingManage" asp-action="Index">My Listings</a></li>
+                                    <li><a class="dropdown-item  text-dark" asp-area="" asp-controller="Listings" asp-action="Create">Stwórz ofertę</a></li>
+                                    <li><a class="dropdown-item  text-dark" asp-area="" asp-controller="Tickets" asp-action="Create">Stwórz ticket</a></li>
                                 </ul>
                             </li>
                         }
