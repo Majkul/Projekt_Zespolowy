@@ -11,6 +11,7 @@ using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.ViewModels;
 using ProjektZespolowyGr3.Controllers;
 using ProjektZespolowyGr3.Models.System;
+using System.Security.Claims;
 
 namespace ProjektZespolowyGr3.Controllers.User
 {
@@ -20,13 +21,15 @@ namespace ProjektZespolowyGr3.Controllers.User
         private readonly IWebHostEnvironment _env;
         private readonly AuthService _auth;
         private readonly HelperService _helper;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ListingsController(MyDBContext context, IWebHostEnvironment env, AuthService auth, HelperService helper)
+        public ListingsController(MyDBContext context, IWebHostEnvironment env, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _env = env;
             _auth = auth;
             _helper = helper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         // GET: Listings
@@ -134,7 +137,16 @@ namespace ProjektZespolowyGr3.Controllers.User
             }
 
             // ZMIENIC POTEM
-            var userId = _helper.GetCurrentUserId();
+            //var userId = _helper.GetCurrentUserId();
+            // To wersja już chyba zmieniona \/
+            int userId = 0;
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!string.IsNullOrEmpty(userIdClaim))
+            {
+                int.TryParse(userIdClaim, out userId);
+            }
+
 
             var listing = new Listing
             {
