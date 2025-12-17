@@ -19,6 +19,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddTransient<AuthService>();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddHttpClient();
+
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<EmailService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
