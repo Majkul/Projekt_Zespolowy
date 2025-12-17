@@ -1,0 +1,19 @@
+﻿@model IEnumerable<ProjektZespolowyGr3.Models.DbModels.UserProfile>
+
+@{
+    ViewData["Title"] = "User Profile";
+}
+
+<h1>User Profile!</h1>
+
+<div>
+@foreach (var item in Model) {
+
+    @Html.DisplayFor(modelItem => item.base64Avatar)
+
+    @Html.DisplayFor(modelItem => item.base64Banner)
+
+    @Html.DisplayFor(modelItem => item.Description)
+
+}
+</div>
