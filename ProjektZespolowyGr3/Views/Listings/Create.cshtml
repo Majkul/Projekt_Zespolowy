@@ -1,58 +1,65 @@
 ﻿@model ProjektZespolowyGr3.Models.ViewModels.CreateListingViewModel
 
 @{
-    ViewData["Title"] = "Create Listing";
+    ViewData["Title"] = "Dodaj ogłoszenie";
 }
 
-<h1>Create</h1>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">Dodaj nowe ogłoszenie</h2>
+            <hr />
 
-<h4>Listing</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Title"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label for="SelectedTagIds">Tags</label>
-                <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control"></select>
-                <span asp-validation-for="SelectedTagIds" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PhotoFiles">Upload Photos (max 5)</label>
-                <input asp-for="PhotoFiles" type="file" multiple class="form-control" />
-                <span asp-validation-for="PhotoFiles" class="text-danger"></span>
-                <small class="form-text text-muted">The first uploaded photo will be featured by default. You can reorder later.</small>
-            </div>
-            <div class="form-group">
-                <label asp-for="Type"></label>
-                <select asp-for="Type" class="form-control" asp-items="Html.GetEnumSelectList<ListingType>()" id="type-select"></select>
-                <span asp-validation-for="Type" class="text-danger"></span>
-            </div>
-            <div class="form-group" id="price-group">
-                <label asp-for="Price"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-            </div>
+            <form asp-action="Create" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label fw-bold">Tytuł ogłoszenia *</label>
+                    <input asp-for="Title" class="form-control" placeholder="Np. Komputer gamingowy" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
 
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-bold">Opis</label>
+                    <textarea asp-for="Description" class="form-control" rows="4" placeholder="Opisz szczegółowo swoją ofertę..."></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label for="SelectedTagIds" class="form-label fw-bold">Kategorie</label>
+                    <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-select">
+                    </select>
+                    <small class="form-text text-muted">Przytrzymaj Ctrl (Cmd na Mac) aby wybrać wiele kategorii</small>
+                    <span asp-validation-for="SelectedTagIds" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Type" class="form-label fw-bold">Typ ogłoszenia *</label>
+                    <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<ListingType>()" id="type-select">
+                    </select>
+                    <span asp-validation-for="Type" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3" id="price-group">
+                    <label asp-for="Price" class="form-label fw-bold">Cena (PLN) *</label>
+                    <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PhotoFiles" class="form-label fw-bold">Zdjęcia (maksymalnie 5)</label>
+                    <input asp-for="PhotoFiles" type="file" multiple accept="image/*" class="form-control" />
+                    <small class="form-text text-muted">Pierwsze zdjęcie będzie zdjęciem głównym. Możesz przesłać maksymalnie 5 zdjęć.</small>
+                    <span asp-validation-for="PhotoFiles" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Anuluj</a>
+                    <input type="submit" value="Utwórz ogłoszenie" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

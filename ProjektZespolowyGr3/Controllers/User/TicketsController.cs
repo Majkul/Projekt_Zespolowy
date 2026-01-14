@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -29,10 +31,25 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         // GET: Tickets
+        [Authorize]
         public async Task<IActionResult> Index()
         {
-            var myDBContext = _context.Tickets.Include(t => t.Assignee).Include(t => t.ReportedListing).Include(t => t.ReportedUser).Include(t => t.User);
-            return View(await myDBContext.ToListAsync());
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized();
+            }
+
+            // Zawsze pokazuj tylko tickety utworzone przez zalogowanego użytkownika.
+            // Wszystkie tickety (dla admina) są dostępne w TicketsManageController.
+            var query = _context.Tickets
+                .Include(t => t.Assignee)
+                .Include(t => t.ReportedListing)
+                .Include(t => t.ReportedUser)
+                .Include(t => t.User)
+                .Where(t => t.UserId == userId);
+
+            return View(await query.ToListAsync());
         }
 
         // GET: Tickets/Details/5
@@ -120,8 +137,12 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return View(model);
             }
 
-            // TODO: zmienic na fatkycznie dzialajace
-            var userId = _helper.GetCurrentUserId();
+            // Pobierz ID aktualnie zalogowanego użytkownika z claimów
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized();
+            }
 
             var ticket = new Ticket
             {
@@ -207,6 +228,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         // GET: Tickets/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -230,6 +252,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,UserId,Category,Status,Subject,Description,AssigneeId,CreatedAt,LastActivity,ReportedUserId,ReportedListingId")] Ticket ticket)
         {
@@ -266,6 +289,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         // GET: Tickets/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -289,6 +313,7 @@ namespace ProjektZespolowyGr3.Controllers.User
 
         // POST: Tickets/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "Admin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {

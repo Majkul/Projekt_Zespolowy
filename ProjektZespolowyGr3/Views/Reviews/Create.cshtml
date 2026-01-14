@@ -1,46 +1,52 @@
 ﻿@model ProjektZespolowyGr3.Models.ViewModels.CreateReviewViewModel
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Dodaj opinię";
 }
 
-<h1>Create</h1>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">Dodaj opinię</h2>
+            <hr />
 
-<h4>Review</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="ListingId" class="control-label"></label>
-                <input asp-for="ListingId" class="form-control" />
-                <span asp-validation-for="ListingId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Rating" class="control-label"></label>
-                <input asp-for="Rating" class="form-control" type="number" min="1" max="5" value="5" />
-                <span asp-validation-for="Rating" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PhotoFiles">Upload Photos (max 5)</label>
-                <input asp-for="PhotoFiles" type="file" multiple class="form-control" />
-                <span asp-validation-for="PhotoFiles" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+            <form asp-action="Create" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                
+                <input type="hidden" asp-for="ListingId" />
+
+                <div class="mb-3">
+                    <label asp-for="Rating" class="form-label fw-bold">Ocena *</label>
+                    <select asp-for="Rating" class="form-select">
+                        <option value="5">5 ⭐⭐⭐⭐⭐ - Doskonałe</option>
+                        <option value="4">4 ⭐⭐⭐⭐ - Bardzo dobre</option>
+                        <option value="3">3 ⭐⭐⭐ - Dobre</option>
+                        <option value="2">2 ⭐⭐ - Średnie</option>
+                        <option value="1">1 ⭐ - Słabe</option>
+                    </select>
+                    <span asp-validation-for="Rating" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-bold">Opis opinii</label>
+                    <textarea asp-for="Description" class="form-control" rows="5" placeholder="Opisz swoje doświadczenia z tym ogłoszeniem..."></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PhotoFiles" class="form-label fw-bold">Zdjęcia (maksymalnie 5)</label>
+                    <input asp-for="PhotoFiles" type="file" multiple accept="image/*" class="form-control" />
+                    <small class="form-text text-muted">Możesz dołączyć zdjęcia do swojej opinii (maksymalnie 5 plików)</small>
+                    <span asp-validation-for="PhotoFiles" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.ListingId" class="btn btn-outline-secondary">Anuluj</a>
+                    <input type="submit" value="Dodaj opinię" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

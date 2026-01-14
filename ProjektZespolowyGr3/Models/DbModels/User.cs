@@ -15,5 +15,8 @@
 
         public ICollection<Listing> Listings { get; set; }
         public ICollection<Review> Reviews { get; set; }
+
+        public ICollection<Message> SentMessages { get; set; } = new List<Message>();
+        public ICollection<Message> ReceivedMessages { get; set; } = new List<Message>();
     }
 }

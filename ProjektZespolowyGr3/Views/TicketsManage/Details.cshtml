@@ -1,0 +1,146 @@
+@model ProjektZespolowyGr3.Models.DbModels.Ticket
+@using System.ComponentModel.DataAnnotations
+
+@{
+    ViewData["Title"] = "Szczegóły ticketu";
+    
+    string GetDisplayName(Enum value)
+    {
+        var type = value.GetType();
+        var memInfo = type.GetMember(value.ToString());
+        if (memInfo.Length > 0)
+        {
+            var attributes = memInfo[0].GetCustomAttributes(typeof(DisplayAttribute), false);
+            if (attributes.Length > 0)
+            {
+                return ((DisplayAttribute)attributes[0]).Name ?? value.ToString();
+            }
+        }
+        return value.ToString().Replace("_", " ");
+    }
+}
+
+<div class="container mt-4">
+    <h2>Szczegóły ticketu #@Model.Id</h2>
+    <hr />
+
+    @if (TempData["AlertSuccess"] != null)
+    {
+        <div class="alert alert-success">@TempData["AlertSuccess"]</div>
+    }
+    @if (TempData["AlertError"] != null)
+    {
+        <div class="alert alert-danger">@TempData["AlertError"]</div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>@Model.Subject</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Kategoria:</strong> <span class="badge bg-info">@GetDisplayName(Model.Category)</span></p>
+                    <p><strong>Status:</strong> <span class="badge bg-@(Model.Status == TicketStatus.Open ? "warning" : Model.Status == TicketStatus.Resolved ? "success" : Model.Status == TicketStatus.In_Progress ? "primary" : "secondary")">@GetDisplayName(Model.Status)</span></p>
+                    <hr />
+                    <p><strong>Opis:</strong></p>
+                    <p>@Model.Description</p>
+                </div>
+            </div>
+
+            @if (Model.Attachments != null && Model.Attachments.Any())
+            {
+                <div class="card mb-3">
+                    <div class="card-header">Załączniki</div>
+                    <div class="card-body">
+                        <ul>
+                            @foreach (var attachment in Model.Attachments)
+                            {
+                                <li><a href="@attachment.Upload.Url" target="_blank">@attachment.Upload.FileName</a></li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Informacje</div>
+                <div class="card-body">
+                    <p><strong>Użytkownik:</strong> @Model.User.Username</p>
+                    <p><strong>Data utworzenia:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                    <p><strong>Ostatnia aktywność:</strong> @Model.LastActivity.ToString("dd.MM.yyyy HH:mm")</p>
+                    @if (Model.ReportedUser != null)
+                    {
+                        <p><strong>Zgłoszony użytkownik:</strong> <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.ReportedUserId">@Model.ReportedUser.Username</a></p>
+                    }
+                    @if (Model.ReportedListing != null)
+                    {
+                        <p><strong>Zgłoszona oferta:</strong> <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.ReportedListingId">@Model.ReportedListing.Title</a></p>
+                    }
+
+                    <hr />
+                    <a asp-controller="Messages"
+                       asp-action="Conversation"
+                       asp-route-userId="@Model.UserId"
+                       asp-route-ticketId="@Model.Id"
+                       class="btn btn-outline-primary w-100 mb-2">
+                        Skontaktuj się ze zgłaszającym
+                    </a>
+
+                    @if (Model.AssigneeId.HasValue)
+                    {
+                        <a asp-controller="Messages"
+                           asp-action="Conversation"
+                           asp-route-userId="@Model.AssigneeId"
+                           asp-route-ticketId="@Model.Id"
+                           class="btn btn-outline-secondary w-100">
+                            Skontaktuj się z przypisanym administratorem
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">Akcje</div>
+                <div class="card-body">
+                    <form asp-action="UpdateStatus" method="post" class="mb-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="mb-2">
+                            <label class="form-label">Status:</label>
+                            <select name="status" class="form-select">
+                                @foreach (var status in ViewBag.Statuses as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                {
+                                    <option value="@status.Value" selected="@status.Selected">@status.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">Zaktualizuj status</button>
+                    </form>
+
+                    <form asp-action="Assign" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="mb-2">
+                            <label class="form-label">Przypisz do:</label>
+                            <select name="assigneeId" class="form-select">
+                                <option value="">Nieprzypisany</option>
+                                @foreach (var admin in ViewBag.Admins as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                {
+                                    <option value="@admin.Value" selected="@admin.Selected">@admin.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-secondary btn-sm w-100">Przypisz</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">Powrót do listy</a>
+    </div>
+</div>
