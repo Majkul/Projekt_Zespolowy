@@ -25,6 +25,7 @@ namespace ProjektZespolowyGr3.Models
     public class ThreadViewModel
     {
         public int Id { get; set; }
+        public int OfferId { get; set; }
         public string User1Id { get; set; }
         public string User2Id { get; set; }
         public bool IsBlocked { get; set; } = false;

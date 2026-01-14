@@ -9,6 +9,8 @@ namespace ProjektZespolowyGr3.Controllers
     {
         private static List<ThreadViewModel> threads = new List<ThreadViewModel>();
         private static List<MessageViewModel> messages = new List<MessageViewModel>();
+        public static List<ThreadViewModel> Threads => threads;
+        public static List<MessageViewModel> Messages => messages;
 
         // Show all threads for logged-in user
         public IActionResult Threads(string userId)

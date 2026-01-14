@@ -57,5 +57,23 @@ public class OfferController : Controller
 
         return RedirectToAction("Index", "Home");
     }
+    
+    public IActionResult Delete(int offerId)
+    {
+        var relatedThreads = MessageController.Threads
+            .Where(t => t.OfferId == offerId)
+            .ToList();
+    
+        foreach (var thread in relatedThreads)
+        {
+            MessageController.Messages.RemoveAll(m => m.ThreadId == thread.Id);
+        }
+    
+        MessageController.Threads.RemoveAll(t => t.OfferId == offerId);
+    
+        FakeDatabase.Offers.RemoveAll(o => o.Id == offerId);
+    
+        return RedirectToAction("Index", "Home");
+    }
 }
 
