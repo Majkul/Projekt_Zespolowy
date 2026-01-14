@@ -1,90 +1,101 @@
 ﻿@model ProjektZespolowyGr3.Models.ViewModels.CreateTicketViewModel
+@using ProjektZespolowyGr3.Models.DbModels
+@using System.ComponentModel.DataAnnotations
 
 @{
-    ViewData["Title"] = "Create Ticket";
+    ViewData["Title"] = "Utwórz zgłoszenie";
 }
 
 @{
+    string GetCategoryDisplayName(TicketCategory category)
+    {
+        var type = typeof(TicketCategory);
+        var memInfo = type.GetMember(category.ToString());
+        var attributes = memInfo[0].GetCustomAttributes(typeof(DisplayAttribute), false);
+        return (attributes.Length > 0) ? ((DisplayAttribute)attributes[0]).Name : category.ToString().Replace("_", " ");
+    }
+
     var allowedCategories = Enum.GetValues(typeof(TicketCategory))
         .Cast<TicketCategory>()
         .Where(c => c != TicketCategory.User_Report && c != TicketCategory.Listing_Report)
         .Select(c => new SelectListItem
-            {
-                Text = c.ToString().Replace("_", " "),
-                Value = ((int)c).ToString(),
-                Selected = Model?.Category == c
-            });
+        {
+            Text = GetCategoryDisplayName(c),
+            Value = ((int)c).ToString(),
+            Selected = Model?.Category == c
+        });
 }
 
-<h1>Create</h1>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">Utwórz zgłoszenie</h2>
+            <hr />
 
-<h4>Ticket</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create" method="post" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Category" class="control-label"></label>
-
-                @if (Model.Category == TicketCategory.User_Report || Model.Category == TicketCategory.Listing_Report)
-                {
-                    <input asp-for="Category" class="form-control" disabled value="@Model.Category.ToString().Replace("_", " ")" />
-                }
-                else
-                {
-                    <select asp-for="Category" class="form-control">
-                        @foreach (var item in allowedCategories)
-                        {
-                            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
-                        }
-                    </select>
-                }
-
-                <span asp-validation-for="Category" class="text-danger"></span>
-            </div>
-
-            @if (Model.ReportedUserId.HasValue)
-            {
-                <div class="form-group">
-                    <label>Reported User</label>
-                    <input class="form-control" value="@Model.ReportedUserName" disabled />
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                
+                <div class="mb-3">
+                    <label asp-for="Category" class="form-label fw-bold">Kategoria *</label>
+                    @if (Model.Category == TicketCategory.User_Report || Model.Category == TicketCategory.Listing_Report)
+                    {
+                        <input class="form-control" disabled value="@GetCategoryDisplayName(Model.Category)" />
+                        <input type="hidden" asp-for="Category" />
+                    }
+                    else
+                    {
+                        <select asp-for="Category" class="form-select">
+                            @foreach (var item in allowedCategories)
+                            {
+                                <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                            }
+                        </select>
+                    }
+                    <span asp-validation-for="Category" class="text-danger"></span>
                 </div>
-            }
 
-            @if (Model.ReportedListingId.HasValue)
-            {
-                <div class="form-group">
-                    <label>Reported Listing</label>
-                    <input class="form-control" value="@Model.ReportedListingTitle" disabled />
+                @if (Model.ReportedUserId.HasValue)
+                {
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Zgłoszony użytkownik</label>
+                        <input class="form-control" value="@Model.ReportedUserName" disabled />
+                        <input type="hidden" asp-for="ReportedUserId" />
+                    </div>
+                }
+
+                @if (Model.ReportedListingId.HasValue)
+                {
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Zgłoszone ogłoszenie</label>
+                        <input class="form-control" value="@Model.ReportedListingTitle" disabled />
+                        <input type="hidden" asp-for="ReportedListingId" />
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label asp-for="Subject" class="form-label fw-bold">Temat *</label>
+                    <input asp-for="Subject" class="form-control" placeholder="Krótki opis problemu" />
+                    <span asp-validation-for="Subject" class="text-danger"></span>
                 </div>
-            }
 
-            <div class="form-group">
-                <label asp-for="Subject" class="control-label"></label>
-                <input asp-for="Subject" class="form-control" />
-                <span asp-validation-for="Subject" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <textarea asp-for="Description"
-                          class="form-control"
-                          rows="6"
-                          placeholder="Please describe the issue"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Attachments">Upload Attachments (max 10)</label>
-                <input asp-for="Attachments" type="file" multiple class="form-control" />
-                <span asp-validation-for="Attachments" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-bold">Opis problemu *</label>
+                    <textarea asp-for="Description" class="form-control" rows="6" placeholder="Opisz szczegółowo problem lub sytuację..."></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Attachments" class="form-label fw-bold">Załączniki (maksymalnie 10)</label>
+                    <input asp-for="Attachments" type="file" multiple class="form-control" />
+                    <small class="form-text text-muted">Możesz dołączyć pliki pomocne w rozwiązaniu problemu (maksymalnie 10 plików, każdy do 10 MB)</small>
+                    <span asp-validation-for="Attachments" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Anuluj</a>
+                    <input type="submit" value="Utwórz zgłoszenie" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>

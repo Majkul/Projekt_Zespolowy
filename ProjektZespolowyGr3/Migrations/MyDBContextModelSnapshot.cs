@@ -106,6 +106,50 @@ namespace ProjektZespolowyGr3.Migrations
                     b.ToTable("ListingTags");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Message", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("ListingId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReceiverId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("TicketId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("Messages");
+                });
+
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -528,6 +572,37 @@ namespace ProjektZespolowyGr3.Migrations
 
                     b.Navigation("Tag");
                 });
+                
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Message", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
+                        .WithMany()
+                        .HasForeignKey("ListingId");
+
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Receiver")
+                        .WithMany("ReceivedMessages")
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Sender")
+                        .WithMany("SentMessages")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Ticket", "Ticket")
+                        .WithMany()
+                        .HasForeignKey("TicketId");
+
+                    b.Navigation("Listing");
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+
+                    b.Navigation("Ticket");
+                });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Review", b =>
                 {
@@ -676,7 +751,11 @@ namespace ProjektZespolowyGr3.Migrations
                 {
                     b.Navigation("Listings");
 
+                    b.Navigation("ReceivedMessages");
+
                     b.Navigation("Reviews");
+
+                    b.Navigation("SentMessages");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
@@ -27,8 +28,19 @@ public class HomeController : Controller
         _emailService = emailService;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
+        // Pobierz kilka najnowszych aktywnych ofert do wyświetlenia na stronie głównej
+        var latestListings = await _context.Listings
+            .Where(l => !l.IsSold)
+            .Include(l => l.Photos)
+                .ThenInclude(lp => lp.Upload)
+            .Include(l => l.Seller)
+            .OrderByDescending(l => l.CreatedAt)
+            .Take(8)
+            .ToListAsync();
+
+        ViewBag.LatestListings = latestListings;
         return View();
     }
 
@@ -156,9 +168,11 @@ public class HomeController : Controller
     public async Task<IActionResult> VerifyEmail(string email, string token)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-        var userAuth = await _context.UserAuths.FirstOrDefaultAsync(ua => ua.UserId == user.Id);
+        if (user == null)
+            return BadRequest("Incorrect activation link.");
 
-        if (user == null || userAuth.EmailVerificationToken != token)
+        var userAuth = await _context.UserAuths.FirstOrDefaultAsync(ua => ua.UserId == user.Id);
+        if (userAuth == null || userAuth.EmailVerificationToken != token)
             return BadRequest("Incorrect activation link.");
 
         userAuth.EmailVerified = true;
@@ -166,13 +180,92 @@ public class HomeController : Controller
 
         await _context.SaveChangesAsync();
 
-        TempData["Alert"] = "The email has been confirmed. You can now log in.";
-        return RedirectToAction("Login");
+        // Automatyczne logowanie po weryfikacji maila
+        var claims = _authService.GetClaims(user);
+        var principal = new ClaimsPrincipal(claims);
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+        // Sprawdź czy profil jest uzupełniony (imię i nazwisko są wymagane)
+        if (string.IsNullOrWhiteSpace(user.FirstName) || string.IsNullOrWhiteSpace(user.LastName))
+        {
+            TempData["AlertSuccess"] = "Email został potwierdzony. Uzupełnij swój profil.";
+            return RedirectToAction("CompleteProfile");
+        }
+
+        TempData["AlertSuccess"] = "Email został potwierdzony. Witamy!";
+        return RedirectToAction("Index");
     }
     [Route("Account/[action]")]
     public IActionResult RegisterConfirmation()
     {
         return View();
+    }
+
+    [Authorize]
+    [Route("Account/[action]")]
+    public async Task<IActionResult> CompleteProfile()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        // Jeśli profil już jest uzupełniony, przekieruj do strony głównej
+        if (!string.IsNullOrWhiteSpace(user.FirstName) && !string.IsNullOrWhiteSpace(user.LastName))
+        {
+            return RedirectToAction("Index");
+        }
+
+        var model = new CompleteProfileViewModel
+        {
+            FirstName = user.FirstName ?? "",
+            LastName = user.LastName ?? "",
+            Address = user.Address,
+            PhoneNumber = user.PhoneNumber
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [Authorize]
+    [Route("Account/[action]")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CompleteProfile(CompleteProfileViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized();
+        }
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        user.FirstName = model.FirstName;
+        user.LastName = model.LastName;
+        user.Address = model.Address;
+        user.PhoneNumber = model.PhoneNumber;
+
+        await _context.SaveChangesAsync();
+
+        TempData["AlertSuccess"] = "Profil został uzupełniony. Witamy!";
+        return RedirectToAction("Index");
     }
 
     [HttpPost]

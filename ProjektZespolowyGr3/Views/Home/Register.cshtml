@@ -1,36 +1,52 @@
 ﻿@model ProjektZespolowyGr3.Models.ViewModels.RegisterViewModel
 
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Rejestracja";
 }
 
-<h2>Register</h2>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="mb-4 text-center">Rejestracja</h2>
 
-<form asp-action="Register" method="post">
-    <div class="form-group">
-        <label asp-for="Login" class="control-label"></label>
-        <input asp-for="Login" class="form-control" />
-        <span asp-validation-for="Login" class="text-danger"></span>
+            <form asp-action="Register" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Login" class="form-label">Login</label>
+                    <input asp-for="Login" class="form-control" />
+                    <span asp-validation-for="Login" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Hasło</label>
+                    <input asp-for="Password" type="password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="ConfirmPassword" class="form-label">Powtórz hasło</label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">Powrót</a>
+                    <input type="submit" value="Zarejestruj się" class="btn btn-primary" />
+                </div>
+            </form>
+
+            @if (TempData["AlertError"] != null)
+            {
+                <div class="alert alert-danger mt-3">
+                    @TempData["AlertError"]
+                </div>
+            }
+        </div>
     </div>
-    <div class="form-group">
-        <label asp-for="Email" class="control-label"></label>
-        <input asp-for="Email" class="form-control" />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Password" class="control-label"></label>
-        <input asp-for="Password" type="password" class="form-control" />
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="ConfirmPassword" class="control-label"></label>
-        <input asp-for="ConfirmPassword" type="password" class="form-control" />
-        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <input type="submit" value="Register" class="btn btn-primary" />
-    </div>
-</form>
+</div>
 
 @if (TempData["AlertError"] != null)
 {

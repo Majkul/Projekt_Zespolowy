@@ -21,6 +21,7 @@ namespace ProjektZespolowyGr3.Models
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketAttachment> TicketAttachments { get; set; }
         public DbSet<Order> Orders { get; set; }
+        public DbSet<Message> Messages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,6 +39,19 @@ namespace ProjektZespolowyGr3.Models
                 .HasOne(lt => lt.Tag)
                 .WithMany(t => t.ListingTags)
                 .HasForeignKey(lt => lt.TagId);
+
+            // Relacje wiadomości <-> użytkownicy
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Sender)
+                .WithMany(u => u.SentMessages)
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Receiver)
+                .WithMany(u => u.ReceivedMessages)
+                .HasForeignKey(m => m.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

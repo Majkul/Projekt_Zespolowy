@@ -1,0 +1,129 @@
+@model List<ProjektZespolowyGr3.Models.DbModels.Ticket>
+@using ProjektZespolowyGr3.Models.DbModels
+@using System.ComponentModel.DataAnnotations
+
+@{
+    ViewData["Title"] = "Zarządzanie ticketami";
+    
+    string GetDisplayName(Enum value)
+    {
+        var type = value.GetType();
+        var memInfo = type.GetMember(value.ToString());
+        if (memInfo.Length > 0)
+        {
+            var attributes = memInfo[0].GetCustomAttributes(typeof(DisplayAttribute), false);
+            if (attributes.Length > 0)
+            {
+                return ((DisplayAttribute)attributes[0]).Name ?? value.ToString();
+            }
+        }
+        return value.ToString().Replace("_", " ");
+    }
+}
+
+<div class="container mt-4">
+    <h2>Zarządzanie ticketami</h2>
+    <hr />
+
+    <form method="get" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="searchString" class="form-control" placeholder="Szukaj..." value="@ViewBag.CurrentFilter">
+            </div>
+            <div class="col-md-2">
+                <select name="statusFilter" class="form-select">
+                    <option value="">Wszystkie statusy</option>
+                    @foreach (var status in ViewBag.Statuses as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                    {
+                        <option value="@status.Value" selected="@status.Selected">@status.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="categoryFilter" class="form-select">
+                    <option value="">Wszystkie kategorie</option>
+                    @foreach (var category in ViewBag.Categories as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                    {
+                        <option value="@category.Value" selected="@category.Selected">@category.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="assigneeFilter" class="form-select">
+                    <option value="">Wszyscy</option>
+                    @foreach (var admin in ViewBag.Admins as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                    {
+                        <option value="@admin.Value" selected="@admin.Selected">@admin.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">Filtruj</button>
+                <a asp-action="Index" class="btn btn-secondary">Wyczyść</a>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Temat</th>
+                <th>Kategoria</th>
+                <th>Status</th>
+                <th>Użytkownik</th>
+                <th>Przypisany do</th>
+                <th>Data utworzenia</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var ticket in Model)
+            {
+                <tr>
+                    <td>@ticket.Id</td>
+                    <td>@ticket.Subject</td>
+                    <td>
+                        <span class="badge bg-info">@GetDisplayName(ticket.Category)</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-@(ticket.Status == TicketStatus.Open ? "warning" : ticket.Status == TicketStatus.Resolved ? "success" : ticket.Status == TicketStatus.In_Progress ? "primary" : "secondary")">
+                            @GetDisplayName(ticket.Status)
+                        </span>
+                    </td>
+                    <td>@ticket.User.Username</td>
+                    <td>@(ticket.Assignee?.Username ?? "Nieprzypisany")</td>
+                    <td>@ticket.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@ticket.Id" class="btn btn-sm btn-primary">Szczegóły</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav>
+            <ul class="pagination">
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="?pageNumber=@i&searchString=@ViewBag.CurrentFilter&statusFilter=@ViewBag.StatusFilter&categoryFilter=@ViewBag.CategoryFilter&assigneeFilter=@ViewBag.AssigneeFilter">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>
+
+{
+  "cells": [],
+  "metadata": {
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 2
+}

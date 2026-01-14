@@ -1,9 +1,9 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ProjektZespolowyGr3</title>
+    <title>@ViewData["Title"] - HandlujZTym</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ProjektZespolowyGr3.styles.css" asp-append-version="true" />
@@ -12,7 +12,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ProjektZespolowyGr3</a>
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">HandlujZTym</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -20,10 +20,7 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Strona główna</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Listings" asp-action="Index">Oferty</a>
@@ -32,10 +29,10 @@
                         @if (!User.Identity.IsAuthenticated)
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Login">Login</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Login">Zaloguj</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Register">Register</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Register">Zarejestruj</a>
                             </li>
                         }
                         @if (User.Identity.IsAuthenticated)
@@ -45,15 +42,21 @@
                                     <img src="/Images/Icons/user-icon.png" alt="User" width="16" height="16" />
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <li><a class="dropdown-item text-dark" asp-controller="MyProfile" asp-action="Details">Mój profil</a></li>
+                                    <li><a class="dropdown-item text-dark" asp-controller="MyProfile" asp-action="Edit">Edytuj profil</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-dark" asp-controller="ListingManage" asp-action="Index">Moje oferty</a></li>
+                                    <li><a class="dropdown-item text-dark" asp-area="" asp-controller="Listings" asp-action="Create">Stwórz ofertę</a></li>
+                                    <li><a class="dropdown-item text-dark" asp-area="" asp-controller="Tickets" asp-action="Index">Moje zgłoszenia</a></li>
+                                    <li><a class="dropdown-item text-dark" asp-area="" asp-controller="Tickets" asp-action="Create">Stwórz zgłoszenie</a></li>
+                                    <li><a class="dropdown-item text-dark" asp-area="" asp-controller="Messages" asp-action="Index">Wiadomości</a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <form asp-controller="Account" asp-action="Logout" method="post">
                                             @Html.AntiForgeryToken()
-                                            <button class="dropdown-item  text-dark border-0 w-100 text-start" style="cursor: pointer;" type="submit" class="btn">Logout</button>
+                                            <button class="dropdown-item text-dark border-0 w-100 text-start" style="cursor: pointer;" type="submit" class="btn">Wyloguj</button>
                                         </form>
                                     </li>
-                                    <li><a class="dropdown-item  text-dark" asp-controller="ListingManage" asp-action="Index">My Listings</a></li>
-                                    <li><a class="dropdown-item  text-dark" asp-area="" asp-controller="Listings" asp-action="Create">Stwórz ofertę</a></li>
-                                    <li><a class="dropdown-item  text-dark" asp-area="" asp-controller="Tickets" asp-action="Create">Stwórz ticket</a></li>
                                 </ul>
                             </li>
                         }
@@ -61,11 +64,12 @@
                         {
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-dark" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Admin Panel
+                                    Panel administratora
                                 </a>
                                 <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item  text-dark" asp-controller="UserManage" asp-action="Index">Manage Users</a></li>
-                                    <li><a class="dropdown-item  text-dark" asp-controller="ListingManage" asp-action="Index">Manage Listings</a></li>
+                                    <li><a class="dropdown-item text-dark" asp-controller="UserManage" asp-action="Index">Zarządzaj użytkownikami</a></li>
+                                    <li><a class="dropdown-item text-dark" asp-controller="ListingManage" asp-action="Index">Zarządzaj ofertami</a></li>
+                                    <li><a class="dropdown-item text-dark" asp-controller="TicketsManage" asp-action="Index">Zarządzaj zgłoszeniami</a></li>
                                 </ul>
                             </li>
                         }
@@ -80,9 +84,9 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - ProjektZespolowyGr3 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="border-top footer text-muted mt-5 py-4">
+        <div class="container text-center">
+            &copy; 2025 - HandlujZTym - Wszystkie prawa zastrzeżone
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

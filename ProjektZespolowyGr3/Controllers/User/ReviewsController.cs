@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.System;
@@ -93,18 +94,22 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             if (model.PhotoFiles.Count > 5)
             {
-                ModelState.AddModelError("PhotoFiles", "You can upload a maximum of 5 photos.");
+                ModelState.AddModelError("PhotoFiles", "Możesz przesłać maksymalnie 5 zdjęć.");
                 return View(model);
             }
 
-            // ZMIENIC POTEM
-            var userId = _helper.GetCurrentUserId();
+            // aktualny użytkownik z claimów
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
+            {
+                return Unauthorized();
+            }
 
             var listing = _context.Listings.FirstOrDefault(l => l.Id == model.ListingId);
 
             if (listing == null)
             {
-                ModelState.AddModelError("", "Listing not found.");
+                ModelState.AddModelError("", "Ogłoszenie nie zostało znalezione.");
                 return View(model);
             }
 
@@ -113,14 +118,14 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             if (existingReview != null)
             {
-                ModelState.AddModelError("", "You have already reviewed this listing.");
+                ModelState.AddModelError("", "Już oceniłeś to ogłoszenie.");
                 return View(model);
             }
 
             // czy nie jestes wlascicielem zgloszenia
             if (listing.SellerId == userId)
             {
-                ModelState.AddModelError("", "You cannot review your own listing.");
+                ModelState.AddModelError("", "Nie możesz oceniać własnego ogłoszenia.");
                 return View(model);
             }
 

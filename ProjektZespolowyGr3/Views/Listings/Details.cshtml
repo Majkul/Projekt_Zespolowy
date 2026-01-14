@@ -2,136 +2,187 @@
 @model Listing
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Szczegóły ogłoszenia";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Listing</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Title)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Seller)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Seller.Username)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Type)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Type)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Photos)
-        </dt>
-        <dd class = "col-sm-10">
-            <p>Photos count: @Model.Photos?.Count()</p>
-            @foreach (var photo in Model.Photos)
-            {
-                <img src="@photo.Upload.Url" alt="Photo" style="max-width:200px; max-height:200px;" />
-
-                <br />
-            }
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Tags)
-        </dt>
-        <dd class = "col-sm-10">
-            <p>Tags count: @Model.Tags?.Count()</p>
-            @foreach (var tag in Model.Tags)
-            {
-                @tag.Tag.Name <br />
-            }
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="mb-3">@Model.Title</h2>
             
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsFeatured)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsFeatured)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UpdatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UpdatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-    </dl>
-    @if (!Model.IsSold && Model.Type == ListingType.Sale)
-    {
-        <form asp-controller="Payment" asp-action="Buy" method="post">
-            <input type="hidden" name="listingId" value="@Model.Id" />
-            <button type="submit" class="btn btn-primary">
-                Kup teraz
-            </button>
-        </form>
-    }
-    else if (Model.IsSold)
-    {
-        <span class="text-danger">Sprzedane</span>
-    }
-    <a asp-controller="Tickets" asp-action="ReportListing" asp-route-listingId="@Model.Id" class="btn btn-danger">Report Listing</a>
-
-    <h4>Reviews</h4>
-    <hr />
-    <a asp-controller="Reviews" asp-action="Create" asp-route-listingId="@Model.Id" class="btn btn-primary mb-3">Add Review</a>
-
-    @if (Model.Reviews != null && Model.Reviews.Any())
-    {
-        <hr />
-        
-        @foreach (var review in Model.Reviews)
-        {
-            <h5>@review.Reviewer.Username • @review.Rating</h5>
-            <p>@review.Description</p>
-
-            @if (review.Photos != null && review.Photos.Any())
+            @if (Model.Photos != null && Model.Photos.Any())
             {
-                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                    @foreach (var photo in review.Photos)
-                    {
-                        <img src="@photo.Upload.Url" alt="Review Photo" style="max-width:100px; max-height:100px;" />
-                    }
+                <div class="mb-4">
+                    <div id="photoCarousel" class="carousel slide" data-bs-ride="carousel">
+                        <div class="carousel-inner">
+                            @foreach (var photo in Model.Photos)
+                            {
+                                <div class="carousel-item @(photo.IsFeatured ? "active" : "")">
+                                    <img src="@photo.Upload.Url" class="d-block w-100" alt="@Model.Title" style="max-height: 500px; object-fit: contain; background: #f8f9fa;">
+                                </div>
+                            }
+                        </div>
+                        @if (Model.Photos.Count() > 1)
+                        {
+                            <button class="carousel-control-prev" type="button" data-bs-target="#photoCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Poprzednie</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#photoCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Następne</span>
+                            </button>
+                        }
+                    </div>
                 </div>
             }
 
-            <small>@review.CreatedAt</small>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Opis</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">@(string.IsNullOrEmpty(Model.Description) ? "Brak opisu." : Model.Description)</p>
+                </div>
+            </div>
 
-            <hr />
-        }
-    }
-    else
-    {
-        <p>no reviews yet</p>
-    }
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+            @if (Model.Tags != null && Model.Tags.Any())
+            {
+                <div class="mb-4">
+                    <h5>Tagi:</h5>
+                    <div>
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <span class="badge bg-secondary me-2">@tag.Tag.Name</span>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Opinie</h5>
+                </div>
+                <div class="card-body">
+                    <a asp-controller="Reviews" asp-action="Create" asp-route-listingId="@Model.Id" class="btn btn-primary btn-sm mb-3">Dodaj opinię</a>
+
+                    @if (Model.Reviews != null && Model.Reviews.Any())
+                    {
+                        @foreach (var review in Model.Reviews)
+                        {
+                            <div class="border-bottom pb-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-0">
+                                            <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@review.ReviewerId" class="text-decoration-none">
+                                                @review.Reviewer.Username
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted">@review.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                                    </div>
+                                    <div>
+                                        @for (int i = 0; i < review.Rating; i++)
+                                        {
+                                            <span class="text-warning">⭐</span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(review.Description))
+                                {
+                                    <p class="mb-2">@review.Description</p>
+                                }
+                                @if (review.Photos != null && review.Photos.Any())
+                                {
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        @foreach (var photo in review.Photos)
+                                        {
+                                            <img src="@photo.Upload.Url" alt="Zdjęcie z opinii" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted mb-0">Brak opinii. Bądź pierwszy!</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    <h5 class="card-title">Szczegóły</h5>
+                    <hr />
+                    
+                    <div class="mb-3">
+                        <strong>Cena:</strong>
+                        @if (Model.Price.HasValue)
+                        {
+                            <span class="text-primary fs-4">@Model.Price.Value.ToString("C")</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-info">Wymiana</span>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Typ:</strong> 
+                        <span class="badge bg-@(Model.Type == ListingType.Sale ? "success" : "info")">
+                            @(Model.Type == ListingType.Sale ? "Sprzedaż" : "Wymiana")
+                        </span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Sprzedawca:</strong><br />
+                        <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.SellerId" class="text-decoration-none">
+                            @Model.Seller.Username
+                        </a>
+                        @if (User.Identity.IsAuthenticated && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value != Model.SellerId.ToString())
+                        {
+                            <div class="mt-2">
+                                <a asp-controller="Messages"
+                                   asp-action="Conversation"
+                                   asp-route-userId="@Model.SellerId"
+                                   asp-route-listingId="@Model.Id"
+                                   class="btn btn-outline-primary btn-sm w-100">
+                                    Skontaktuj się ze sprzedawcą
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Data utworzenia:</strong><br />
+                        <small class="text-muted">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                    </div>
+
+                    <hr />
+
+                    @if (!Model.IsSold && Model.Type == ListingType.Sale)
+                    {
+                        <form asp-controller="Payment" asp-action="Buy" method="post" class="mb-2">
+                            <input type="hidden" name="listingId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                Kup teraz
+                            </button>
+                        </form>
+                    }
+                    else if (Model.IsSold)
+                    {
+                        <div class="alert alert-danger mb-2">
+                            <strong>Sprzedane</strong>
+                        </div>
+                    }
+                    
+                    <a asp-controller="Tickets" asp-action="ReportListing" asp-route-listingId="@Model.Id" class="btn btn-outline-danger w-100">
+                        Zgłoś ogłoszenie
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

@@ -46,8 +46,18 @@ namespace ProjektZespolowyGr3.Models.System
         public User? Validate(string login, string password)
         {
             var user = _context.Users.FirstOrDefault(x => x.Username == login);
+            if (user == null)
+            {
+                return null;
+            }
+
             var userAuth = _context.UserAuths.FirstOrDefault(x => x.UserId == user.Id);
-            if (user != null && VerifyPassword(password, userAuth.PasswordSalt, userAuth.Password))
+            if (userAuth == null)
+            {
+                return null;
+            }
+
+            if (VerifyPassword(password, userAuth.PasswordSalt, userAuth.Password))
             {
                 return user;
             }
