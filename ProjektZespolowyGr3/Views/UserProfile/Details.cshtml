@@ -1,0 +1,107 @@
+@model ProjektZespolowyGr3.Models.DbModels.User
+
+@{
+    ViewData["Title"] = "Profil użytkownika";
+    var averageRating = ViewBag.AverageRating as double? ?? 0;
+    var reviewCount = ViewBag.ReviewCount as int? ?? 0;
+    var activeListings = ViewBag.ActiveListings as List<ProjektZespolowyGr3.Models.DbModels.Listing> ?? new List<ProjektZespolowyGr3.Models.DbModels.Listing>();
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">@Model.Username</h3>
+                    @if (!string.IsNullOrEmpty(Model.FirstName) || !string.IsNullOrEmpty(Model.LastName))
+                    {
+                        <p class="text-muted">
+                            @Model.FirstName @Model.LastName
+                        </p>
+                    }
+                    
+                    <hr />
+                    
+                    <h5>Statystyki</h5>
+                    <p>
+                        <strong>Średnia ocena:</strong> 
+                        @if (averageRating > 0)
+                        {
+                            <span class="badge bg-success">@averageRating.ToString("F2") ⭐</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Brak ocen</span>
+                        }
+                    </p>
+                    <p><strong>Liczba opinii:</strong> @reviewCount</p>
+                    <p><strong>Aktywne oferty:</strong> @activeListings.Count</p>
+                    <p><strong>Członek od:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy")</p>
+                    
+                    <hr />
+                    
+                    <h5>Dane kontaktowe</h5>
+                    @if (!string.IsNullOrEmpty(Model.Email))
+                    {
+                        <p><strong>Email:</strong> @Model.Email</p>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                    {
+                        <p><strong>Telefon:</strong> @Model.PhoneNumber</p>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Address))
+                    {
+                        <p><strong>Adres:</strong> @Model.Address</p>
+                    }
+
+                    @if (User.Identity.IsAuthenticated && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value != Model.Id.ToString())
+                    {
+                        <hr />
+                        <a asp-controller="Messages"
+                           asp-action="Conversation"
+                           asp-route-userId="@Model.Id"
+                           class="btn btn-outline-primary w-100">
+                            Napisz wiadomość
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <h4>Aktywne oferty</h4>
+            <hr />
+            
+            @if (activeListings.Any())
+            {
+                <div class="row">
+                    @foreach (var listing in activeListings)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                @if (listing.Photos != null && listing.Photos.Any())
+                                {
+                                    var featuredPhoto = listing.Photos.FirstOrDefault(p => p.IsFeatured) ?? listing.Photos.First();
+                                    <img src="@featuredPhoto.Upload.Url" class="card-img-top" alt="@listing.Title" style="height: 200px; object-fit: cover;">
+                                }
+                                <div class="card-body">
+                                    <h5 class="card-title">@listing.Title</h5>
+                                    @if (listing.Price.HasValue)
+                                    {
+                                        <p class="card-text"><strong>@listing.Price.Value.ToString("C")</strong></p>
+                                    }
+                                    <a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id" class="btn btn-primary btn-sm">Zobacz szczegóły</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">Brak aktywnych ofert.</p>
+            }
+        </div>
+    </div>
+</div>
+

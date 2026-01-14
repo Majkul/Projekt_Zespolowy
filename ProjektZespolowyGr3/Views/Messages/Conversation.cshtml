@@ -1,0 +1,86 @@
+@model IEnumerable<ProjektZespolowyGr3.Models.DbModels.Message>
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Wiadomości";
+    var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    int.TryParse(currentUserIdString, out var currentUserId);
+    var otherUser = ViewBag.OtherUser as ProjektZespolowyGr3.Models.DbModels.User;
+    int? listingId = ViewBag.ListingId as int?;
+    int? ticketId = ViewBag.TicketId as int?;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">Rozmowa z @otherUser?.Username</h5>
+                        @if (listingId.HasValue)
+                        {
+                            <small class="text-muted">Dotyczy ogłoszenia</small>
+                        }
+                        else if (ticketId.HasValue)
+                        {
+                            <small class="text-muted">Dotyczy zgłoszenia</small>
+                        }
+                    </div>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var msg in Model)
+                        {
+                            var isMine = msg.SenderId == currentUserId;
+                            <div class="d-flex mb-2 @(isMine ? "justify-content-end" : "justify-content-start")">
+                                <div class="p-2 rounded @(isMine ? "bg-primary text-white" : "bg-light")" style="max-width: 70%;">
+                                    <div class="small d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>@(isMine ? "Ty" : msg.Sender.Username)</strong>
+                                            <span class="text-muted ms-2">@msg.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                                        </div>
+                                        @if (!isMine)
+                                        {
+                                            <form asp-controller="Tickets"
+                                                  asp-action="ReportUser"
+                                                  method="get"
+                                                  class="ms-2">
+                                                <input type="hidden" name="userId" value="@msg.SenderId" />
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        title="Zgłoś wulgarną wiadomość">
+                                                    Zgłoś
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                    <div class="mt-1">@msg.Content</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">Brak wiadomości. Napisz pierwszą wiadomość.</p>
+                    }
+                </div>
+                <div class="card-footer">
+                    <form asp-controller="Messages" asp-action="Send" method="post" class="d-flex gap-2">
+                        <input type="hidden" name="receiverId" value="@otherUser?.Id" />
+                        @if (listingId.HasValue)
+                        {
+                            <input type="hidden" name="listingId" value="@listingId" />
+                        }
+                        @if (ticketId.HasValue)
+                        {
+                            <input type="hidden" name="ticketId" value="@ticketId" />
+                        }
+                        <textarea name="content" class="form-control" rows="2" placeholder="Napisz wiadomość..." required></textarea>
+                        <button type="submit" class="btn btn-primary">Wyślij</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

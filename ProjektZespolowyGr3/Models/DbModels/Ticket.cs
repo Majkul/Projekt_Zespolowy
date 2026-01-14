@@ -30,20 +30,37 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
 public enum TicketStatus
 {
+    [Display(Name = "Otwarte")]
     Open,
+    [Display(Name = "W trakcie")]
     In_Progress,
+    [Display(Name = "Rozwiązane")]
     Resolved,
+    [Display(Name = "Zamknięte")]
     Closed
 }
 
 public enum TicketCategory
 {
+    [Display(Name = "Problem z płatnością")]
     Payment_Issue,
+
+    [Display(Name = "Problem z zamówieniem")]
     Order_Issue,
+
+    [Display(Name = "Spór między użytkownikami")]
     Dispute,
+
+    [Display(Name = "Zgłoszenie użytkownika")]
     User_Report,
+
+    [Display(Name = "Zgłoszenie oferty")]
     Listing_Report,
+
+    [Display(Name = "Problem techniczny")]
     Technical_Issue,
+
+    [Display(Name = "Inny problem")]
     Other_Issue
 }
 

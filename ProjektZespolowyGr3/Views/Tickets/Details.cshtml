@@ -1,92 +1,133 @@
 ﻿@model ProjektZespolowyGr3.Models.DbModels.Ticket
+@using System.ComponentModel.DataAnnotations
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Szczegóły zgłoszenia";
+    
+    string GetDisplayName(Enum value)
+    {
+        var type = value.GetType();
+        var memInfo = type.GetMember(value.ToString());
+        if (memInfo.Length > 0)
+        {
+            var attributes = memInfo[0].GetCustomAttributes(typeof(DisplayAttribute), false);
+            if (attributes.Length > 0)
+            {
+                return ((DisplayAttribute)attributes[0]).Name ?? value.ToString();
+            }
+        }
+        return value.ToString().Replace("_", " ");
+    }
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Ticket</h4>
+<div class="container mt-4">
+    <h2 class="mb-4">Szczegóły zgłoszenia</h2>
     <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.User)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.User.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Category)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Category)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Subject)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Subject)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Attachments)
-        </dt>
-        <dd class="col-sm-10">
-            <p>Attachments count: @Model.Attachments?.Count()</p>
 
-            @foreach (var attachment in Model.Attachments)
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">@Model.Subject</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Kategoria:</strong>
+                        <span class="badge bg-info ms-2">@GetDisplayName(Model.Category)</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Status:</strong>
+                        <span class="badge bg-@(Model.Status == TicketStatus.Open ? "warning" : Model.Status == TicketStatus.Resolved ? "success" : Model.Status == TicketStatus.In_Progress ? "primary" : "secondary") ms-2">
+                            @GetDisplayName(Model.Status)
+                        </span>
+                    </div>
+                    <hr />
+                    <div>
+                        <strong>Opis:</strong>
+                        <p class="mt-2">@(string.IsNullOrEmpty(Model.Description) ? "Brak opisu." : Model.Description)</p>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.Attachments != null && Model.Attachments.Any())
             {
-                <a href="@attachment.Upload.Url" target="_blank" download="@attachment.Upload.FileName">
-                    @attachment.Upload.FileName
-                </a>
-                <br />
+                <div class="card mb-3">
+                    <div class="card-header">Załączniki</div>
+                    <div class="card-body">
+                        <ul>
+                            @foreach (var attachment in Model.Attachments)
+                            {
+                                <li>
+                                    <a href="@attachment.Upload.Url" target="_blank" download="@attachment.Upload.FileName">
+                                        @attachment.Upload.FileName
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
             }
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Assignee)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Assignee.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.LastActivity)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.LastActivity)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ReportedUser)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ReportedUser.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ReportedListing)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ReportedListing.Id)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">Informacje</div>
+                <div class="card-body">
+                    <p>
+                        <strong>Zgłoszone przez:</strong>
+                        <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.UserId">
+                            @Model.User.Username
+                        </a>
+                    </p>
+                    <p><strong>Data utworzenia:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                    <p><strong>Ostatnia aktywność:</strong> @Model.LastActivity.ToString("dd.MM.yyyy HH:mm")</p>
+
+                    @if (Model.ReportedUser != null)
+                    {
+                        <p>
+                            <strong>Zgłoszony użytkownik:</strong>
+                            <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.ReportedUserId">
+                                @Model.ReportedUser.Username
+                            </a>
+                        </p>
+                    }
+                    @if (Model.ReportedListing != null)
+                    {
+                        <p>
+                            <strong>Zgłoszona oferta:</strong>
+                            <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.ReportedListingId">
+                                @Model.ReportedListing.Title
+                            </a>
+                        </p>
+                    }
+
+                    @if (User.Identity.IsAuthenticated && Model.AssigneeId.HasValue && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.AssigneeId.Value.ToString())
+                    {
+                        <hr />
+                        <a asp-controller="Messages"
+                           asp-action="Conversation"
+                           asp-route-userId="@Model.UserId"
+                           asp-route-ticketId="@Model.Id"
+                           class="btn btn-outline-primary w-100 mb-2">
+                            Skontaktuj się ze zgłaszającym
+                        </a>
+                    }
+                </div>
+            </div>
+
+            @if (Model.Assignee != null)
+            {
+                <div class="card">
+                    <div class="card-header">Przypisane do</div>
+                    <div class="card-body">
+                        <p>@Model.Assignee.Username</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">Powrót do listy</a>
+    </div>
 </div>

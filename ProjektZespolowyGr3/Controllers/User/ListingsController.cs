@@ -33,16 +33,29 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         // GET: Listings
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? searchString)
         {
-            var listings = await _context.Listings
+            IQueryable<Listing> query = _context.Listings
                 .Include(l => l.Photos)
                     .ThenInclude(lp => lp.Upload)
                 .Include(l => l.Reviews)
                 .Include(l => l.Seller)
                     .ThenInclude(s => s.Listings)
-                        .ThenInclude(sl => sl.Reviews)
-                .ToListAsync();
+                        .ThenInclude(sl => sl.Reviews);
+
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                var term = searchString.Trim();
+
+                // Wyszukiwanie po tytule i opisie, case-insensitive, jak LIKE %fraza%
+                query = query.Where(l =>
+                    EF.Functions.ILike(l.Title, $"%{term}%") ||
+                    (l.Description != null && EF.Functions.ILike(l.Description, $"%{term}%")));
+
+                ViewBag.SearchString = term;
+            }
+
+            var listings = await query.ToListAsync();
 
             var model = listings.Select(l => new BrowseListingsViewModel
             {
@@ -58,6 +71,11 @@ namespace ProjektZespolowyGr3.Controllers.User
                         : 0,
                 ReviewCount = l.Seller.Listings.SelectMany(sl => sl.Reviews).Count(),
             }).ToList();
+
+            if (!model.Any() && !string.IsNullOrWhiteSpace(searchString))
+            {
+                ViewBag.NoResultsMessage = "Nie znaleziono niczego co mogłoby Ciebie zainteresować.";
+            }
 
             return View(model);
         }
