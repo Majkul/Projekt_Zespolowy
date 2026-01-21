@@ -13,13 +13,13 @@ namespace ProjektZespolowyGr3.Controllers
         {
             return View(tickets);
         }
-
+        [Authorize]
         // Show form to report suspicious offer
         public IActionResult Create(int offerId)
         {
             return View(new TicketViewModel { OfferId = offerId });
         }
-
+        [Authorize]
         [HttpPost]
         public IActionResult Create(TicketViewModel model)
         {

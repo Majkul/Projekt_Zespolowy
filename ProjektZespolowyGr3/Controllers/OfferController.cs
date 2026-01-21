@@ -9,7 +9,7 @@ public class OfferController : Controller
     {
         _env = env;
     }
-
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Create(OfferViewModel model, List<IFormFile> photos)
     {
@@ -57,7 +57,7 @@ public class OfferController : Controller
 
         return RedirectToAction("Index", "Home");
     }
-    
+    [Authorize]
     public IActionResult Delete(int offerId)
     {
         var relatedThreads = MessageController.Threads

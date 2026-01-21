@@ -99,7 +99,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             };
             return View("Create", vm);
         }
-
+        [Authorize]
         // GET: Tickets/Create
         public IActionResult Create()
         {
@@ -109,7 +109,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             };
             return View(vm);
         }
-
+        [Authorize]
         // POST: Tickets/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.

@@ -68,6 +68,12 @@ builder.Services.AddScoped(s =>
     return client.GetDatabase(mongoSettings.DatabaseName);
 });
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Auth/Login";   // your login page
+    options.AccessDeniedPath = "/Auth/Denied";
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -82,7 +88,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
