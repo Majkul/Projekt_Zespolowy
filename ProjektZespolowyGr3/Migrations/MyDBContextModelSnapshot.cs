@@ -417,6 +417,35 @@ namespace ProjektZespolowyGr3.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.UserProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("_UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("base64Avatar")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("base64Banner")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("_UserId");
+
+                    b.ToTable("UserProfiles");
+                });
+
             modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
                 {
                     b.Property<int>("UserId")
@@ -499,6 +528,51 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Tag");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Upload", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Uploader")
+                        .WithMany()
+                        .HasForeignKey("UploaderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Uploader");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                    
+                    b.Navigation("Listing");
+
+                    b.Navigation("Upload");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingTag", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
+                        .WithMany("Tags")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Tag", "Tag")
+                        .WithMany("ListingTags")
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+
+                    b.Navigation("Tag");
+                });
+                
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Message", b =>
                 {
                     b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
@@ -627,6 +701,17 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Uploader");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.UserProfile", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "_User")
+                        .WithMany()
+                        .HasForeignKey("_UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("_User");
+                });
+
             modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
                 {
                     b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "User")
@@ -671,6 +756,18 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Reviews");
 
                     b.Navigation("SentMessages");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
+                {
+                    b.Navigation("Photos");
+
+                    b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Tag", b =>
+                {
+                    b.Navigation("ListingTags");
                 });
 #pragma warning restore 612, 618
         }
