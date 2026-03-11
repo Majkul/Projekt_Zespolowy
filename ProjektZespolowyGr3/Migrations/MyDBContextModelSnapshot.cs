@@ -528,60 +528,6 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Tag");
                 });
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Upload", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Uploader")
-                        .WithMany()
-                        .HasForeignKey("UploaderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Uploader");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                    
-                    b.Navigation("Listing");
-
-                    b.Navigation("Upload");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingTag", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
-                        .WithMany("Tags")
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Tag", "Tag")
-                        .WithMany("ListingTags")
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Listing");
-
-                    b.Navigation("Tag");
-                });
-                
-=======
->>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
-=======
->>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
-=======
->>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Message", b =>
                 {
                     b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
@@ -765,27 +711,6 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Reviews");
 
                     b.Navigation("SentMessages");
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
-                {
-                    b.Navigation("Photos");
-
-                    b.Navigation("Tags");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Tag", b =>
-                {
-                    b.Navigation("ListingTags");
-=======
->>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
-=======
->>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
-=======
->>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
                 });
 #pragma warning restore 612, 618
         }

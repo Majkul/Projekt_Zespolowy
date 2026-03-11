@@ -1,4 +1,4 @@
-﻿@model ProjektZespolowyGr3.Models.ViewModels.LoginViewModel
+@model ProjektZespolowyGr3.Models.ViewModels.LoginViewModel
 
 @{
     if (!string.IsNullOrEmpty(ViewBag.Alert))
@@ -26,35 +26,4 @@
             </form>
         </div>
     </div>
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    <div class="form-group">
-        <label asp-for="Password" class="control-label"></label>
-        <input asp-for="Password" type="password" class="form-control" />
-    </div>
-    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
-    <div class="form-group">
-        @Html.LabelFor(m => m.Login)
-        @Html.TextBoxFor(m => m.Login, new { @class = "form-control" })
-        @Html.ValidationMessageFor(m => m.Login, "", new { @class = "text-danger" })
-    </div>
-    <div class="form-group">
-        @Html.LabelFor(m => m.Password)
-        @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
-        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
-    </div>
-    <div class="form-group">
-        <input type="submit" value="Zaloguj" class="btn btn-success" /><a class="btn btn-info" asp-action="Index">Powrót</a>
-    </div>
 </div>
-
-=======
-</div>
->>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
-=======
-</div>
->>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
-=======
-</div>
->>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
