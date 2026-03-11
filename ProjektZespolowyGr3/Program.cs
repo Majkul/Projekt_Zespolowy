@@ -2,7 +2,6 @@ using DomPogrzebowyProjekt.Models.System;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using MongoDB.Driver;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.System;
 
@@ -79,27 +78,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-<<<<<<< HEAD
-// Bind settings
-builder.Services.Configure<MongoSettings>(builder.Configuration.GetSection("MongoSettings"));
-var mongoSettings = builder.Configuration.GetSection("MongoSettings").Get<MongoSettings>();
-
-// Register MongoClient
-builder.Services.AddSingleton<IMongoClient>(s => new MongoClient(mongoSettings.ConnectionString));
-
-// Register database
-builder.Services.AddScoped(s =>
-{
-    var client = s.GetRequiredService<IMongoClient>();
-    return client.GetDatabase(mongoSettings.DatabaseName);
-});
-
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.LoginPath = "/Auth/Login";   // your login page
-    options.AccessDeniedPath = "/Auth/Denied";
-});
-=======
 // Forward headers for Replit proxy
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -110,7 +88,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 // Listen on all interfaces on port 5000
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
->>>>>>> b261900 (Configure application to run on port 5000 and connect to PostgreSQL)
 
 var app = builder.Build();
 
@@ -126,10 +103,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 app.UseRouting();
-<<<<<<< HEAD
-=======
 
->>>>>>> b261900 (Configure application to run on port 5000 and connect to PostgreSQL)
 app.UseAuthentication();
 app.UseAuthorization();
 

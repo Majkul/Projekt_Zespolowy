@@ -1,6 +1,7 @@
-﻿namespace ProjektZespolowyGr3.Models.ViewModels
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ProjektZespolowyGr3.Models.ViewModels
 {
-    using System.ComponentModel.DataAnnotations;
 
     public class LoginViewModel
     {
