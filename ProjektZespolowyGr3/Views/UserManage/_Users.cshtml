@@ -63,7 +63,11 @@
         @foreach (var item in Model)
         {
             <tr>
-                <td>@item.Id</td>
+                <td>
+                    <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@item.Id" class="text-decoration-none">
+                        @item.Username
+                    </a>
+                </td>
                 <td>@item.Username</td>
                 <td>@item.Email</td>
                 <td>@item.FirstName</td>

@@ -17,7 +17,11 @@
         {
             <tr>
                 <td>@item.Id</td>
-                <td>@item.Username</td>
+                <td>
+                    <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@item.Id" class="text-decoration-none">
+                        @item.Username
+                    </a>
+                </td>
                 <td>@item.Email</td>
                 <td>@item.IsBanned</td>
                 <td>@item.CreatedAt</td>
