@@ -530,6 +530,7 @@ namespace ProjektZespolowyGr3.Migrations
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Upload", b =>
                 {
                     b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "Uploader")
@@ -575,6 +576,8 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Tag");
                 });
                 
+=======
+>>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
 =======
 >>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
 =======
@@ -764,6 +767,7 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("SentMessages");
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Listing", b =>
@@ -776,6 +780,8 @@ namespace ProjektZespolowyGr3.Migrations
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Tag", b =>
                 {
                     b.Navigation("ListingTags");
+=======
+>>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
 =======
 >>>>>>> 81e15f107d945340967048138e0ac212ae5e9c83
 =======
