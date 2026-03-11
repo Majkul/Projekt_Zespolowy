@@ -7,6 +7,11 @@
     var activeListings = ViewBag.ActiveListings as List<ProjektZespolowyGr3.Models.DbModels.Listing> ?? new List<ProjektZespolowyGr3.Models.DbModels.Listing>();
 }
 
+@{
+    bool isAuthenticated = User.Identity.IsAuthenticated;
+    bool isProfileOwner = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.Id.ToString();
+}
+
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-4">
@@ -54,7 +59,7 @@
                         <p><strong>Adres:</strong> @Model.Address</p>
                     }
 
-                    @if (User.Identity.IsAuthenticated && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value != Model.Id.ToString())
+                    @if (!isProfileOwner)
                     {
                         <hr />
                         <a asp-controller="Messages"
@@ -62,6 +67,14 @@
                            asp-route-userId="@Model.Id"
                            class="btn btn-outline-primary w-100">
                             Napisz wiadomość
+                        </a>
+
+                        <hr />
+                        <a asp-controller="Tickets"
+                           asp-action="ReportUser"
+                           asp-route-userId="@Model.Id"
+                           class="btn btn-danger w-100">
+                            Zgłoś użytkownika
                         </a>
                     }
                 </div>

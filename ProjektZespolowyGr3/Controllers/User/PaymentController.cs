@@ -44,6 +44,12 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (listing == null || listing.IsSold)
                 return BadRequest("Listing nie istnieje lub jest sprzedany");
 
+            // wlasne
+            if (listing.SellerId == userId)
+            {
+                return BadRequest("Nie można kupić własnej oferty");
+            }
+
             var order = new Order
             {
                 ListingId = listing.Id,
