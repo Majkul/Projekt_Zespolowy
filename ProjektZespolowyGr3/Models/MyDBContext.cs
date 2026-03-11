@@ -17,6 +17,7 @@ namespace ProjektZespolowyGr3.Models
         public DbSet<ListingPhoto> ListingPhotos { get; set; }
         public DbSet<ListingTag> ListingTags { get; set; }
         public DbSet<ReviewPhoto> ReviewPhotos { get; set; }
+        public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketAttachment> TicketAttachments { get; set; }
         public DbSet<Order> Orders { get; set; }

@@ -64,7 +64,10 @@
                     <h5 class="mb-0">Opinie</h5>
                 </div>
                 <div class="card-body">
-                    <a asp-controller="Reviews" asp-action="Create" asp-route-listingId="@Model.Id" class="btn btn-primary btn-sm mb-3">Dodaj opinię</a>
+                    @if (User.Identity.IsAuthenticated && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value != Model.SellerId.ToString())
+                    {
+                        <a asp-controller="Reviews" asp-action="Create" asp-route-listingId="@Model.Id" class="btn btn-primary btn-sm mb-3">Dodaj opinię</a>
+                    }
 
                     @if (Model.Reviews != null && Model.Reviews.Any())
                     {

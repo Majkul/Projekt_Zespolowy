@@ -417,6 +417,35 @@ namespace ProjektZespolowyGr3.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.UserProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("_UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("base64Avatar")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("base64Banner")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("_UserId");
+
+                    b.ToTable("UserProfiles");
+                });
+
             modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
                 {
                     b.Property<int>("UserId")
@@ -625,6 +654,17 @@ namespace ProjektZespolowyGr3.Migrations
                         .IsRequired();
 
                     b.Navigation("Uploader");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.UserProfile", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "_User")
+                        .WithMany()
+                        .HasForeignKey("_UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("_User");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>

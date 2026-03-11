@@ -1,5 +1,6 @@
 using DomPogrzebowyProjekt.Models.System;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.System;
@@ -9,7 +10,31 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Build connection string from environment variables if DATABASE_URL is set
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (string.IsNullOrEmpty(connectionString))
+{
+    var host = Environment.GetEnvironmentVariable("PGHOST") ?? "localhost";
+    var port = Environment.GetEnvironmentVariable("PGPORT") ?? "5432";
+    var database = Environment.GetEnvironmentVariable("PGDATABASE") ?? "postgres";
+    var user = Environment.GetEnvironmentVariable("PGUSER") ?? "postgres";
+    var password = Environment.GetEnvironmentVariable("PGPASSWORD") ?? "";
+    connectionString = $"Host={host};Port={port};Database={database};Username={user};Password={password};SSL Mode=Disable";
+}
+else
+{
+    // Convert postgres:// URL to Npgsql format
+    var uri = new Uri(connectionString);
+    var userInfo = uri.UserInfo.Split(':');
+    var pgUser = userInfo[0];
+    var pgPassword = userInfo.Length > 1 ? userInfo[1] : "";
+    var pgHost = uri.Host;
+    var pgPort = uri.Port > 0 ? uri.Port : 5432;
+    var pgDatabase = uri.AbsolutePath.TrimStart('/');
+    connectionString = $"Host={pgHost};Port={pgPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Disable";
+}
+
+builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(connectionString));
 
 // TODO ZMIENIC potem wywalic
 builder.Services.AddTransient<HelperService>();
@@ -53,22 +78,33 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Forward headers for Replit proxy
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// Listen on all interfaces on port 5000
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
