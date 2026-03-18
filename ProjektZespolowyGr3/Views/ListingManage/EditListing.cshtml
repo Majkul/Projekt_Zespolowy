@@ -18,21 +18,21 @@
     </div>
 }
 
-<form asp-action="EditListing" asp-route-id="@modelId" method="post" enctype="multipart/form-data" class="w-75">
+<form id="edit-listing-form" asp-action="EditListing" asp-route-id="@modelId" method="post" enctype="multipart/form-data" class="w-75">
 
     <div class="mb-3">
-        <label asp-for="Title" class="form-label">Title</label>
-        <input asp-for="Title" class="form-control" />
+        <label asp-for="Title" class="form-label" id="label-Title">Title</label>
+        <input asp-for="Title" class="form-control" id="input-Title" />
     </div>
 
     <div class="mb-3">
-        <label asp-for="Description" class="form-label">Description</label>
-        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+        <label asp-for="Description" class="form-label" id="label-Description">Description</label>
+        <textarea asp-for="Description" class="form-control" rows="4" id="input-Description"></textarea>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Type" class="form-label">Type</label>
-        <select asp-for="Type" class="form-control">
+        <label asp-for="Type" class="form-label" id="label-Type">Type</label>
+        <select asp-for="Type" class="form-control" id="input-Type">
             @foreach (var type in Enum.GetValues(typeof(ListingType)))
             {
                 <option value="@type">@type</option>
@@ -41,13 +41,13 @@
     </div>
 
     <div class="mb-3">
-        <label asp-for="Price" class="form-label">Price</label>
-        <input asp-for="Price" type="number" class="form-control" step="0.01" />
+        <label asp-for="Price" class="form-label" id="label-Price">Price</label>
+        <input asp-for="Price" type="number" class="form-control" step="0.01" id="input-Price" />
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Tags</label>
-        <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control">
+        <label class="form-label" id="label-SelectedTagIds">Tags</label>
+        <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control" id="input-SelectedTagIds">
         </select>
         <small class="text-muted">Hold CTRL to select multiple</small>
     </div>
@@ -85,3 +85,71 @@
         <a class="btn btn-danger" asp-action="Index">Cancel</a>
     </div>
 </form>
+
+<script>
+    const initialValues = {
+        Title: '@(Model.Title ?? "")',
+        Description: '@(Model.Description ?? "")',
+        Type: '@Model.Type',
+        Price: '@Model.Price',
+        SelectedTagIds: '@string.Join(",", (Model.SelectedTagIds ?? new List<int>()).OrderBy(id => id))'
+    };
+
+    function updateLabel(field, value) {
+        const label = document.getElementById('label-' + field);
+        if (label) {
+            label.style.fontWeight = value !== initialValues[field] ? 'bold' : 'normal';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const fields = ['Title', 'Description', 'Type', 'Price', 'SelectedTagIds'];
+
+        fields.forEach(function (field) {
+            const input = document.getElementById('input-' + field);
+            if (input) {
+                if (input.multiple) {
+                    input.addEventListener('change', function () {
+                        const selectedValues = Array.from(input.selectedOptions).map(option => option.value).join(",");
+                        updateLabel(field, selectedValues);
+                    });
+                } else {
+                    input.addEventListener('input', function () {
+                        updateLabel(field, input.value);
+                    });
+                }
+            }
+        });
+
+        const form = document.getElementById('edit-listing-form');
+        form.addEventListener('submit', function (e) {
+            let changedFields = [];
+            fields.forEach(function (field) {
+                const input = document.getElementById('input-' + field);
+                let value;
+                if (input) {
+                    if (input.multiple) {
+                        value = Array.from(input.selectedOptions).map(option => option.value).join(",");
+                    } else {
+                        value = input.value;
+                    }
+                    if (value != initialValues[field]) {
+                        changedFields.push(field);
+                    }
+                }
+            });
+            if (changedFields.length > 0) {
+                const fieldNames = changedFields.map(f => {
+                    switch (f) {
+                        case 'SelectedTagIds': return 'Tags';
+                        default: return f;
+                    }
+                });
+                const msg = "Are you sure you want to change " + fieldNames.join(", ") + "?";
+                if (!confirm(msg)) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
+</script>
