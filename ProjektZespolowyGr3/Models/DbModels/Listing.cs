@@ -16,7 +16,6 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public bool IsSold { get; set; } = false;
         public bool IsArchived { get; set; } = false;
         public DateTime? ArchivedAt { get; set; }
-       
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 

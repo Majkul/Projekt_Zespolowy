@@ -71,6 +71,7 @@
             <th scope="col">Description</th>
             <th scope="col">Username</th>
             <th scope="col">Rating</th>
+            <th scope="col">IsArchived</th>
             <th scope="col">Price</th>
             <th scope="col">Status</th>
             <th scope="col" style="width: 200px;">Actions</th>
@@ -94,6 +95,7 @@
                 <td>
                     @item.ReviewCount rating@(item.ReviewCount != 1 ? "s" : ""), @item.AverageRating.ToString("0.00") average
                 </td>
+                <td>@(item.Listing.IsArchived ? "Yes" : "No")</td>
                 <td>@item.Listing.Price</td>
                 <td>
                     @if (item.Listing.IsArchived)

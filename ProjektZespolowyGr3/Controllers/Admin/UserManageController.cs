@@ -122,6 +122,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 Address = user.Address,
                 IsBanned = user.IsBanned,
                 IsAdmin = user.IsAdmin,
+                IsDeleted = user.IsDeleted,
                 PhoneNumber = user.PhoneNumber
             };
 
@@ -158,6 +159,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
             user.IsBanned = u.IsBanned;
             user.IsAdmin = u.IsAdmin;
+            user.IsDeleted = u.IsDeleted;
 
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
@@ -168,8 +170,20 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
         {
             var user = _context.Users.Find(id);
             if (user == null) return NotFound();
-
-            _context.Users.Remove(user);
+            //TODO obsługa zarchiwizowanych wiadomości w chacie (wyszarzyć je czy coś)
+            //Zablokowac wyświetlanie zarchiwizowanych ofert
+            //Zbanować wyświetlanie strony dla usuniętych użytonikwów - oznaczyć jakoś żeby dał się zrobić konto na tego maila znowu, np usunąć maila tam?
+            _context.Messages.Where(lp => lp.SenderId == id || lp.ReceiverId == id)
+                .ToList().ForEach(lp =>
+                {
+                    lp.IsArchived = true;
+                });
+            _context.Listings.Where(lp => lp.SellerId == id)
+                .ToList().ForEach(lp =>
+                {
+                    lp.IsArchived = true;
+                });
+            user.IsDeleted = true;
             _context.SaveChanges();
 
             return RedirectToAction("Index");

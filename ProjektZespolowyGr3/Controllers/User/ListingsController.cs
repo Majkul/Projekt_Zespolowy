@@ -42,7 +42,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .Include(l => l.Reviews)
                 .Include(l => l.Seller)
                     .ThenInclude(s => s.Listings)
-                        .ThenInclude(sl => sl.Reviews);
+                        .ThenInclude(sl => sl.Reviews)
+                .Where(l => l.IsArchived == false);
 
             if (!string.IsNullOrWhiteSpace(searchString))
             {
@@ -349,10 +350,11 @@ namespace ProjektZespolowyGr3.Controllers.User
             var listing = await _context.Listings.FindAsync(id);
             if (listing != null)
             {
-                _context.Listings.Remove(listing);
+                //_context.Listings.Remove(listing);
+                listing.IsArchived = true;
             }
 
-            await _context.SaveChangesAsync();
+            //await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

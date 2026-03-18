@@ -37,10 +37,13 @@
                                 <div class="p-2 rounded @(isMine ? "bg-primary text-white" : "bg-light")" style="max-width: 70%;">
                                     <div class="small d-flex justify-content-between align-items-center">
                                         <div>
-                                            <strong>@(isMine ? "Ty" : msg.Sender.Username)</strong>
-                                            <span class="@(isMine ? "text-light-gray" : "text-muted") ms-2">@msg.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                                            
+                                            <strong>@(isMine ? "Ty" : msg.Sender?.Username ?? "Nieznany")</strong>
+                                            <span class="@(isMine ? "text-light-gray" : "text-muted") ms-2">
+                                                @(msg.SentAt != DateTime.MinValue ? msg.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") : "")
+                                            </span>
                                         </div>
-                                        @if (!isMine)
+                                        @if (!isMine && !msg.IsArchived)
                                         {
                                             <form asp-controller="Tickets"
                                                   asp-action="ReportUser"
@@ -55,7 +58,16 @@
                                             </form>
                                         }
                                     </div>
-                                    <div class="mt-1">@msg.Content</div>
+                                    <div class="mt-1">
+                                        @if (msg.IsArchived)
+                                        {
+                                            <em class="@(isMine ? "text-light" : "text-muted")">Wiadomość została usunięta.</em>
+                                        }
+                                        else
+                                        {
+                                            @msg.Content
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         }

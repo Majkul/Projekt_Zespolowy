@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjektZespolowyGr3.Models;
@@ -11,9 +12,11 @@ using ProjektZespolowyGr3.Models;
 namespace ProjektZespolowyGr3.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    partial class MyDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260318143935_listing_archived")]
+    partial class listing_archived
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,9 +32,6 @@ namespace ProjektZespolowyGr3.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("ArchivedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -296,9 +296,6 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsArchived")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTime>("LastActivity")
                         .HasColumnType("timestamp with time zone");
 
@@ -433,35 +430,6 @@ namespace ProjektZespolowyGr3.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.UserProfile", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("_UserId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("base64Avatar")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("base64Banner")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("_UserId");
-
-                    b.ToTable("UserProfiles");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
@@ -672,17 +640,6 @@ namespace ProjektZespolowyGr3.Migrations
                         .IsRequired();
 
                     b.Navigation("Uploader");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.UserProfile", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "_User")
-                        .WithMany()
-                        .HasForeignKey("_UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("_User");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
