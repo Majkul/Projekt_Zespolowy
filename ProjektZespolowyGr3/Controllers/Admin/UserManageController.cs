@@ -154,10 +154,6 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 user.Email = u.Email;
             if (u.Address != null)
                 user.Address = u.Address;
-            if (u.IsBanned != null)
-                user.IsBanned = u.IsBanned.Value;
-            if (u.IsAdmin != null)
-                user.IsAdmin = u.IsAdmin.Value;
             if (u.PhoneNumber != null)
                 user.PhoneNumber = u.PhoneNumber;
 
