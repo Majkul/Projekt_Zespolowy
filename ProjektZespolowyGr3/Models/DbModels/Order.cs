@@ -14,6 +14,7 @@
         public OrderStatus Status { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        public bool IsArchived { get; set; } = false;
     }
 
     public enum OrderStatus

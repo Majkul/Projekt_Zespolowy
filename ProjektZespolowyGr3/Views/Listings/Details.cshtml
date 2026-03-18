@@ -123,23 +123,31 @@
             <div class="card shadow-sm sticky-top" style="top: 20px;">
                 <div class="card-body">
                     <h5 class="card-title">Szczegóły</h5>
+
+                    @if (Model.IsArchived)
+                    {
+                        <div class="alert alert-secondary mb-2">
+                            <strong>Ogłoszenie zarchiwizowane</strong>
+                        </div>
+                    }
+
                     <hr />
 
                     <div class="mb-3">
                         <strong>Cena:</strong>
                         @if (Model.Price.HasValue)
                         {
-                            <span class="text-primary fs-4">@Model.Price.Value.ToString("C")</span>
+                            <span class="@(Model.IsArchived ? "text-muted fs-4" : "text-primary fs-4")">@Model.Price.Value.ToString("C")</span>
                         }
                         else
                         {
-                            <span class="badge bg-info">Wymiana</span>
+                            <span class="badge bg-@(Model.IsArchived ? "secondary" : "info")">Wymiana</span>
                         }
                     </div>
 
                     <div class="mb-3">
-                        <strong>Typ:</strong> 
-                        <span class="badge bg-@(Model.Type == ListingType.Sale ? "success" : "info")">
+                        <strong>Typ:</strong>
+                        <span class="badge bg-@(Model.IsArchived ? "secondary" : Model.Type == ListingType.Sale ? "success" : "info")">
                             @(Model.Type == ListingType.Sale ? "Sprzedaż" : "Wymiana")
                         </span>
                     </div>
@@ -149,7 +157,7 @@
                         <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.SellerId" class="text-decoration-none">
                             @Model.Seller.Username
                         </a>
-                        @if (!isUserSeller)
+                        @if (!Model.IsArchived && !isUserSeller)
                         {
                             <div class="mt-2">
                                 <a asp-controller="Messages"
@@ -170,7 +178,13 @@
 
                     <hr />
 
-                    @if (!isUserSeller && !Model.IsSold && Model.Type == ListingType.Sale)
+                    @if (Model.IsArchived)
+                    {
+                        <button class="btn btn-secondary w-100 btn-lg mb-2" disabled>
+                            Ogłoszenie niedostępne
+                        </button>
+                    }
+                    else if (!Model.IsSold && Model.Type == ListingType.Sale)
                     {
                         <form asp-controller="Payment" asp-action="Buy" method="post" class="mb-2">
                             <input type="hidden" name="listingId" value="@Model.Id" />

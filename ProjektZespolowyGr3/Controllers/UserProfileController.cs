@@ -45,7 +45,7 @@ namespace ProjektZespolowyGr3.Controllers
                 : 0;
 
             var activeListings = user.Listings
-                .Where(l => !l.IsSold)
+                .Where(l => !l.IsSold && !l.IsArchived)
                 .ToList();
 
             ViewBag.AverageRating = Math.Round(averageRating, 2);

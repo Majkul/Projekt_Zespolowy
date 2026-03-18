@@ -24,6 +24,12 @@
                     <input type="submit" value="Zaloguj" class="btn btn-primary" />
                 </div>
             </form>
+            @if (TempData["AlertErrorLogin"] != null)
+            {
+                <div class="alert alert-danger mt-3">
+                    @TempData["AlertErrorLogin"]
+                </div>
+            }
         </div>
     </div>
 </div>

@@ -15,5 +15,6 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         public double AverageRating { get; set; }
         public int ReviewCount { get; set; }
         public string SellerName { get; set; }
+        public bool IsArchived { get; set; }
     }
 }

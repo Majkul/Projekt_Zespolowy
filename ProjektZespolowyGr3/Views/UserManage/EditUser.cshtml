@@ -49,6 +49,10 @@
         <label asp-for="IsBanned" class="form-check-label" id="label-IsBanned">Is Banned</label>
         <input asp-for="IsBanned" type="checkbox" class="form-check-input" id="input-IsBanned" />
     </div>
+    <div class="mb-3">
+        <label asp-for="IsDeleted" class="form-check-label" id="label-IsDeleted">Is Deleted</label>
+        <input asp-for="IsDeleted" type="checkbox" class="form-check-input" id="input-IsDeleted" />
+    </div>
 
     <div class="d-flex gap-2 mt-3">
         <button type="submit" class="btn btn-primary">Save</button>
@@ -65,7 +69,8 @@
         Address: '@(Model.Address ?? "")',
         PhoneNumber: '@(Model.PhoneNumber ?? "")',
         IsAdmin: '@Model.IsAdmin'.toLowerCase() === 'true',
-        IsBanned: '@Model.IsBanned'.toLowerCase() === 'true'
+        IsBanned: '@Model.IsBanned'.toLowerCase() === 'true',
+        IsDeleted: '@Model.IsDeleted'.toLowerCase() === 'true'
     };
 
     function updateLabel(field, value) {
@@ -85,7 +90,7 @@
             }
         });
 
-        ['IsAdmin', 'IsBanned'].forEach(function (field) {
+        ['IsAdmin', 'IsBanned', 'IsDeleted'].forEach(function (field) {
             const input = document.getElementById('input-' + field);
             if (input) {
                 input.addEventListener('change', function () {
