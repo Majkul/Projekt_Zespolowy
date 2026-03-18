@@ -61,11 +61,7 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             if (userId == currentUserId)
             {
-<<<<<<< HEAD
                 return BadRequest("Nie możesz napisać wiadomości do siebie.");
-=======
-                return BadRequest("Nie można wysłać wiadomości do samego siebie");
->>>>>>> origin/main
             }
 
             var otherUser = await _context.Users.FindAsync(userId);
@@ -109,16 +105,9 @@ namespace ProjektZespolowyGr3.Controllers.User
         {
             var currentUserId = GetCurrentUserId();
 
-<<<<<<< HEAD
             if (receiverId == currentUserId)
             {
                 return BadRequest("Nie możesz wysłać wiadomości do siebie.");
-=======
-            // sam sobie
-            if (receiverId == currentUserId)
-            {
-                return BadRequest("Nie można wysłać wiadomości do samego siebie");
->>>>>>> origin/main
             }
 
             if (string.IsNullOrWhiteSpace(content))

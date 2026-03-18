@@ -36,6 +36,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         public async Task<IActionResult> Index(string? searchString)
         {
             IQueryable<Listing> query = _context.Listings
+                .Where(l => !l.IsArchived)
                 .Include(l => l.Photos)
                     .ThenInclude(lp => lp.Upload)
                 .Include(l => l.Reviews)

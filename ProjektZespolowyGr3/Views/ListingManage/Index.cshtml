@@ -72,7 +72,8 @@
             <th scope="col">Username</th>
             <th scope="col">Rating</th>
             <th scope="col">Price</th>
-            <th scope="col" style="width: 140px;">Actions</th>
+            <th scope="col">Status</th>
+            <th scope="col" style="width: 200px;">Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -95,9 +96,32 @@
                 </td>
                 <td>@item.Listing.Price</td>
                 <td>
+                    @if (item.Listing.IsArchived)
+                    {
+                        <span class="badge bg-secondary">Zarchiwizowane</span>
+                        @if (item.Listing.ArchivedAt.HasValue)
+                        {
+                            <br /><small class="text-muted">@item.Listing.ArchivedAt.Value.ToString("dd.MM.yyyy")</small>
+                        }
+                    }
+                    else if (item.Listing.IsSold)
+                    {
+                        <span class="badge bg-danger">Sprzedane</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Aktywne</span>
+                    }
+                </td>
+                <td>
                     <a asp-action="EditListing" asp-route-id="@item.Listing.Id" class="btn btn-sm btn-warning me-2">Edit</a>
+                    <form asp-action="ArchiveListing" asp-route-id="@item.Listing.Id" method="post" style="display:inline;" class="me-1">
+                        <button type="submit" class="btn btn-sm @(item.Listing.IsArchived ? "btn-outline-success" : "btn-outline-secondary")">
+                            @(item.Listing.IsArchived ? "Przywróć" : "Archiwizuj")
+                        </button>
+                    </form>
                     <form asp-action="DeleteListing" asp-route-id="@item.Listing.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this listing?');">
-                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                     </form>
                 </td>
             </tr>

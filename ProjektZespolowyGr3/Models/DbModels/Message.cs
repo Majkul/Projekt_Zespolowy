@@ -27,5 +27,6 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public DateTime SentAt { get; set; }
 
         public bool IsRead { get; set; } = false;
+        public bool IsArchived { get; set; } = false;
     }
 }

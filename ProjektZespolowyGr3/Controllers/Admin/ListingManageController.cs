@@ -286,6 +286,44 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
 
         [HttpPost]
+        public async Task<IActionResult> ArchiveListing(int id)
+        {
+            int userId = 0;
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!string.IsNullOrEmpty(userIdClaim))
+                    int.TryParse(userIdClaim, out userId);
+            }
+
+            var listing = await _context.Listings.FindAsync(id);
+            if (listing == null) return NotFound();
+            if (!isAdmin && listing.SellerId != userId) return Forbid();
+
+            listing.IsArchived = !listing.IsArchived;
+            listing.ArchivedAt = listing.IsArchived ? DateTime.UtcNow : null;
+            listing.UpdatedAt = DateTime.UtcNow;
+
+            var relatedTickets = await _context.Tickets
+                .Where(t => t.ReportedListingId == id)
+                .ToListAsync();
+            foreach (var ticket in relatedTickets)
+                ticket.IsArchived = listing.IsArchived;
+
+            var relatedMessages = await _context.Messages
+                .Where(m => m.ListingId == id)
+                .ToListAsync();
+            foreach (var message in relatedMessages)
+                message.IsArchived = listing.IsArchived;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
         public IActionResult DeleteListing(int id)
         {
             int userId = 0;

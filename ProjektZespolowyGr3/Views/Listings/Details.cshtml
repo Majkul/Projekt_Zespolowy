@@ -11,6 +11,16 @@
 }
 
 <div class="container mt-4">
+    @if (Model.IsArchived)
+    {
+        <div class="alert alert-secondary d-flex align-items-center mb-3" role="alert">
+            <strong>Ogłoszenie zarchiwizowane</strong>
+            @if (Model.ArchivedAt.HasValue)
+            {
+                <span class="ms-2 text-muted small">(@Model.ArchivedAt.Value.ToString("dd.MM.yyyy HH:mm"))</span>
+            }
+        </div>
+    }
     <div class="row">
         <div class="col-md-8">
             <h2 class="mb-3">@Model.Title</h2>
@@ -189,6 +199,11 @@
                     {
                         <a asp-controller="ListingManage" asp-action="EditListing" asp-route-id="@Model.Id" class="btn btn-primary w-100 btn-lg">Edit</a>
                         <hr/>
+                        <form asp-controller="ListingManage" asp-action="ArchiveListing" asp-route-id="@Model.Id" method="post" class="mb-2">
+                            <button type="submit" class="btn @(Model.IsArchived ? "btn-outline-success" : "btn-outline-secondary") w-100">
+                                @(Model.IsArchived ? "Przywróć ogłoszenie" : "Archiwizuj ogłoszenie")
+                            </button>
+                        </form>
                         <form asp-controller="ListingManage" asp-action="DeleteListing" asp-route-id="item.Listing.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this listing?');">
                             <button type="submit" class="btn btn-danger w-100 btn-lg">Delete</button>
                         </form>
