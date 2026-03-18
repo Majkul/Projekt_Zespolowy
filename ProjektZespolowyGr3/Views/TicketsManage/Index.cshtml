@@ -91,7 +91,11 @@
                             @GetDisplayName(ticket.Status)
                         </span>
                     </td>
-                    <td>@ticket.User.Username</td>
+                    <td>
+                        <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@ticket.User.Id" class="text-decoration-none">
+                            @ticket.User.Username
+                        </a>
+                    </td>
                     <td>@(ticket.Assignee?.Username ?? "Nieprzypisany")</td>
                     <td>@ticket.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>

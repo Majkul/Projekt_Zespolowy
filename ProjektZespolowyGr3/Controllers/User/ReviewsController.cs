@@ -11,20 +11,30 @@ using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.System;
 using ProjektZespolowyGr3.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ProjektZespolowyGr3.Controllers.User
 {
+    [Authorize]
     public class ReviewsController : Controller
     {
         private readonly MyDBContext _context;
         private readonly IWebHostEnvironment _env;
-        private readonly HelperService _helper;
 
-        public ReviewsController(MyDBContext context, IWebHostEnvironment env, HelperService helper)
+        public ReviewsController(MyDBContext context, IWebHostEnvironment env)
         {
             _context = context;
             _env = env;
-            _helper = helper;
+        }
+
+        private int GetCurrentUserId()
+        {
+            var idString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(idString) || !int.TryParse(idString, out var id))
+            {
+                throw new Exception("Brak zalogowanego użytkownika");
+            }
+            return id;
         }
 
         // GET: Reviews
@@ -71,6 +81,13 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (listing == null)
                 return NotFound();
 
+            // wlasne
+            var userId = GetCurrentUserId();
+            if (listing.SellerId == userId)
+            {
+                return BadRequest("Nie możesz oceniać własnego ogłoszenia.");
+            }
+
             var model = new CreateReviewViewModel
             {
                 ListingId = listingId
@@ -99,12 +116,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return View(model);
             }
 
-            // aktualny użytkownik z claimów
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
-            {
-                return Unauthorized();
-            }
+            var userId = GetCurrentUserId();
 
             var listing = _context.Listings.FirstOrDefault(l => l.Id == model.ListingId);
 

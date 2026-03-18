@@ -79,9 +79,17 @@
         @foreach (var item in Model)
         {
             <tr>
-                <td>@item.Listing.Title</td>
+                <td>
+                    <a asp-controller="Listings" asp-action="Details" asp-route-id="@item.Listing.Id" class="text-decoration-none">
+                        @item.Listing.Title
+                    </a>
+                </td>
                 <td>@item.Listing.Description</td>
-                <td>@item.Seller?.Username</td>
+                <td>
+                    <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@item.Seller.Id" class="text-decoration-none">
+                        @item.Seller.Username
+                    </a>
+                </td>
                 <td>
                     @item.ReviewCount rating@(item.ReviewCount != 1 ? "s" : ""), @item.AverageRating.ToString("0.00") average
                 </td>

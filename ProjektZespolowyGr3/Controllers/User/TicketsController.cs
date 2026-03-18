@@ -17,17 +17,26 @@ using ProjektZespolowyGr3.Models.ViewModels;
 
 namespace ProjektZespolowyGr3.Controllers.User
 {
+    [Authorize]
     public class TicketsController : Controller
     {
         private readonly MyDBContext _context;
-        private readonly HelperService _helper;
         private readonly IWebHostEnvironment _env;
 
-        public TicketsController(MyDBContext context, HelperService helper, IWebHostEnvironment env)
+        public TicketsController(MyDBContext context, IWebHostEnvironment env)
         {
             _context = context;
-            _helper = helper;
             _env = env;
+        }
+
+        private int GetCurrentUserId()
+        {
+            var idString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(idString) || !int.TryParse(idString, out var id))
+            {
+                throw new Exception("Brak zalogowanego użytkownika");
+            }
+            return id;
         }
 
         // GET: Tickets
@@ -79,6 +88,17 @@ namespace ProjektZespolowyGr3.Controllers.User
         [HttpGet]
         public IActionResult ReportUser(int userId)
         {
+            if (!_context.Users.Any(u => u.Id == userId))
+            {
+                return NotFound("User not found.");
+            }
+
+            // sam siebie
+            if (userId == GetCurrentUserId())
+            {
+                return BadRequest("You cannot report yourself.");
+            }
+
             var vm = new CreateTicketViewModel
             {
                 Category = TicketCategory.User_Report,
@@ -91,6 +111,17 @@ namespace ProjektZespolowyGr3.Controllers.User
         [HttpGet]
         public IActionResult ReportListing(int listingId)
         {
+            if (!_context.Listings.Any(l => l.Id == listingId))
+            {
+                return NotFound("Listing not found.");
+            }
+
+            // sam siebie
+            if (_context.Listings.Where(l => l.Id == listingId).Select(l => l.SellerId).FirstOrDefault() == GetCurrentUserId())
+            {
+                return BadRequest("You cannot report your own listing.");
+            }
+
             var vm = new CreateTicketViewModel
             {
                 Category = TicketCategory.Listing_Report,
