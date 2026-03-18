@@ -68,7 +68,12 @@
             <div class="card">
                 <div class="card-header">Informacje</div>
                 <div class="card-body">
-                    <p><strong>Użytkownik:</strong> @Model.User.Username</p>
+                    <p><strong>Użytkownik:</strong>
+                        <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.ReportedUserId">
+                            @Model.User.Username
+                        </a>
+                    </p>
+                    
                     <p><strong>Data utworzenia:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
                     <p><strong>Ostatnia aktywność:</strong> @Model.LastActivity.ToString("dd.MM.yyyy HH:mm")</p>
                     @if (Model.ReportedUser != null)

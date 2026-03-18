@@ -158,10 +158,12 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 user.IsBanned = u.IsBanned.Value;
             if (u.IsAdmin != null)
                 user.IsAdmin = u.IsAdmin.Value;
-            if (u.IsDeleted != null)
-                user.IsDeleted = u.IsDeleted.Value;
             if (u.PhoneNumber != null)
                 user.PhoneNumber = u.PhoneNumber;
+
+            user.IsBanned = u.IsBanned;
+            user.IsAdmin = u.IsAdmin;
+            user.IsDeleted = u.IsDeleted;
 
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
