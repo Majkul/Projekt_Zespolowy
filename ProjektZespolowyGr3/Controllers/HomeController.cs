@@ -32,7 +32,7 @@ public class HomeController : Controller
     {
         // Pobierz kilka najnowszych aktywnych ofert do wyświetlenia na stronie głównej
         var latestListings = await _context.Listings
-            .Where(l => !l.IsSold)
+            .Where(l => !l.IsSold && !l.IsArchived)
             .Include(l => l.Photos)
                 .ThenInclude(lp => lp.Upload)
             .Include(l => l.Seller)
@@ -66,8 +66,14 @@ public class HomeController : Controller
                 var userAuth = _context.UserAuths.FirstOrDefault(x => x.UserId == user.Id);
                 if (!userAuth.EmailVerified)
                 {
-                    ModelState.AddModelError("", "You need to confirm your email address.");
-                    TempData["AlertError"] = "You need to confirm your email address.";
+                    //ModelState.AddModelError("", "You need to confirm your email address.");
+                    TempData["AlertErrorLogin"] = "You need to confirm your email address.";
+                    return View();
+                }
+                if (user.IsDeleted || user.IsBanned)
+                {
+                    //ModelState.AddModelError("", "Your account is not active.");
+                    TempData["AlertErrorLogin"] = "Your account is not active.";
                     return View();
                 }
                 var claims = _authService.GetClaims(user);
@@ -84,7 +90,7 @@ public class HomeController : Controller
             }
             else
             {
-                TempData["AlertError"] = "Incorrect login or password";
+                TempData["AlertErrorLogin"] = "Incorrect login or password";
                 return View();
             }
         }

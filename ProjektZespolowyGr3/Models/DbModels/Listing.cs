@@ -14,7 +14,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public decimal? Price { get; set; }
         public bool IsFeatured { get; set; } = false;
         public bool IsSold { get; set; } = false;
-       
+        public bool IsArchived { get; set; } = false;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 

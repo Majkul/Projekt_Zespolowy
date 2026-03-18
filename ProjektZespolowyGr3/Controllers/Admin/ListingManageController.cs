@@ -97,6 +97,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                         ? l.Seller.Listings.SelectMany(sl => sl.Reviews).Average(r => r.Rating)
                         : 0,
                 ReviewCount = l.Seller.Listings.SelectMany(sl => sl.Reviews).Count(),
+                IsArchived = l.IsArchived
                 })
                 .ToListAsync();
         }
@@ -318,7 +319,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
                     _context.Uploads.Remove(lp.Upload);
                 });
-            _context.Listings.Remove(listing);
+            listing.IsArchived = true;
             
             _context.Tickets.Where(lp => lp.ReportedListingId == id)
                 .ToList().ForEach(lp =>
@@ -329,7 +330,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             _context.Messages.Where(m => m.ListingId == id)
                 .ToList().ForEach(m =>
                 {
-                    _context.Messages.Remove(m);
+                    m.IsArchived = true;
                 });
 
             _context.SaveChanges();

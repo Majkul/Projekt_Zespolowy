@@ -86,6 +86,17 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
 
+            foreach (var message in messages)
+            {
+                if (message.IsArchived)
+                {
+                    message.Content = "Ta wiadomość została usunięta.";
+                    message.Sender = null;
+                    message.Receiver = null;
+                    message.SentAt = DateTime.MinValue;
+                }
+            }
+
             ViewBag.OtherUser = otherUser;
             ViewBag.ListingId = listingId;
             ViewBag.TicketId = ticketId;
