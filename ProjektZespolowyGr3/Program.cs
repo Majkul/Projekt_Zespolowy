@@ -11,6 +11,9 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IPayuOrderSyncService, PayuOrderSyncService>();
+
 // TODO ZMIENIC potem wywalic
 builder.Services.AddTransient<HelperService>();
 
@@ -29,7 +32,6 @@ builder.Services.AddHttpClient("PayU")
         });
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
-builder.Services.AddTransient<EmailService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddAuthentication(options =>
@@ -56,6 +58,13 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+// Zastosuj oczekujące migracje EF (np. kolumna Quantity w TradeProposalItems), żeby uniknąć rozjazdu modelu z bazą.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MyDBContext>();
+    db.Database.Migrate();
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -69,6 +78,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

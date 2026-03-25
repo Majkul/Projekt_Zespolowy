@@ -1,4 +1,4 @@
-﻿using ProjektZespolowyGr3.Models.DbModels;
+using ProjektZespolowyGr3.Models.DbModels;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,10 +9,10 @@ namespace ProjektZespolowyGr3.Models
         [Required, Key]
         [ForeignKey("User")]
         public int UserId { get; set; }
-        public User User { get; set; }
+        public User User { get; set; } = null!;
 
         [Required(ErrorMessage = "Password is required")]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
         public string PasswordSalt { get; set; } = string.Empty;
         public DateTime LastLogin { get; set; }
         public int FailedAttempts { get; set; }

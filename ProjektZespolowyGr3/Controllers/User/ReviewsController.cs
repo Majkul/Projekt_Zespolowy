@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -109,7 +109,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return View(model);
             }
 
-            if (model.PhotoFiles.Count > 5)
+            if ((model.PhotoFiles?.Count ?? 0) > 5)
             {
                 ModelState.AddModelError("PhotoFiles", "Możesz przesłać maksymalnie 5 zdjęć.");
                 return View(model);

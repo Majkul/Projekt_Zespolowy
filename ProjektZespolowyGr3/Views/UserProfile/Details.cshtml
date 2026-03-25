@@ -8,7 +8,7 @@
 }
 
 @{
-    bool isAuthenticated = User.Identity.IsAuthenticated;
+    bool isAuthenticated = User.Identity?.IsAuthenticated == true;
     bool isProfileOwner = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.Id.ToString();
 }
 

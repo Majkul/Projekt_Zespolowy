@@ -1,6 +1,8 @@
 @model IEnumerable<ProjektZespolowyGr3.Models.DbModels.Message>
+@using System.Security.Claims
 @{
     ViewData["Title"] = "Wiadomości";
+    var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }
 <div class="container mt-4">
     <h2 class="mb-4">Skrzynka odbiorcza</h2>
@@ -12,18 +14,16 @@
             {
                 var isListing = msg.ListingId.HasValue;
                 var isTicket = msg.TicketId.HasValue;
-                var otherUser = msg.SenderId == int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value)
-                ? msg.Receiver
-                : msg.Sender;
+                var otherUser = msg.SenderId == currentUserId ? msg.Receiver : msg.Sender;
                 <a class="list-group-item list-group-item-action @(msg.IsArchived ? "list-group-item-secondary" : "")"
                    asp-controller="Messages"
                    asp-action="Conversation"
-                   asp-route-userId="@otherUser.Id"
+                   asp-route-userId="@(otherUser?.Id ?? 0)"
                    asp-route-listingId="@(msg.ListingId)"
                    asp-route-ticketId="@(msg.TicketId)">
                     <div class="d-flex w-100 justify-content-between align-items-center">
                         <h5 class="mb-1 @(msg.IsArchived ? "text-muted" : "")">
-                            @otherUser.Username
+                            @(otherUser?.Username ?? "Konwersacja")
                             @if (msg.IsArchived)
                             {
                                 <span class="badge bg-secondary ms-2">Zarchiwizowana</span>

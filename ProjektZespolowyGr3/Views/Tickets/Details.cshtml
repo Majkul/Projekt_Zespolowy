@@ -1,4 +1,4 @@
-﻿@model ProjektZespolowyGr3.Models.DbModels.Ticket
+@model ProjektZespolowyGr3.Models.DbModels.Ticket
 @using System.ComponentModel.DataAnnotations
 
 @{
@@ -101,7 +101,7 @@
                         </p>
                     }
 
-                    @if (User.Identity.IsAuthenticated && Model.AssigneeId.HasValue && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.AssigneeId.Value.ToString())
+                    @if (User.Identity?.IsAuthenticated == true && Model.AssigneeId.HasValue && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.AssigneeId.Value.ToString())
                     {
                         <hr />
                         <a asp-controller="Messages"
