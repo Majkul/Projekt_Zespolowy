@@ -312,6 +312,22 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
 
         [HttpPost]
+        public async Task<IActionResult> ToggleFeature(int id)
+        {
+            if (!User.IsInRole("Admin"))
+                return Forbid();
+
+            var listing = await _context.Listings.FindAsync(id);
+            if (listing == null) return NotFound();
+
+            listing.IsFeatured = !listing.IsFeatured;
+            listing.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
         public async Task<IActionResult> ArchiveListing(int id)
         {
             int userId = 0;

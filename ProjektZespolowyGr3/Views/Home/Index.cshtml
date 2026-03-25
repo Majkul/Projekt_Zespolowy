@@ -1,6 +1,7 @@
 ﻿@using ProjektZespolowyGr3.Models.DbModels
 @{
     ViewData["Title"] = "Strona główna";
+    var featuredListings = ViewBag.FeaturedListings as List<Listing> ?? new List<Listing>();
     var latestListings = ViewBag.LatestListings as List<Listing> ?? new List<Listing>();
 }
 
@@ -25,6 +26,59 @@
 </div>
 
 <div class="container">
+
+    @if (featuredListings.Any())
+    {
+        <div class="mb-5">
+            <h2 class="mb-4 text-warning fw-bold">★ Wyróżnione oferty</h2>
+            <div class="row">
+                @foreach (var listing in featuredListings)
+                {
+                    <div class="col-md-3 mb-4">
+                        <div class="card h-100 border border-warning border-2 shadow">
+                            @if (listing.Photos != null && listing.Photos.Any())
+                            {
+                                var featuredPhoto = listing.Photos.FirstOrDefault(p => p.IsFeatured) ?? listing.Photos.First();
+                                <div style="position: relative;">
+                                    <img src="@featuredPhoto.Upload.Url" class="card-img-top" alt="@listing.Title" style="height: 180px; object-fit: cover;">
+                                    <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">★ Wyróżnione</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="card-img-top bg-warning bg-opacity-25 d-flex align-items-center justify-content-center" style="height: 180px;">
+                                    <span class="text-warning fs-1">★</span>
+                                </div>
+                            }
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">@listing.Title</h5>
+                                @if (!string.IsNullOrEmpty(listing.Description))
+                                {
+                                    <p class="card-text text-muted small">@(listing.Description.Length > 80 ? listing.Description.Substring(0, 80) + "..." : listing.Description)</p>
+                                }
+                                @if (listing.Price.HasValue)
+                                {
+                                    <p class="card-text"><strong class="text-primary">@listing.Price.Value.ToString("C")</strong></p>
+                                }
+                                else
+                                {
+                                    <p class="card-text"><span class="badge bg-info">Wymiana</span></p>
+                                }
+                                <div class="mt-auto">
+                                    <a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id" class="btn btn-warning btn-sm w-100">Zobacz szczegóły</a>
+                                </div>
+                            </div>
+                            <div class="card-footer text-muted small">
+                                <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@listing.SellerId" class="text-decoration-none">@listing.Seller.Username</a>
+                                <span class="float-end">👁 @listing.ViewCount</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
     <div class="row mb-4">
         <div class="col-12">
             <h2 class="mb-4">Najnowsze oferty</h2>

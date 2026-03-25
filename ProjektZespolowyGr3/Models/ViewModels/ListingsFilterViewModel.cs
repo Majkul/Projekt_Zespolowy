@@ -13,6 +13,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         public string? SortBy { get; set; }
 
         public List<Tag> AvailableTags { get; set; } = new();
+        public IEnumerable<BrowseListingsViewModel> FeaturedResults { get; set; } = new List<BrowseListingsViewModel>();
         public IEnumerable<BrowseListingsViewModel> Results { get; set; } = new List<BrowseListingsViewModel>();
 
         public bool HasActiveFilters =>

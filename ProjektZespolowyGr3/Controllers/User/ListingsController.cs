@@ -116,7 +116,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 SelectedTagIds = selectedTagIds,
                 SortBy = sortBy,
                 AvailableTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync(),
-                Results = results,
+                FeaturedResults = results.Where(r => r.Listing.IsFeatured),
+                Results = results.Where(r => !r.Listing.IsFeatured),
             };
 
             return View(filterModel);
