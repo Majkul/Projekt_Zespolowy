@@ -30,6 +30,9 @@ namespace ProjektZespolowyGr3.Models.DbModels
         /// <summary>Co sprzedający przyjąłby w zamian (opis oczekiwań przy wymianie).</summary>
         public string? ExchangeDescription { get; set; }
 
+        /// <summary>Liczba wyświetleń ogłoszenia (nie licząc wizyt właściciela).</summary>
+        public int ViewCount { get; set; } = 0;
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
