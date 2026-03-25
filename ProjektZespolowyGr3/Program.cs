@@ -7,10 +7,8 @@ using ProjektZespolowyGr3.Models.System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Build connection string from environment variables if DATABASE_URL is set
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
 if (string.IsNullOrEmpty(connectionString))
 {
@@ -23,7 +21,6 @@ if (string.IsNullOrEmpty(connectionString))
 }
 else
 {
-    // Convert postgres:// URL to Npgsql format
     var uri = new Uri(connectionString);
     var userInfo = uri.UserInfo.Split(':');
     var pgUser = userInfo[0];
@@ -39,13 +36,8 @@ builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(connecti
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPayuOrderSyncService, PayuOrderSyncService>();
 
-builder.Services.AddScoped<INotificationService, NotificationService>();
-builder.Services.AddScoped<IPayuOrderSyncService, PayuOrderSyncService>();
-
-// TODO ZMIENIC potem wywalic
 builder.Services.AddTransient<HelperService>();
 
-//Authentication
 builder.Services.AddAuthorization();
 builder.Services.AddTransient<AuthService>();
 builder.Services.AddHttpContextAccessor();
@@ -83,7 +75,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Forward headers for Replit proxy
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
@@ -91,23 +82,18 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-// Listen on all interfaces on port 5000
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 var app = builder.Build();
 
-     
 app.UseForwardedHeaders();
-     
-// Zastosuj oczekujące migracje EF (np. kolumna Quantity w TradeProposalItems), żeby uniknąć rozjazdu modelu z bazą.
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyDBContext>();
     db.Database.Migrate();
 }
- 
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -115,9 +101,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 

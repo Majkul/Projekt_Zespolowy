@@ -11,6 +11,10 @@
 }
 
 <div class="container mt-4">
+    @if (TempData["TradeError"] != null)
+    {
+        <div class="alert alert-warning">@TempData["TradeError"]</div>
+    }
     @if (Model.IsArchived)
     {
         <div class="alert alert-secondary d-flex align-items-center mb-3" role="alert">
@@ -20,9 +24,6 @@
                 <span class="ms-2 text-muted small">(@Model.ArchivedAt.Value.ToString("dd.MM.yyyy HH:mm"))</span>
             }
         </div>
-    @if (TempData["TradeError"] != null)
-    {
-        <div class="alert alert-warning">@TempData["TradeError"]</div>
     }
     <div class="row">
         <div class="col-md-8">
@@ -244,6 +245,7 @@
                             Ogłoszenie niedostępne
                         </button>
                     }
+
                     else if (Model.IsSold || Model.StockQuantity <= 0)
                     {
                         <div class="alert alert-danger mb-2">

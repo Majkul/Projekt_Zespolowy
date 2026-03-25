@@ -53,6 +53,13 @@
     </div>
 
     <div class="mb-3">
+        <label asp-for="StockQuantity" class="form-label">Liczba sztuk</label>
+        <input asp-for="StockQuantity" type="number" min="0" class="form-control" />
+        <small class="text-muted">0 = wyprzedane (ogłoszenie oznaczone jako sprzedane).</small>
+        <span asp-validation-for="StockQuantity" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
         <label class="form-label">Tags</label>
         <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control">
         </select>
