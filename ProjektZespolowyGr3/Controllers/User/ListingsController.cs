@@ -34,53 +34,92 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         // GET: Listings
-        public async Task<IActionResult> Index(string? searchString)
+        public async Task<IActionResult> Index(
+            string? searchString,
+            string? type,
+            decimal? minPrice,
+            decimal? maxPrice,
+            List<int>? selectedTagIds,
+            string? sortBy)
         {
+            selectedTagIds ??= new List<int>();
+
             IQueryable<Listing> query = _context.Listings
                 .Where(l => !l.IsArchived)
-                .Include(l => l.Photos)
-                    .ThenInclude(lp => lp.Upload)
+                .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
                 .Include(l => l.Reviews)
-                .Include(l => l.Seller)
-                    .ThenInclude(s => s.Listings)
-                        .ThenInclude(sl => sl.Reviews)
-                .Where(l => l.IsArchived == false);
+                .Include(l => l.Tags).ThenInclude(lt => lt.Tag)
+                .Include(l => l.Seller).ThenInclude(s => s.Listings).ThenInclude(sl => sl.Reviews);
 
+            // Text search
             if (!string.IsNullOrWhiteSpace(searchString))
             {
                 var term = searchString.Trim();
-
-                // Wyszukiwanie po tytule i opisie, case-insensitive, jak LIKE %fraza%
                 query = query.Where(l =>
                     EF.Functions.ILike(l.Title, $"%{term}%") ||
                     (l.Description != null && EF.Functions.ILike(l.Description, $"%{term}%")));
-
-                ViewBag.SearchString = term;
             }
+
+            // Type filter
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                if (type == "Sale")
+                    query = query.Where(l => l.Type == ListingType.Sale);
+                else if (type == "Trade")
+                    query = query.Where(l => l.Type == ListingType.Trade);
+            }
+
+            // Price range (only meaningful for Sale listings)
+            if (minPrice.HasValue)
+                query = query.Where(l => l.Price == null || l.Price >= minPrice.Value);
+            if (maxPrice.HasValue)
+                query = query.Where(l => l.Price == null || l.Price <= maxPrice.Value);
+
+            // Tag filter
+            if (selectedTagIds.Any())
+            {
+                foreach (var tagId in selectedTagIds)
+                    query = query.Where(l => l.Tags.Any(lt => lt.TagId == tagId));
+            }
+
+            // Sort
+            query = sortBy switch
+            {
+                "price_asc"   => query.OrderBy(l => l.Price),
+                "price_desc"  => query.OrderByDescending(l => l.Price),
+                "oldest"      => query.OrderBy(l => l.CreatedAt),
+                "most_viewed" => query.OrderByDescending(l => l.ViewCount),
+                _             => query.OrderByDescending(l => l.CreatedAt),
+            };
 
             var listings = await query.ToListAsync();
 
-            var model = listings.Select(l => new BrowseListingsViewModel
+            var results = listings.Select(l => new BrowseListingsViewModel
             {
                 Listing = l,
                 ListingId = l.Id,
                 Seller = l.Seller,
                 SellerId = l.SellerId,
                 PhotoUrl = l.Photos.FirstOrDefault(lp => lp.IsFeatured)?.Upload.Url,
-                AverageRating = l.Seller.Listings
-                        .SelectMany(sl => sl.Reviews)
-                        .Any()
-                        ? l.Seller.Listings.SelectMany(sl => sl.Reviews).Average(r => r.Rating)
-                        : 0,
+                AverageRating = l.Seller.Listings.SelectMany(sl => sl.Reviews).Any()
+                    ? l.Seller.Listings.SelectMany(sl => sl.Reviews).Average(r => r.Rating)
+                    : 0,
                 ReviewCount = l.Seller.Listings.SelectMany(sl => sl.Reviews).Count(),
             }).ToList();
 
-            if (!model.Any() && !string.IsNullOrWhiteSpace(searchString))
+            var filterModel = new ListingsFilterViewModel
             {
-                ViewBag.NoResultsMessage = "Nie znaleziono niczego co mogłoby Ciebie zainteresować.";
-            }
+                SearchString = searchString,
+                Type = type,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                SelectedTagIds = selectedTagIds,
+                SortBy = sortBy,
+                AvailableTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync(),
+                Results = results,
+            };
 
-            return View(model);
+            return View(filterModel);
         }
 
         // GET: Listings/Details/5
