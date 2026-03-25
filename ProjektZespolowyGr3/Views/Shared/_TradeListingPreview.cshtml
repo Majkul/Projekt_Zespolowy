@@ -1,0 +1,68 @@
+@model ProjektZespolowyGr3.Models.DbModels.Listing
+@using System.Linq
+@using ProjektZespolowyGr3.Models.DbModels
+@{
+    var thumb = Model.Photos?
+        .OrderByDescending(p => p.IsFeatured)
+        .FirstOrDefault()?.Upload?.Url
+        ?? Model.Photos?.FirstOrDefault()?.Upload?.Url;
+    var compact = ViewBag.Compact as bool? ?? false;
+}
+<div class="card @(compact ? "mb-2" : "mb-3") border shadow-sm">
+    <div class="row g-0">
+        @if (!string.IsNullOrEmpty(thumb))
+        {
+            <div class="col-auto">
+                <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id" class="d-block h-100">
+                    <img src="@thumb" class="rounded-start h-100" alt="" style="@(compact ? "width:72px;min-height:72px;object-fit:cover;" : "width:140px;min-height:140px;object-fit:cover;")" />
+                </a>
+            </div>
+        }
+        <div class="col">
+            <div class="card-body py-2 px-3">
+                <h6 class="card-title mb-1">
+                    <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id" class="text-decoration-none">@Model.Title</a>
+                </h6>
+                <p class="small text-muted mb-2 mb-md-2">
+                    @if (ViewBag.ProposedTradeQuantity is int propQty && propQty >= 1)
+                    {
+                        <span class="badge bg-info text-dark me-1">W ofercie: @propQty szt.</span>
+                    }
+                    @if (Model.Price.HasValue)
+                    {
+                        <span>@Model.Price.Value.ToString("C")</span>
+                    }
+                    else
+                    {
+                        <span>Bez podanej ceny</span>
+                    }
+                    @if (Model.Type == ListingType.Trade)
+                    {
+                        <span class="ms-1">· Wymiana</span>
+                    }
+                    <span class="ms-1">· @Model.StockQuantity szt.</span>
+                </p>
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    if (compact)
+                    {
+                        <p class="small text-body-secondary mb-0" style="max-height: 5.5rem; overflow: auto; white-space: pre-wrap;">@Model.Description</p>
+                    }
+                    else
+                    {
+                        <p class="small mb-0" style="white-space: pre-wrap;">@Model.Description</p>
+                    }
+                }
+                @if (Model.Tags != null && Model.Tags.Any())
+                {
+                    <div class="mt-2">
+                        @foreach (var lt in Model.Tags)
+                        {
+                            <span class="badge bg-light text-dark border me-1 mb-1">@lt.Tag.Name</span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

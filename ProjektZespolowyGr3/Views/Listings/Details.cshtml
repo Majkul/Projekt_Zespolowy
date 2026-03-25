@@ -1,4 +1,4 @@
-﻿@using ProjektZespolowyGr3.Models.DbModels
+@using ProjektZespolowyGr3.Models.DbModels
 @model Listing
 
 @{
@@ -6,11 +6,12 @@
 }
 
 @{
-    bool isUserAuthenticated = User.Identity.IsAuthenticated;
+    bool isUserAuthenticated = User.Identity?.IsAuthenticated == true;
     bool isUserSeller = isUserAuthenticated && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.SellerId.ToString();
 }
 
 <div class="container mt-4">
+<<<<<<< HEAD
     @if (Model.IsArchived)
     {
         <div class="alert alert-secondary d-flex align-items-center mb-3" role="alert">
@@ -20,6 +21,11 @@
                 <span class="ms-2 text-muted small">(@Model.ArchivedAt.Value.ToString("dd.MM.yyyy HH:mm"))</span>
             }
         </div>
+=======
+    @if (TempData["TradeError"] != null)
+    {
+        <div class="alert alert-warning">@TempData["TradeError"]</div>
+>>>>>>> origin/main
     }
     <div class="row">
         <div class="col-md-8">
@@ -72,6 +78,37 @@
                         }
                     </div>
                 </div>
+            }
+
+            @if (!Model.NotExchangeable && (Model.ExchangeDescription != null || (Model.ExchangeAcceptedTags != null && Model.ExchangeAcceptedTags.Any()) || Model.MinExchangeValue.HasValue))
+            {
+                <div class="card mb-4 border-info">
+                    <div class="card-header">Wymiana</div>
+                    <div class="card-body">
+                        @if (Model.MinExchangeValue.HasValue)
+                        {
+                            <p class="mb-2"><strong>Minimalna wartość oferty kupującego:</strong> @Model.MinExchangeValue.Value.ToString("C")</p>
+                        }
+                        @if (Model.ExchangeAcceptedTags != null && Model.ExchangeAcceptedTags.Any())
+                        {
+                            <p class="mb-1"><strong>Akceptowane tagi przy wymianie:</strong></p>
+                            <div class="mb-2">
+                                @foreach (var et in Model.ExchangeAcceptedTags)
+                                {
+                                    <span class="badge bg-info text-dark me-1">@et.Tag.Name</span>
+                                }
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.ExchangeDescription))
+                        {
+                            <p class="mb-0"><strong>Czego szukam w zamian:</strong> @Model.ExchangeDescription</p>
+                        }
+                    </div>
+                </div>
+            }
+            else if (Model.NotExchangeable)
+            {
+                <p class="text-muted"><span class="badge bg-dark">Nie do wymiany</span> To ogłoszenie nie jest uwzględniane w propozycjach wymiany.</p>
             }
 
             <div class="card mb-4">
@@ -163,6 +200,11 @@
                     </div>
 
                     <div class="mb-3">
+                        <strong>Dostępna ilość:</strong>
+                        <span class="@(Model.StockQuantity > 0 ? "" : "text-danger")">@Model.StockQuantity szt.</span>
+                    </div>
+
+                    <div class="mb-3">
                         <strong>Sprzedawca:</strong><br />
                         <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.SellerId" class="text-decoration-none">
                             @Model.Seller.Username
@@ -178,6 +220,17 @@
                                     Skontaktuj się ze sprzedawcą
                                 </a>
                             </div>
+                            @if (isUserAuthenticated && !Model.NotExchangeable && !Model.IsSold && Model.StockQuantity > 0)
+                            {
+                                <div class="mt-2">
+                                    <a asp-controller="TradeProposals"
+                                       asp-action="Compose"
+                                       asp-route-listingId="@Model.Id"
+                                       class="btn btn-success btn-sm w-100">
+                                        Wymień się
+                                    </a>
+                                </div>
+                            }
                         }
                     </div>
 
@@ -194,16 +247,7 @@
                             Ogłoszenie niedostępne
                         </button>
                     }
-                    else if (!Model.IsSold && Model.Type == ListingType.Sale)
-                    {
-                        <form asp-controller="Payment" asp-action="Buy" method="post" class="mb-2">
-                            <input type="hidden" name="listingId" value="@Model.Id" />
-                            <button type="submit" class="btn btn-primary w-100 btn-lg")>
-                                Kup teraz
-                            </button>
-                        </form>
-                    }
-                    else if (Model.IsSold)
+                    else if (Model.IsSold || Model.StockQuantity <= 0)
                     {
                         <div class="alert alert-danger mb-2">
                             <strong>Sprzedane</strong>
@@ -212,14 +256,31 @@
                     else if (isUserSeller)
                     {
                         <a asp-controller="ListingManage" asp-action="EditListing" asp-route-id="@Model.Id" class="btn btn-primary w-100 btn-lg">Edit</a>
+<<<<<<< HEAD
                         <hr/>
                         <form asp-controller="ListingManage" asp-action="ArchiveListing" asp-route-id="@Model.Id" method="post" class="mb-2">
                             <button type="submit" class="btn @(Model.IsArchived ? "btn-outline-success" : "btn-outline-secondary") w-100">
                                 @(Model.IsArchived ? "Przywróć ogłoszenie" : "Archiwizuj ogłoszenie")
                             </button>
                         </form>
+=======
+                        <hr />
+>>>>>>> origin/main
                         <form asp-controller="ListingManage" asp-action="DeleteListing" asp-route-id="item.Listing.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this listing?');">
                             <button type="submit" class="btn btn-danger w-100 btn-lg">Delete</button>
+                        </form>
+                    }
+                    else if (!Model.IsSold && Model.StockQuantity > 0 && Model.Type == ListingType.Sale)
+                    {
+                        <form asp-controller="Payment" asp-action="Buy" method="post" class="mb-2">
+                            <input type="hidden" name="listingId" value="@Model.Id" />
+                            <div class="mb-2">
+                                <label for="buy-quantity" class="form-label small mb-0">Ilość</label>
+                                <input id="buy-quantity" name="quantity" type="number" class="form-control" value="1" min="1" max="@Model.StockQuantity" required />
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                Kup teraz
+                            </button>
                         </form>
                     }
 

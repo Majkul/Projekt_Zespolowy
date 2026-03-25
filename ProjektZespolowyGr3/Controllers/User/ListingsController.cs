@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -96,6 +97,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                     .ThenInclude(lp => lp.Upload)
                 .Include(l => l.Tags)
                     .ThenInclude(lt => lt.Tag)
+                .Include(l => l.ExchangeAcceptedTags)
+                    .ThenInclude(et => et.Tag)
                 .Include(l => l.Reviews)
                     .ThenInclude(r => r.Reviewer)
                 .Include(l => l.Reviews)
@@ -112,6 +115,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         // GET: Listings/Create
+        [Authorize]
         [HttpGet]
         public IActionResult Create()
         {
@@ -134,15 +138,25 @@ namespace ProjektZespolowyGr3.Controllers.User
         // POST: Listings/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateListingViewModel model)
         {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var currentUserId) || currentUserId <= 0)
+            {
+                return Challenge();
+            }
+
             // cena tylko dla sprzedazy
             if (model.Type == ListingType.Sale && (!model.Price.HasValue || model.Price <= 0))
             {
                 ModelState.AddModelError("Price", "Price must be greater than zero.");
             }
+
+            if (model.StockQuantity < 1)
+                ModelState.AddModelError(nameof(CreateListingViewModel.StockQuantity), "Liczba sztuk musi być co najmniej 1.");
 
             if (!ModelState.IsValid)
             {
@@ -150,23 +164,12 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return View(model);
             }
 
-            if (model.PhotoFiles.Count > 5)
+            var photoFiles = model.PhotoFiles ?? new List<IFormFile>();
+            if (photoFiles.Count > 5)
             {
                 ModelState.AddModelError("PhotoFiles", "You can upload a maximum of 5 photos.");
                 return View(model);
             }
-
-            // ZMIENIC POTEM
-            //var userId = _helper.GetCurrentUserId();
-            // To wersja już chyba zmieniona \/
-            int userId = 0;
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (!string.IsNullOrEmpty(userIdClaim))
-            {
-                int.TryParse(userIdClaim, out userId);
-            }
-
 
             var listing = new Listing
             {
@@ -174,10 +177,15 @@ namespace ProjektZespolowyGr3.Controllers.User
                 Description = model.Description,
                 Type = model.Type,
                 Price = model.Type == ListingType.Trade ? null : model.Price,
-                SellerId = userId,
+                StockQuantity = model.StockQuantity,
+                SellerId = currentUserId,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                NotExchangeable = model.NotExchangeable,
+                MinExchangeValue = model.MinExchangeValue,
+                ExchangeDescription = string.IsNullOrWhiteSpace(model.ExchangeDescription) ? null : model.ExchangeDescription.Trim()
             };
+            ListingStockHelper.SyncSoldFlag(listing);
 
             if (model.SelectedTagIds != null && model.SelectedTagIds.Any())
             {
@@ -195,11 +203,27 @@ namespace ProjektZespolowyGr3.Controllers.User
                 }
             }
 
+            if (model.SelectedExchangeAcceptedTagIds != null && model.SelectedExchangeAcceptedTagIds.Any())
+            {
+                foreach (var tagId in model.SelectedExchangeAcceptedTagIds.Distinct())
+                {
+                    var tag = _context.Tags.Find(tagId);
+                    if (tag != null)
+                    {
+                        listing.ExchangeAcceptedTags.Add(new ListingExchangeAcceptedTag
+                        {
+                            TagId = tag.Id,
+                            Listing = listing
+                        });
+                    }
+                }
+            }
+
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
 
-            if (model.PhotoFiles != null && model.PhotoFiles.Count != 0)
+            if (photoFiles.Count != 0)
             {
-                foreach (var file in model.PhotoFiles)
+                foreach (var file in photoFiles)
                 {
                     if (file.Length > 5 * 1024 * 1024)
                     {
@@ -229,7 +253,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 if (!Directory.Exists(uploadsPath))
                     Directory.CreateDirectory(uploadsPath);
 
-                foreach (var file in model.PhotoFiles)
+                foreach (var file in photoFiles)
                 {
                     var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
                     var fileName = $"{Guid.NewGuid()}{ext}";
@@ -246,7 +270,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                         Extension = ext,
                         Url = $"/uploads/{fileName}",
                         SizeBytes = file.Length,
-                        UploaderId = userId,
+                        UploaderId = currentUserId,
                         UploadedAt = DateTime.UtcNow
                     };
                     _context.Uploads.Add(upload);

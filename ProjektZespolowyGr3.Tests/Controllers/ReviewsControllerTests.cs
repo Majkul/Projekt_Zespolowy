@@ -8,7 +8,6 @@ using Moq;
 using Microsoft.AspNetCore.Hosting;
 using ProjektZespolowyGr3.Controllers.User;
 using ProjektZespolowyGr3.Models;
-using ProjektZespolowyGr3.Models.System;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.ViewModels;
 
@@ -18,7 +17,6 @@ namespace ProjektZespolowyGr3.Tests.Controllers
     {
         private readonly MyDBContext _context;
         private readonly Mock<IWebHostEnvironment> _envMock;
-        private readonly HelperService _helperService;
         private readonly ReviewsController _controller;
 
         public ReviewsControllerTests()
@@ -29,8 +27,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _context = new MyDBContext(options);
             _envMock = new Mock<IWebHostEnvironment>();
             _envMock.Setup(e => e.WebRootPath).Returns("/wwwroot");
-            _helperService = new HelperService(_context);
-            _controller = new ReviewsController(_context, _envMock.Object, _helperService);
+            _controller = new ReviewsController(_context, _envMock.Object);
         }
 
         private void SetupAuthenticatedUser(int userId)
@@ -52,11 +49,12 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         }
 
         [Fact]
-        public async Task Create_GET_WithListingId_ShouldReturnView()
+        public void Create_GET_WithListingId_ShouldReturnView()
         {
             // Arrange
             var seller = new User { Username = "seller", Email = "seller@test.com", CreatedAt = DateTime.UtcNow };
-            _context.Users.Add(seller);
+            var reviewer = new User { Username = "reviewer", Email = "rev@test.com", CreatedAt = DateTime.UtcNow };
+            _context.Users.AddRange(seller, reviewer);
             _context.SaveChanges();
 
             var listing = new Listing
@@ -71,6 +69,8 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             };
             _context.Listings.Add(listing);
             _context.SaveChanges();
+
+            SetupAuthenticatedUser(reviewer.Id);
 
             // Act
             var result = _controller.Create(listing.Id);

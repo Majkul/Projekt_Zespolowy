@@ -1,4 +1,4 @@
-﻿namespace ProjektZespolowyGr3.Models.DbModels
+namespace ProjektZespolowyGr3.Models.DbModels
 {
     public class ListingPhoto
     {
@@ -6,10 +6,10 @@
         public bool IsFeatured { get; set; } = false;
 
         public int ListingId { get; set; }
-        public Listing Listing { get; set; }
+        public Listing Listing { get; set; } = null!;
 
         public int UploadId { get; set; }
-        public Upload Upload { get; set; }
+        public Upload Upload { get; set; } = null!;
     }
 
 }

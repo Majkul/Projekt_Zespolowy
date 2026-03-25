@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
+using ProjektZespolowyGr3.Models.System;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace ProjektZespolowyGr3.Controllers.User
 {
@@ -17,32 +19,46 @@ namespace ProjektZespolowyGr3.Controllers.User
         private readonly MyDBContext _context;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
+        private readonly IPayuOrderSyncService _payuSync;
+        private readonly ILogger<PaymentController> _logger;
 
         private readonly string _payUBaseUrl;
         private readonly string _clientId;
         private readonly string _clientSecret;
         private readonly string _merchantPosId;
 
-        public PaymentController(MyDBContext context, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public PaymentController(
+            MyDBContext context,
+            IHttpClientFactory httpClientFactory,
+            IConfiguration configuration,
+            IPayuOrderSyncService payuSync,
+            ILogger<PaymentController> logger)
         {
             _context = context;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
+            _payuSync = payuSync;
+            _logger = logger;
 
-            _payUBaseUrl = configuration["PayU:BaseUrl"];
-            _clientId = configuration["PayU:ClientId"];
-            _clientSecret = configuration["PayU:ClientSecret"];
-            _merchantPosId = configuration["PayU:MerchantPosId"];
+            _payUBaseUrl = configuration["PayU:BaseUrl"] ?? "";
+            _clientId = configuration["PayU:ClientId"] ?? "";
+            _clientSecret = configuration["PayU:ClientSecret"] ?? "";
+            _merchantPosId = configuration["PayU:MerchantPosId"] ?? "";
         }
 
         [HttpPost]
-        public async Task<IActionResult> Buy(int listingId)
+        public async Task<IActionResult> Buy(int listingId, int quantity = 1)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out var userId))
+                return Unauthorized();
             var listing = await _context.Listings.FindAsync(listingId);
 
-            if (listing == null || listing.IsSold)
-                return BadRequest("Listing nie istnieje lub jest sprzedany");
+            if (listing == null || listing.IsArchived || !ListingStockHelper.CanSell(listing, quantity))
+                return BadRequest("Oferta nie istnieje, jest niedostępna lub podano złą ilość.");
+
+            if (listing.Type != ListingType.Sale || !listing.Price.HasValue)
+                return BadRequest("Ta oferta nie jest na sprzedaż.");
 
             // wlasne
             if (listing.SellerId == userId)
@@ -50,12 +66,14 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return BadRequest("Nie można kupić własnej oferty");
             }
 
+            var unitPrice = listing.Price!.Value;
             var order = new Order
             {
                 ListingId = listing.Id,
                 BuyerId = userId,
                 SellerId = listing.SellerId,
-                Amount = (decimal)listing.Price,
+                Amount = unitPrice * quantity,
+                Quantity = quantity,
                 Status = OrderStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
                 PayUOrderId = ""
@@ -72,38 +90,31 @@ namespace ProjektZespolowyGr3.Controllers.User
 
         [HttpPost]
         [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Notify()
         {
-            using var reader = new StreamReader(Request.Body);
-            var body = await reader.ReadToEndAsync();
-
-            using var doc = JsonDocument.Parse(body);
-
-            var payuOrderId = doc.RootElement
-                .GetProperty("order")
-                .GetProperty("orderId")
-                .GetString();
-
-            var payuStatus = doc.RootElement
-                .GetProperty("order")
-                .GetProperty("status")
-                .GetString();
-
-            var order = await _context.Orders
-                .FirstOrDefaultAsync(o => o.PayUOrderId == payuOrderId);
-
-            if (order == null)
-                return Ok();
-
-            if (payuStatus == "COMPLETED" && order.Status != OrderStatus.Paid)
+            try
             {
-                order.Status = OrderStatus.Paid;
+                using var reader = new StreamReader(Request.Body);
+                var body = await reader.ReadToEndAsync();
 
-                var listing = await _context.Listings.FindAsync(order.ListingId);
-                if (listing != null)
-                    listing.IsSold = true;
+                using var doc = JsonDocument.Parse(body);
 
-                await _context.SaveChangesAsync();
+                var payuOrderId = doc.RootElement
+                    .GetProperty("order")
+                    .GetProperty("orderId")
+                    .GetString();
+
+                var payuStatus = doc.RootElement
+                    .GetProperty("order")
+                    .GetProperty("status")
+                    .GetString();
+
+                await _payuSync.HandleNotifyAsync(payuOrderId ?? "", payuStatus);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "PayU Notify: błąd przetwarzania webhooka");
             }
 
             return Ok();
@@ -116,9 +127,15 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (order == null)
                 return NotFound();
 
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out var userId))
+                return Unauthorized();
             if (order.BuyerId != userId && !User.IsInRole("Admin"))
                 return Forbid();
+
+            await _payuSync.TryFinalizeOrderFromPayuApiAsync(order.Id);
+            await _context.Entry(order).ReloadAsync();
+            await _payuSync.EnsureListingPurchasedNotificationIfNeededAsync(order.Id);
 
             return View(order);
         }
@@ -154,7 +171,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 throw new Exception($"PayU OAuth error: {json}");
 
             using var doc = JsonDocument.Parse(json);
-            return doc.RootElement.GetProperty("access_token").GetString();
+            return doc.RootElement.GetProperty("access_token").GetString()
+                ?? throw new InvalidOperationException("PayU OAuth: brak access_token w odpowiedzi.");
         }
 
         private async Task<string> CreatePayUOrderAsync(Order order, Listing listing, string token)
@@ -197,8 +215,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                     new
                     {
                         name = listing.Title,
-                        unitPrice = ((int)(order.Amount * 100)).ToString(),
-                        quantity = "1"
+                        unitPrice = ((int)Math.Round((double)(listing.Price!.Value * 100), MidpointRounding.AwayFromZero)).ToString(),
+                        quantity = Math.Max(1, order.Quantity).ToString()
                     }
                 }
             };
@@ -222,8 +240,9 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             using var doc = JsonDocument.Parse(json);
 
-            var redirectUri = doc.RootElement.GetProperty("redirectUri").GetString();
-            var payuOrderId = doc.RootElement.GetProperty("orderId").GetString();
+            var redirectUri = doc.RootElement.GetProperty("redirectUri").GetString()
+                ?? throw new InvalidOperationException("PayU: brak redirectUri w odpowiedzi.");
+            var payuOrderId = doc.RootElement.GetProperty("orderId").GetString() ?? "";
 
             order.PayUOrderId = payuOrderId;
             await _context.SaveChangesAsync();

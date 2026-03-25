@@ -1,4 +1,4 @@
-﻿using ProjektZespolowyGr3.Models;
+using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.System;
 using ProjektZespolowyGr3.Models.ViewModels;
 using ProjektZespolowyGr3.Models.DbModels;
@@ -17,7 +17,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
     [Authorize(Roles = "Admin,Client")]
     public class ListingManageController : Controller
     {
-        public MyDBContext _context;
+        private readonly MyDBContext _context;
         private readonly IWebHostEnvironment _env;
         private readonly IHttpContextAccessor _httpContextAccessor;
         public ListingManageController(MyDBContext context, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor)
@@ -26,7 +26,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             _env = env;
             _httpContextAccessor = httpContextAccessor;
         }
-        public async Task<IActionResult> Index(string? searchString = null, int pageSize = 25, int pageNumber = 1, string tagFilter = null)
+        public async Task<IActionResult> Index(string? searchString = null, int pageSize = 25, int pageNumber = 1, string? tagFilter = null)
         {
             int userId = 0;
             var isAdmin = User.IsInRole("Admin");
@@ -53,7 +53,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             return View(model);
         }
 
-        private async Task<List<BrowseListingsViewModel>> GetFilteredListingsAsync(string? searchString, int pageSize, int pageNumber, string tagFilter, int userId, bool isAdmin)
+        private async Task<List<BrowseListingsViewModel>> GetFilteredListingsAsync(string? searchString, int pageSize, int pageNumber, string? tagFilter, int userId, bool isAdmin)
         {
             var listings = _context.Listings
                         .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
@@ -101,7 +101,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 })
                 .ToListAsync();
         }
-        private async Task<int> GetListingsCountAsync(string? searchString, string tagFilter, int userId, bool isAdmin)
+        private async Task<int> GetListingsCountAsync(string? searchString, string? tagFilter, int userId, bool isAdmin)
         {
             var listings = _context.Listings.AsQueryable();
 
@@ -144,6 +144,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             var listing = _context.Listings
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags)
+                .Include(l => l.ExchangeAcceptedTags)
                 .FirstOrDefault(l => l.Id == id);
 
             if (listing == null)
@@ -160,6 +161,11 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 Price = listing.Price,
                 SelectedTagIds = listing.Tags.Select(t => t.TagId).ToList(),
                 Photos = listing.Photos,
+                NotExchangeable = listing.NotExchangeable,
+                MinExchangeValue = listing.MinExchangeValue,
+                ExchangeDescription = listing.ExchangeDescription,
+                StockQuantity = listing.StockQuantity,
+                SelectedExchangeAcceptedTagIds = listing.ExchangeAcceptedTags.Select(e => e.TagId).ToList(),
                 AvailableTags = _context.Tags.Select(t => new SelectListItem
                 {
                     Value = t.Id.ToString(),
@@ -192,6 +198,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             var listing = _context.Listings
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags)
+                .Include(l => l.ExchangeAcceptedTags)
                 .FirstOrDefault(l => l.Id == id);
 
             if (listing == null)
@@ -211,6 +218,11 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             listing.Description = vm.Description;
             listing.Price = vm.Price;
             listing.Type = vm.Type;
+            listing.NotExchangeable = vm.NotExchangeable;
+            listing.MinExchangeValue = vm.MinExchangeValue;
+            listing.ExchangeDescription = string.IsNullOrWhiteSpace(vm.ExchangeDescription) ? null : vm.ExchangeDescription.Trim();
+            listing.StockQuantity = vm.StockQuantity;
+            ListingStockHelper.SyncSoldFlag(listing);
 
             listing.Tags.Clear();
             if (vm.SelectedTagIds != null)
@@ -218,6 +230,19 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 foreach (var tagId in vm.SelectedTagIds)
                 {
                     listing.Tags.Add(new ListingTag
+                    {
+                        TagId = tagId,
+                        ListingId = listing.Id
+                    });
+                }
+            }
+
+            listing.ExchangeAcceptedTags.Clear();
+            if (vm.SelectedExchangeAcceptedTagIds != null)
+            {
+                foreach (var tagId in vm.SelectedExchangeAcceptedTagIds.Distinct())
+                {
+                    listing.ExchangeAcceptedTags.Add(new ListingExchangeAcceptedTag
                     {
                         TagId = tagId,
                         ListingId = listing.Id

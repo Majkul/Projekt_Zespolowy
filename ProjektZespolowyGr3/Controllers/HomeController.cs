@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
@@ -50,7 +50,7 @@ public class HomeController : Controller
     }
 
     [Route("Account/[action]")]
-    public async Task<IActionResult> Login(string login, string password, string returnUrl = null)
+    public async Task<IActionResult> Login(string login, string password, string? returnUrl = null)
     {
         if (Request.Method == "GET")
         {
@@ -63,8 +63,14 @@ public class HomeController : Controller
             if (_authService.Validate(login, password) != null)
             {
                 var user = _authService.GetUser(login);
+                if (user == null)
+                {
+                    TempData["AlertErrorLogin"] = "Incorrect login or password";
+                    return View();
+                }
+
                 var userAuth = _context.UserAuths.FirstOrDefault(x => x.UserId == user.Id);
-                if (!userAuth.EmailVerified)
+                if (userAuth is not { EmailVerified: true })
                 {
                     //ModelState.AddModelError("", "You need to confirm your email address.");
                     TempData["AlertErrorLogin"] = "You need to confirm your email address.";
@@ -97,7 +103,7 @@ public class HomeController : Controller
     }
 
     [Route("Account/[action]")]
-    public async Task<IActionResult> Register()
+    public IActionResult Register()
     {
         return View();
     }

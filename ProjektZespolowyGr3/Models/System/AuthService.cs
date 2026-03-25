@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using System.Text;
@@ -33,14 +33,9 @@ namespace ProjektZespolowyGr3.Models.System
             return result;
         }
 
-        internal User GetUser(string login)
+        internal User? GetUser(string login)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Username == login);
-
-            if (user == null)
-                return null;
-
-            return user;
+            return _context.Users.FirstOrDefault(u => u.Username == login);
         }
 
         public User? Validate(string login, string password)

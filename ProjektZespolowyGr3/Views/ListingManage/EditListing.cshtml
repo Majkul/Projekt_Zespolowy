@@ -1,4 +1,4 @@
-﻿@model ProjektZespolowyGr3.Models.ViewModels.EditListingViewModel
+@model ProjektZespolowyGr3.Models.ViewModels.EditListingViewModel
 @{
     ViewBag.Title = "Edit listing";
     var modelId = ViewBag.ModelId;
@@ -46,10 +46,39 @@
     </div>
 
     <div class="mb-3">
-        <label class="form-label" id="label-SelectedTagIds">Tags</label>
-        <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control" id="input-SelectedTagIds">
+        <label asp-for="StockQuantity" class="form-label">Liczba sztuk</label>
+        <input asp-for="StockQuantity" type="number" min="0" class="form-control" />
+        <small class="text-muted">0 = wyprzedane (ogłoszenie oznaczone jako sprzedane).</small>
+        <span asp-validation-for="StockQuantity" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tags</label>
+        <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control">
         </select>
         <small class="text-muted">Hold CTRL to select multiple</small>
+    </div>
+
+    <div class="card mb-3 border-info">
+        <div class="card-header">Wymiana</div>
+        <div class="card-body">
+            <div class="form-check mb-3">
+                <input asp-for="NotExchangeable" class="form-check-input" />
+                <label asp-for="NotExchangeable" class="form-check-label">Nie do wymiany</label>
+            </div>
+            <div class="mb-3">
+                <label asp-for="MinExchangeValue" class="form-label">Minimalna wartość oferty kupującego (PLN)</label>
+                <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label asp-for="ExchangeDescription" class="form-label">Czego szukasz w zamian</label>
+                <textarea asp-for="ExchangeDescription" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="mb-0">
+                <label class="form-label">Akceptowane tagi przy wymianie</label>
+                <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-control"></select>
+            </div>
+        </div>
     </div>
 
     <h4 class="mt-4">Existing Photos</h4>

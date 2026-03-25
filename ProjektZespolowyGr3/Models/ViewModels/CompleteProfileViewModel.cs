@@ -7,12 +7,12 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         [Display(Name = "Imię")]
         [Required(ErrorMessage = "Imię jest wymagane")]
         [StringLength(50, ErrorMessage = "Imię nie może być dłuższe niż 50 znaków")]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         [Display(Name = "Nazwisko")]
         [Required(ErrorMessage = "Nazwisko jest wymagane")]
         [StringLength(50, ErrorMessage = "Nazwisko nie może być dłuższe niż 50 znaków")]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         [Display(Name = "Adres")]
         [StringLength(200, ErrorMessage = "Adres nie może być dłuższy niż 200 znaków")]

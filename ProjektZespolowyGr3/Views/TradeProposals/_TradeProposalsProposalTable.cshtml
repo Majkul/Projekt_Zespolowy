@@ -1,0 +1,64 @@
+@model IReadOnlyList<ProjektZespolowyGr3.Models.DbModels.TradeProposal>
+@using ProjektZespolowyGr3.Models.DbModels
+@{
+    var userId = (int)ViewBag.CurrentUserId;
+    var showListing = ViewBag.ShowListingColumn as bool? == true;
+
+    string StatusLabel(TradeProposalStatus s) => s switch
+    {
+        TradeProposalStatus.Pending => "Oczekuje",
+        TradeProposalStatus.Accepted => "Zaakceptowana",
+        TradeProposalStatus.Rejected => "Odrzucona",
+        TradeProposalStatus.Cancelled => "Anulowana",
+        TradeProposalStatus.Superseded => "Zastąpiona",
+        _ => s.ToString()
+    };
+}
+@if (Model.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-striped table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">#</th>
+                    @if (showListing)
+                    {
+                        <th scope="col">Ogłoszenie</th>
+                    }
+                    <th scope="col">Druga strona</th>
+                    <th scope="col">Rola</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Ostatnia zmiana</th>
+                    <th scope="col" class="text-end">Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    var counterpart = p.InitiatorUserId == userId ? p.Receiver : p.Initiator;
+                    var role = p.InitiatorUserId == userId ? "Składasz ofertę" : "Otrzymujesz ofertę";
+                    <tr>
+                        <td>@p.Id</td>
+                        @if (showListing)
+                        {
+                            <td>
+                                @(p.SubjectListing?.Title ?? "—")
+                                @if (p.SubjectListingId > 0)
+                                {
+                                    <a class="d-block small" asp-controller="Listings" asp-action="Details" asp-route-id="@p.SubjectListingId">Ogłoszenie</a>
+                                }
+                            </td>
+                        }
+                        <td>@counterpart.Username</td>
+                        <td>@role</td>
+                        <td>@StatusLabel(p.Status)</td>
+                        <td>@p.LastModifiedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@p.Id">Szczegóły</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

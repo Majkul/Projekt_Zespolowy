@@ -90,7 +90,7 @@ namespace ProjektZespolowyGr3.Controllers
         }
 
         // GET: MyProfile/Details
-        public async Task<IActionResult> Details()
+        public IActionResult Details()
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProjektZespolowyGr3.Models.DbModels
 {
@@ -6,10 +6,10 @@ namespace ProjektZespolowyGr3.Models.DbModels
     {
         public int Id { get; set; }
         public int UserId { get; set; }
-        public User User { get; set; }
+        public User User { get; set; } = null!;
         public TicketCategory Category { get; set; }
         public TicketStatus Status { get; set; }
-        public string Subject { get; set; }
+        public string Subject { get; set; } = string.Empty;
         public string? Description { get; set; }
 
         public int? AssigneeId { get; set; }
