@@ -16,42 +16,42 @@
         </ul>
     </div>
 }
-<form asp-action="EditUser" asp-route-id="@modelId" method="post" enctype="multipart/form-data" class="w-50">
+<form id="edit-user-form" asp-action="EditUser" asp-route-id="@modelId" method="post" enctype="multipart/form-data" class="w-50">
     <div class="mb-3">
-        <label asp-for="Username" class="form-label">Login</label>
-        <input asp-for="Username" class="form-control" />
+        <label asp-for="Username" class="form-label" id="label-Username">Login</label>
+        <input asp-for="Username" class="form-control" id="input-Username" />
     </div>
     <div class="mb-3">
-        <label asp-for="FirstName" class="form-label">First Name</label>
-        <input asp-for="FirstName" class="form-control" />
+        <label asp-for="FirstName" class="form-label" id="label-FirstName">First Name</label>
+        <input asp-for="FirstName" class="form-control" id="input-FirstName" />
     </div>
     <div class="mb-3">
-        <label asp-for="LastName" class="form-label">Last Name</label>
-        <input asp-for="LastName" class="form-control" />
+        <label asp-for="LastName" class="form-label" id="label-LastName">Last Name</label>
+        <input asp-for="LastName" class="form-control" id="input-LastName" />
     </div>
     <div class="mb-3">
-        <label asp-for="Email" class="form-label">Email</label>
-        <input asp-for="Email" class="form-control" />
+        <label asp-for="Email" class="form-label" id="label-Email">Email</label>
+        <input asp-for="Email" class="form-control" id="input-Email" />
     </div>
     <div class="mb-3">
-        <label asp-for="Address" class="form-label">Address</label>
-        <input asp-for="Address" class="form-control" />
+        <label asp-for="Address" class="form-label" id="label-Address">Address</label>
+        <input asp-for="Address" class="form-control" id="input-Address" />
     </div>
     <div class="mb-3">
-        <label asp-for="PhoneNumber" class="form-label">Phone number</label>>
-        <input asp-for="PhoneNumber" class="form-control" />
+        <label asp-for="PhoneNumber" class="form-label" id="label-PhoneNumber">Phone number</label>
+        <input asp-for="PhoneNumber" class="form-control" id="input-PhoneNumber" />
     </div>
     <div class="mb-3">
-        <label asp-for="IsAdmin" class="form-check-label">Is Admin</label>
-        <input asp-for="IsAdmin" type="checkbox" class="form-check-input" />
+        <label asp-for="IsAdmin" class="form-check-label" id="label-IsAdmin">Is Admin</label>
+        <input asp-for="IsAdmin" type="checkbox" class="form-check-input" id="input-IsAdmin" />
     </div>
     <div class="mb-3">
-        <label asp-for="IsBanned" class="form-check-label">Is Banned</label>
-        <input asp-for="IsBanned" type="checkbox" class="form-check-input" />
+        <label asp-for="IsBanned" class="form-check-label" id="label-IsBanned">Is Banned</label>
+        <input asp-for="IsBanned" type="checkbox" class="form-check-input" id="input-IsBanned" />
     </div>
     <div class="mb-3">
-        <label asp-for="IsDeleted" class="form-label">Is Deleted</label>
-        <input asp-for="IsDeleted" class="form-control" />
+        <label asp-for="IsDeleted" class="form-check-label" id="label-IsDeleted">Is Deleted</label>
+        <input asp-for="IsDeleted" type="checkbox" class="form-check-input" id="input-IsDeleted" />
     </div>
 
     <div class="d-flex gap-2 mt-3">
@@ -59,3 +59,73 @@
         <a class="btn btn-danger" asp-action="Index">Cancel</a>
     </div>
 </form>
+
+<script>
+    const initialValues = {
+        Username: '@(Model.Username ?? "")',
+        FirstName: '@(Model.FirstName ?? "")',
+        LastName: '@(Model.LastName ?? "")',
+        Email: '@(Model.Email ?? "")',
+        Address: '@(Model.Address ?? "")',
+        PhoneNumber: '@(Model.PhoneNumber ?? "")',
+        IsAdmin: '@Model.IsAdmin'.toLowerCase() === 'true',
+        IsBanned: '@Model.IsBanned'.toLowerCase() === 'true',
+        IsDeleted: '@Model.IsDeleted'.toLowerCase() === 'true'
+    };
+
+    function updateLabel(field, value) {
+        const label = document.getElementById('label-' + field);
+        if (label) {
+            label.style.fontWeight = value !== initialValues[field] ? 'bold' : 'normal';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        ['Username', 'FirstName', 'LastName', 'Email', 'Address', 'PhoneNumber'].forEach(function (field) {
+            const input = document.getElementById('input-' + field);
+            if (input) {
+                input.addEventListener('input', function () {
+                    updateLabel(field, input.value);
+                });
+            }
+        });
+
+        ['IsAdmin', 'IsBanned', 'IsDeleted'].forEach(function (field) {
+            const input = document.getElementById('input-' + field);
+            if (input) {
+                input.addEventListener('change', function () {
+                    updateLabel(field, input.checked);
+                });
+            }
+        });
+
+        const fields = ['Username', 'FirstName', 'LastName', 'Email', 'Address', 'PhoneNumber', 'IsAdmin', 'IsBanned'];
+
+        const form = document.getElementById('edit-user-form');
+        form.addEventListener('submit', function (e) {
+            let changedFields = [];
+            fields.forEach(function (field) {
+                const input = document.getElementById('input-' + field);
+                let value;
+                if (input) {
+                    if (input.multiple) {
+                        value = Array.from(input.selectedOptions).map(option => option.value).join(",");
+                    } else if (input.type === 'checkbox') {
+                        value = input.checked;
+                    } else {
+                        value = input.value;
+                    }
+                    if (value != initialValues[field]) {
+                        changedFields.push(field);
+                    }
+                }
+            });
+            if (changedFields.length > 0) {
+                const msg = "Are you sure you want to change " + changedFields.join(", ") + "?";
+                if (!confirm(msg)) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
+</script>
