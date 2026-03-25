@@ -1,4 +1,4 @@
-﻿@model ProjektZespolowyGr3.Models.ViewModels.CreateTicketViewModel
+@model ProjektZespolowyGr3.Models.ViewModels.CreateTicketViewModel
 @using ProjektZespolowyGr3.Models.DbModels
 @using System.ComponentModel.DataAnnotations
 
@@ -11,8 +11,12 @@
     {
         var type = typeof(TicketCategory);
         var memInfo = type.GetMember(category.ToString());
+        if (memInfo.Length == 0)
+            return category.ToString().Replace("_", " ");
         var attributes = memInfo[0].GetCustomAttributes(typeof(DisplayAttribute), false);
-        return (attributes.Length > 0) ? ((DisplayAttribute)attributes[0]).Name : category.ToString().Replace("_", " ");
+        return (attributes.Length > 0)
+            ? (((DisplayAttribute)attributes[0]).Name ?? category.ToString().Replace("_", " "))
+            : category.ToString().Replace("_", " ");
     }
 
     var allowedCategories = Enum.GetValues(typeof(TicketCategory))

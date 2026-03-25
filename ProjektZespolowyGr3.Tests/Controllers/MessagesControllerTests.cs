@@ -7,6 +7,7 @@ using System.Security.Claims;
 using ProjektZespolowyGr3.Controllers.User;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
+using ProjektZespolowyGr3.Models.System;
 
 namespace ProjektZespolowyGr3.Tests.Controllers
 {
@@ -21,7 +22,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _context = new MyDBContext(options);
-            _controller = new MessagesController(_context);
+            _controller = new MessagesController(_context, new NotificationService(_context));
         }
 
         private void SetupAuthenticatedUser(int userId)

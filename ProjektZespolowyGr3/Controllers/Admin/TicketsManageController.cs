@@ -32,7 +32,7 @@ namespace ProjektZespolowyGr3.Controllers.Admin
             {
                 query = query.Where(t =>
                     t.Subject.Contains(searchString) ||
-                    t.Description.Contains(searchString) ||
+                    (t.Description != null && t.Description.Contains(searchString)) ||
                     t.User.Username.Contains(searchString));
             }
 

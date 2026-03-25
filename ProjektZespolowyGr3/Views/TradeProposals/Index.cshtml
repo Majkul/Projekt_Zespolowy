@@ -1,0 +1,43 @@
+@model ProjektZespolowyGr3.Models.ViewModels.TradeProposalsIndexViewModel
+@{
+    ViewData["Title"] = "Moje wymiany";
+    ViewBag.CurrentUserId = Model.CurrentUserId;
+    ViewBag.ShowListingColumn = true;
+}
+
+<h2 class="mb-3">Moje wymiany</h2>
+
+@if (Model.ActiveOnePerListing.Count == 0 && Model.ArchivedOnePerListing.Count == 0)
+{
+    <p class="text-muted">Nie masz jeszcze żadnych propozycji wymiany.</p>
+}
+else
+{
+    <p class="text-muted small mb-4">
+        Na liście jest <strong>jedna wymiana na ogłoszenie</strong>. Pełny wątek (kontroferty, historia) zobaczysz po wejściu w <strong>Szczegóły</strong>.
+    </p>
+
+    <section class="mb-5">
+        <h3 class="h4 mb-3">Obecne wymiany</h3>
+        @if (Model.ActiveOnePerListing.Count == 0)
+        {
+            <p class="text-muted small mb-0">Brak trwających negocjacji.</p>
+        }
+        else
+        {
+            await Html.RenderPartialAsync("_TradeProposalsProposalTable", Model.ActiveOnePerListing);
+        }
+    </section>
+
+    <section>
+        <h3 class="h4 mb-3">Zarchiwizowane wymiany</h3>
+        @if (Model.ArchivedOnePerListing.Count == 0)
+        {
+            <p class="text-muted small mb-0">Brak zarchiwizowanych wymian (lub masz nadal otwartą negocjację przy danym ogłoszeniu).</p>
+        }
+        else
+        {
+            await Html.RenderPartialAsync("_TradeProposalsProposalTable", Model.ArchivedOnePerListing);
+        }
+    </section>
+}

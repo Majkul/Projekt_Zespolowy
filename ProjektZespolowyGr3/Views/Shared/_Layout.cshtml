@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="utf-8" />
@@ -26,7 +26,7 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Listings" asp-action="Index">Oferty</a>
                         </li>
                         
-                        @if (!User.Identity.IsAuthenticated)
+                        @if (User.Identity?.IsAuthenticated != true)
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Login">Zaloguj</a>
@@ -35,8 +35,11 @@
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Register">Zarejestruj</a>
                             </li>
                         }
-                        @if (User.Identity.IsAuthenticated)
+                        @if (User.Identity?.IsAuthenticated == true)
                         {
+                            <li class="nav-item d-flex align-items-center">
+                                @await Component.InvokeAsync("UnreadNotifications")
+                            </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-dark" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <img src="/Images/Icons/user-icon.png" alt="User" width="16" height="16" />
@@ -47,8 +50,10 @@
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item text-dark" asp-controller="ListingManage" asp-action="Index">Moje oferty</a></li>
                                     <li><a class="dropdown-item text-dark" asp-area="" asp-controller="Listings" asp-action="Create">Stwórz ofertę</a></li>
+                                    <li><a class="dropdown-item text-dark" asp-controller="TradeProposals" asp-action="Index">Moje wymiany</a></li>
                                     <li><a class="dropdown-item text-dark" asp-area="" asp-controller="Tickets" asp-action="Index">Moje zgłoszenia</a></li>
                                     <li><a class="dropdown-item text-dark" asp-area="" asp-controller="Tickets" asp-action="Create">Stwórz zgłoszenie</a></li>
+                                    <li><a class="dropdown-item text-dark" asp-area="" asp-controller="Notifications" asp-action="Index">Powiadomienia</a></li>
                                     <li><a class="dropdown-item text-dark" asp-area="" asp-controller="Messages" asp-action="Index">Wiadomości</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>

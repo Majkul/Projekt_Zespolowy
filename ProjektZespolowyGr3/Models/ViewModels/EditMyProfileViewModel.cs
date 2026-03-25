@@ -24,7 +24,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         [Display(Name = "Email")]
         [EmailAddress]
         [Required(ErrorMessage = "Email jest wymagany")]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
     }
 }
 

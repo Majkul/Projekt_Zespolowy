@@ -1,0 +1,84 @@
+@model ProjektZespolowyGr3.Models.ViewModels.ComposeTradeViewModel
+@using ProjektZespolowyGr3.Models.DbModels
+@{
+    var p = Model.ParentProposal!;
+
+    decimal SumSide(TradeProposalSide side)
+    {
+        decimal s = 0;
+        foreach (var it in p.Items.Where(i => i.Side == side))
+        {
+            if (it.Listing != null) s += (it.Listing.Price ?? 0) * Math.Max(1, it.Quantity);
+            if (it.CashAmount.HasValue) s += it.CashAmount.Value;
+        }
+        return s;
+    }
+
+    var initiatorSum = SumSide(TradeProposalSide.Initiator);
+    var receiverSum = SumSide(TradeProposalSide.Receiver);
+}
+
+<div class="card border-secondary mb-4 shadow-sm">
+    <div class="card-header">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+            <span><strong>Propozycja, na którą odpowiadasz</strong> (ref. #@p.Id)</span>
+            <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-outline-secondary">Pełny widok</a>
+        </div>
+        <div class="alert alert-light border py-2 mb-0 small">
+            <strong>Nową kontrofertę składasz Ty</strong> — trafi ona do rozmówcy <strong>@Model.ReceiverUsername</strong>.<br />
+            <span class="text-muted">Poniżej: <strong>Otrzymujący Ofertę</strong> i <strong>Składający Ofertę</strong> — role w <em>tej</em> propozycji (odbiorca vs nadawca oferty).</span>
+        </div>
+        <div class="small text-muted mt-2">
+            Ostatnia zmiana tej propozycji: @p.LastModifiedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100 bg-light border-secondary">
+                    <div class="fw-semibold mb-1">Otrzymujący Ofertę — <span class="text-secondary">@p.Receiver.Username</span></div>
+                    <div class="small text-muted mb-2">Szacowana wartość: <strong>@receiverSum.ToString("C")</strong></div>
+                    @foreach (var it in p.Items.Where(i => i.Side == TradeProposalSide.Receiver).OrderBy(i => i.Id))
+                    {
+                        if (it.Listing != null)
+                        {
+                            ViewBag.ProposedTradeQuantity = Math.Max(1, it.Quantity);
+                            @await Html.PartialAsync("_TradeListingPreview", it.Listing)
+                            ViewBag.ProposedTradeQuantity = null;
+                        }
+                        if (it.CashAmount.HasValue)
+                        {
+                            <div class="border rounded p-2 mb-2 bg-white small">
+                                Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100 bg-light border-primary">
+                    <div class="fw-semibold mb-1">Składający Ofertę — <span class="text-primary">@p.Initiator.Username</span></div>
+                    <div class="small text-muted mb-2">Szacowana wartość: <strong>@initiatorSum.ToString("C")</strong></div>
+                    @foreach (var it in p.Items.Where(i => i.Side == TradeProposalSide.Initiator).OrderBy(i => i.Id))
+                    {
+                        if (it.Listing != null)
+                        {
+                            ViewBag.ProposedTradeQuantity = Math.Max(1, it.Quantity);
+                            @await Html.PartialAsync("_TradeListingPreview", it.Listing)
+                            ViewBag.ProposedTradeQuantity = null;
+                        }
+                        if (it.CashAmount.HasValue)
+                        {
+                            <div class="border rounded p-2 mb-2 bg-white small">
+                                Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+        <p class="small text-muted mb-0 mt-3">
+            Formularz poniżej to <em>nowa</em> propozycja: składasz ją jako <strong>@Model.InitiatorUsername</strong>, adresatem jest <strong>@Model.ReceiverUsername</strong>. Powyższy podgląd dotyczy wyłącznie propozycji, na którą odpowiadasz.
+        </p>
+    </div>
+</div>

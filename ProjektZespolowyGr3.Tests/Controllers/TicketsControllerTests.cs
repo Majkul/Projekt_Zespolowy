@@ -10,14 +10,13 @@ using ProjektZespolowyGr3.Controllers.User;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.ViewModels;
-using ProjektZespolowyGr3.Models.System;
+using System.Threading.Tasks;
 
 namespace ProjektZespolowyGr3.Tests.Controllers
 {
     public class TicketsControllerTests : IDisposable
     {
         private readonly MyDBContext _context;
-        private readonly HelperService _helperService;
         private readonly Mock<IWebHostEnvironment> _envMock;
         private readonly TicketsController _controller;
 
@@ -27,10 +26,9 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _context = new MyDBContext(options);
-            _helperService = new HelperService(_context);
             _envMock = new Mock<IWebHostEnvironment>();
             _envMock.Setup(e => e.WebRootPath).Returns("/wwwroot");
-            _controller = new TicketsController(_context, _helperService, _envMock.Object);
+            _controller = new TicketsController(_context, _envMock.Object);
         }
 
         private void SetupAuthenticatedUser(int userId)
@@ -97,15 +95,17 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         }
 
         [Fact]
-        public void ReportUser_ShouldReturnView_WithPreFilledViewModel()
+        public async Task ReportUser_ShouldReturnView_WithPreFilledViewModel()
         {
             // Arrange
+            var reporter = new User { Username = "reporter", Email = "reporter@test.com", CreatedAt = DateTime.UtcNow };
             var reportedUser = new User { Username = "reported", Email = "reported@test.com", CreatedAt = DateTime.UtcNow };
-            _context.Users.Add(reportedUser);
+            _context.Users.AddRange(reporter, reportedUser);
             _context.SaveChanges();
+            SetupAuthenticatedUser(reporter.Id);
 
             // Act
-            var result = _controller.ReportUser(reportedUser.Id);
+            var result = await _controller.ReportUser(reportedUser.Id);
 
             // Assert
             result.Should().BeOfType<ViewResult>();
@@ -121,7 +121,8 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         {
             // Arrange
             var seller = new User { Username = "seller", Email = "seller@test.com", CreatedAt = DateTime.UtcNow };
-            _context.Users.Add(seller);
+            var reporter = new User { Username = "reporter", Email = "rep@test.com", CreatedAt = DateTime.UtcNow };
+            _context.Users.AddRange(seller, reporter);
             _context.SaveChanges();
 
             var listing = new Listing
@@ -136,6 +137,8 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             };
             _context.Listings.Add(listing);
             _context.SaveChanges();
+
+            SetupAuthenticatedUser(reporter.Id);
 
             // Act
             var result = _controller.ReportListing(listing.Id);

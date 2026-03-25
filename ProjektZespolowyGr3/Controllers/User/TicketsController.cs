@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -86,7 +86,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         [HttpGet]
-        public IActionResult ReportUser(int userId)
+        public async Task<IActionResult> ReportUser(int userId, int? listingId = null)
         {
             if (!_context.Users.Any(u => u.Id == userId))
             {
@@ -99,11 +99,30 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return BadRequest("You cannot report yourself.");
             }
 
+            int? reportedListingId = null;
+            string? reportedListingTitle = null;
+            if (listingId.HasValue)
+            {
+                var listing = await _context.Listings.AsNoTracking().FirstOrDefaultAsync(l => l.Id == listingId.Value);
+                if (listing != null)
+                {
+                    var me = GetCurrentUserId();
+                    var involved = new HashSet<int> { userId, me };
+                    if (involved.Contains(listing.SellerId))
+                    {
+                        reportedListingId = listing.Id;
+                        reportedListingTitle = listing.Title;
+                    }
+                }
+            }
+
             var vm = new CreateTicketViewModel
             {
                 Category = TicketCategory.User_Report,
                 ReportedUserId = userId,
-                ReportedUserName = _context.Users.Where(u => u.Id == userId).Select(u => u.Username).FirstOrDefault()
+                ReportedUserName = _context.Users.Where(u => u.Id == userId).Select(u => u.Username).FirstOrDefault(),
+                ReportedListingId = reportedListingId,
+                ReportedListingTitle = reportedListingTitle
             };
             return View("Create", vm);
         }
@@ -162,7 +181,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return View(model);
             }
 
-            if (model.Attachments.Count > 10)
+            if ((model.Attachments?.Count ?? 0) > 10)
             {
                 ModelState.AddModelError("Attachments", "You can upload a maximum of 10 attachments.");
                 return View(model);
@@ -367,8 +386,14 @@ namespace ProjektZespolowyGr3.Controllers.User
         {
             var type = typeof(TicketCategory);
             var memInfo = type.GetMember(category.ToString());
+            if (memInfo.Length == 0)
+                return category.ToString();
+
             var attributes = memInfo[0].GetCustomAttributes(typeof(DisplayAttribute), false);
-            return (attributes.Length > 0) ? ((DisplayAttribute)attributes[0]).Name : category.ToString();
+            if (attributes.Length > 0 && ((DisplayAttribute)attributes[0]).Name is { } name)
+                return name;
+
+            return category.ToString();
         }
     }
 }

@@ -1,8 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <!-- Nazwy klas migracji EF (np. „payment”) — CS8981 -->
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>7a16b429-5f81-4ad9-b92b-89c52ad5abf6</UserSecretsId>
   </PropertyGroup>
@@ -27,11 +29,6 @@
     <Folder Include="Migrations\" />
     <Folder Include="wwwroot\Images\Icons\" />
     <Folder Include="wwwroot\uploads\" />
-  </ItemGroup>
-
-  <!-- Wykluczenie plików testowych z kompilacji projektu głównego -->
-  <ItemGroup>
-    <Compile Remove="ProjektZespolowyGr3.Tests\**\*.cs" />
   </ItemGroup>
 
 </Project>

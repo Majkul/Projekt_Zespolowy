@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
+using ProjektZespolowyGr3.Models.System;
 using System.Security.Claims;
 
 namespace ProjektZespolowyGr3.Controllers.User
@@ -11,10 +12,12 @@ namespace ProjektZespolowyGr3.Controllers.User
     public class MessagesController : Controller
     {
         private readonly MyDBContext _context;
+        private readonly INotificationService _notifications;
 
-        public MessagesController(MyDBContext context)
+        public MessagesController(MyDBContext context, INotificationService notifications)
         {
             _context = context;
+            _notifications = notifications;
         }
 
         private int GetCurrentUserId()
@@ -88,12 +91,18 @@ namespace ProjektZespolowyGr3.Controllers.User
             }
 
             var messages = await query
+                .Include(m => m.TradeProposal!).ThenInclude(t => t.Initiator)
+                .Include(m => m.TradeProposal!).ThenInclude(t => t.Receiver)
+                .Include(m => m.TradeProposal!).ThenInclude(t => t.Items).ThenInclude(i => i.Listing!).ThenInclude(l => l!.Photos).ThenInclude(p => p.Upload)
+                .Include(m => m.TradeProposal!).ThenInclude(t => t.Items).ThenInclude(i => i.Listing!).ThenInclude(l => l!.Tags).ThenInclude(lt => lt.Tag)
+                .Include(m => m.ReplyToMessage!)
+                    .ThenInclude(rm => rm.TradeProposal)
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
 
             foreach (var message in messages)
             {
-                if (message.IsArchived)
+                if (message.IsArchived && message.TradeProposalId == null)
                 {
                     message.Content = "Ta wiadomość została usunięta.";
                     message.Sender = null;
@@ -105,6 +114,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             ViewBag.OtherUser = otherUser;
             ViewBag.ListingId = listingId;
             ViewBag.TicketId = ticketId;
+            ViewBag.CurrentUserId = currentUserId;
 
             return View(messages);
         }
@@ -139,6 +149,8 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
+
+            await _notifications.NotifyNewMessageAsync(receiverId, message.Id);
 
             return RedirectToAction(nameof(Conversation), new { userId = receiverId, listingId, ticketId });
         }

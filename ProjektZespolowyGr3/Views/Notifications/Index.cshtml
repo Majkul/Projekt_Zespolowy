@@ -1,0 +1,62 @@
+@model List<ProjektZespolowyGr3.Models.DbModels.Notification>
+@using ProjektZespolowyGr3.Models.DbModels
+@{
+    ViewData["Title"] = "Powiadomienia";
+}
+
+<div class="container mt-4 mb-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="mb-0">Powiadomienia</h2>
+        @if (Model.Any(n => !n.IsRead))
+        {
+            <form asp-action="MarkAllRead" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Oznacz wszystkie jako przeczytane</button>
+            </form>
+        }
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <p class="text-muted">Brak powiadomień.</p>
+    }
+    else
+    {
+        <ul class="list-group">
+            @foreach (var n in Model)
+            {
+                <li class="list-group-item @(n.IsRead ? "" : "list-group-item-light border-start border-primary border-3")">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                        <div class="flex-grow-1">
+                            @switch (n.Kind)
+                            {
+                                case NotificationKind.NewMessage:
+                                    <strong>Nowa wiadomość</strong>
+                                    <span class="text-muted">od @(n.Message?.Sender?.Username ?? "użytkownika")</span>
+                                    @if (n.Message != null && n.Message.Content.Length > 0 && n.Message.TradeProposalId == null)
+                                    {
+                                        <div class="small text-muted text-truncate" style="max-width: 36rem;">@n.Message.Content</div>
+                                    }
+                                    break;
+                                case NotificationKind.ListingPurchased:
+                                    <strong>Zakupiono Twoje ogłoszenie</strong>
+                                    <span class="text-muted">@(n.Order?.Listing?.Title ?? "—")</span>
+                                    break;
+                                case NotificationKind.TradeProposalReceived:
+                                    <strong>Nowa propozycja wymiany</strong>
+                                    <span class="text-muted">od @(n.TradeProposal?.Initiator?.Username ?? "?")</span>
+                                    @if (n.TradeProposal?.SubjectListing != null)
+                                    {
+                                        <div class="small text-muted">Kontekst: @n.TradeProposal.SubjectListing.Title</div>
+                                    }
+                                    break;
+                            }
+                            <div class="small text-muted mt-1">@n.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                        </div>
+                        <a asp-action="Go" asp-route-id="@n.Id" class="btn btn-sm btn-primary">Otwórz</a>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+</div>

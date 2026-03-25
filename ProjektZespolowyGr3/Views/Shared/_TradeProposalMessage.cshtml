@@ -1,0 +1,152 @@
+@model ProjektZespolowyGr3.Models.DbModels.Message
+@using ProjektZespolowyGr3.Models.DbModels
+@{
+    var currentUserId = (int)(ViewBag.CurrentUserId ?? 0);
+    var tp = Model.TradeProposal;
+    if (tp == null) { return; }
+
+    bool isMine = Model.SenderId == currentUserId;
+    bool iAmInitiator = tp.InitiatorUserId == currentUserId;
+
+    decimal Sum(TradeProposalSide side)
+    {
+        decimal s = 0;
+        foreach (var it in tp.Items.Where(i => i.Side == side))
+        {
+            if (it.Listing != null) s += (it.Listing.Price ?? 0) * Math.Max(1, it.Quantity);
+            if (it.CashAmount.HasValue) s += it.CashAmount.Value;
+        }
+        return s;
+    }
+
+    var receiverSum = Sum(TradeProposalSide.Receiver);
+    var initiatorSum = Sum(TradeProposalSide.Initiator);
+    var pending = tp.Status == TradeProposalStatus.Pending;
+}
+
+<div class="d-flex mb-3 @(isMine ? "justify-content-end" : "justify-content-start")">
+    <div class="trade-bubble p-3 rounded-3 border @(isMine ? "border-primary bg-white" : "border-secondary bg-light")" style="max-width: 92%;">
+        @if (Model.ReplyToMessageId != null && Model.ReplyToMessage != null)
+        {
+            var rm = Model.ReplyToMessage;
+            <div class="small border-start border-3 border-info ps-2 py-2 mb-2 rounded bg-light">
+                <div class="text-muted mb-1">Kontroferta — odpowiedź na wcześniejszą propozycję</div>
+                @if (rm.TradeProposalId != null && rm.TradeProposal != null)
+                {
+                    <div>
+                        Wcześniejsza propozycja
+                        <a asp-controller="TradeProposals" asp-action="Details" asp-route-id="@rm.TradeProposal.Id" class="fw-semibold">#@rm.TradeProposal.Id</a>
+                        <span class="text-muted">(@rm.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"))</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-break text-muted">@rm.Content</div>
+                }
+            </div>
+        }
+        <div class="small text-muted mb-1">
+            @(isMine ? "Wysłana propozycja" : "Otrzymana propozycja") · @Model.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+            @if (tp.LastModifiedAt > tp.CreatedAt.AddSeconds(1))
+            {
+                <span class="ms-1" title="Ostatnia edycja: @tp.LastModifiedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")">✎</span>
+            }
+        </div>
+        <div class="small text-muted mb-2">
+            @if (iAmInitiator)
+            {
+                <span>W tej propozycji jesteś <strong>Składający Ofertę</strong> (<strong>@tp.Initiator.Username</strong>).</span>
+            }
+            else
+            {
+                <span>W tej propozycji jesteś <strong>Otrzymujący Ofertę</strong> (<strong>@tp.Receiver.Username</strong>).</span>
+            }
+        </div>
+        <div class="row g-2">
+            <div class="col-md-6">
+                <div class="fw-semibold small">Otrzymujący Ofertę — @tp.Receiver.Username</div>
+                <div class="small mb-2">Σ @receiverSum.ToString("C")</div>
+                @{ ViewBag.Compact = true; }
+                @foreach (var it in tp.Items.Where(i => i.Side == TradeProposalSide.Receiver).OrderBy(i => i.Id))
+                {
+                    if (it.Listing != null)
+                    {
+                        ViewBag.ProposedTradeQuantity = Math.Max(1, it.Quantity);
+                        @await Html.PartialAsync("_TradeListingPreview", it.Listing)
+                        ViewBag.ProposedTradeQuantity = null;
+                    }
+                    if (it.CashAmount.HasValue)
+                    {
+                        <div class="border rounded p-2 mb-2 bg-white small">
+                            Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                        </div>
+                    }
+                }
+            </div>
+            <div class="col-md-6">
+                <div class="fw-semibold small">Składający Ofertę — @tp.Initiator.Username</div>
+                <div class="small mb-2">Σ @initiatorSum.ToString("C")</div>
+                @{ ViewBag.Compact = true; }
+                @foreach (var it in tp.Items.Where(i => i.Side == TradeProposalSide.Initiator).OrderBy(i => i.Id))
+                {
+                    if (it.Listing != null)
+                    {
+                        ViewBag.ProposedTradeQuantity = Math.Max(1, it.Quantity);
+                        @await Html.PartialAsync("_TradeListingPreview", it.Listing)
+                        ViewBag.ProposedTradeQuantity = null;
+                    }
+                    if (it.CashAmount.HasValue)
+                    {
+                        <div class="border rounded p-2 mb-2 bg-white small">
+                            Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+        <div class="mt-2 d-flex flex-wrap gap-1">
+            <a asp-controller="TradeProposals" asp-action="Details" asp-route-id="@tp.Id" class="btn btn-sm btn-outline-secondary">Szczegóły</a>
+
+            @if (pending && tp.ReceiverUserId == currentUserId)
+            {
+                <form asp-controller="TradeProposals" asp-action="Accept" asp-route-id="@tp.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-success">Akceptuj</button>
+                </form>
+                <form asp-controller="TradeProposals" asp-action="Reject" asp-route-id="@tp.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Odrzuć</button>
+                </form>
+                <a asp-controller="TradeProposals" asp-action="Compose" asp-route-listingId="@tp.SubjectListingId" asp-route-parentTradeProposalId="@tp.Id" class="btn btn-sm btn-outline-primary">Kontroferta</a>
+            }
+            @if (pending && tp.InitiatorUserId == currentUserId)
+            {
+                <form asp-controller="TradeProposals" asp-action="Cancel" asp-route-id="@tp.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-warning">Anuluj</button>
+                </form>
+                <a asp-controller="TradeProposals" asp-action="Compose" asp-route-listingId="@tp.SubjectListingId" asp-route-editTradeProposalId="@tp.Id" class="btn btn-sm btn-outline-primary">Edytuj</a>
+            }
+        </div>
+        <div class="mt-2 small">
+            @switch (tp.Status)
+            {
+                case TradeProposalStatus.Accepted:
+                    <span class="text-success">Propozycja zaakceptowana.</span>
+                    break;
+                case TradeProposalStatus.Rejected:
+                    <span class="text-danger">Propozycja odrzucona.</span>
+                    break;
+                case TradeProposalStatus.Cancelled:
+                    <span class="text-secondary">Propozycja anulowana.</span>
+                    break;
+                case TradeProposalStatus.Superseded:
+                    <span class="text-muted">Zastąpiona kontrofertą.</span>
+                    break;
+                default:
+                    <span class="text-muted">Oczekuje na decyzję.</span>
+                    break;
+            }
+        </div>
+    </div>
+</div>

@@ -20,6 +20,7 @@ namespace ProjektZespolowyGr3.Tests.Models
                 Price = 100.50m,
                 IsFeatured = false,
                 IsSold = false,
+                StockQuantity = 1,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -33,6 +34,7 @@ namespace ProjektZespolowyGr3.Tests.Models
             listing.Price.Should().Be(100.50m);
             listing.IsFeatured.Should().BeFalse();
             listing.IsSold.Should().BeFalse();
+            listing.StockQuantity.Should().Be(1);
         }
 
         [Fact]
