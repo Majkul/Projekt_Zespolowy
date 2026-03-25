@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 ﻿using System.ComponentModel.DataAnnotations;
-=======
->>>>>>> origin/main
 namespace ProjektZespolowyGr3.Models.DbModels
 {
     public class User

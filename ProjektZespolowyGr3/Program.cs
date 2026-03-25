@@ -39,6 +39,9 @@ builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(connecti
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPayuOrderSyncService, PayuOrderSyncService>();
 
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IPayuOrderSyncService, PayuOrderSyncService>();
+
 // TODO ZMIENIC potem wywalic
 builder.Services.AddTransient<HelperService>();
 
@@ -93,16 +96,16 @@ builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 var app = builder.Build();
 
-<<<<<<< HEAD
+     
 app.UseForwardedHeaders();
-=======
+     
 // Zastosuj oczekujące migracje EF (np. kolumna Quantity w TradeProposalItems), żeby uniknąć rozjazdu modelu z bazą.
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyDBContext>();
     db.Database.Migrate();
 }
->>>>>>> origin/main
+ 
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

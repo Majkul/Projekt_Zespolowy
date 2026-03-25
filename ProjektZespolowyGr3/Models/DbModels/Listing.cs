@@ -19,9 +19,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public bool IsFeatured { get; set; } = false;
         public bool IsSold { get; set; } = false;
         public bool IsArchived { get; set; } = false;
-<<<<<<< HEAD
         public DateTime? ArchivedAt { get; set; }
-=======
 
         /// <summary>Jeśli true, ogłoszenie nie może być dodane do propozycji wymiany.</summary>
         public bool NotExchangeable { get; set; }
@@ -32,7 +30,6 @@ namespace ProjektZespolowyGr3.Models.DbModels
         /// <summary>Co sprzedający przyjąłby w zamian (opis oczekiwań przy wymianie).</summary>
         public string? ExchangeDescription { get; set; }
 
->>>>>>> origin/main
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
