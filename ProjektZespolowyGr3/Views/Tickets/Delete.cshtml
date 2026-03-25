@@ -1,4 +1,4 @@
-﻿@model ProjektZespolowyGr3.Models.DbModels.Ticket
+@model ProjektZespolowyGr3.Models.DbModels.Ticket
 
 @{
     ViewData["Title"] = "Delete";
@@ -45,7 +45,7 @@
             @Html.DisplayNameFor(model => model.Assignee)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Assignee.Id)
+            @(Model.Assignee?.Id.ToString() ?? "—")
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.CreatedAt)
@@ -63,13 +63,13 @@
             @Html.DisplayNameFor(model => model.ReportedUser)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ReportedUser.Id)
+            @(Model.ReportedUser?.Id.ToString() ?? "—")
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.ReportedListing)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ReportedListing.Id)
+            @(Model.ReportedListing?.Id.ToString() ?? "—")
         </dd>
     </dl>
     

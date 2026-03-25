@@ -1,7 +1,10 @@
 @model ProjektZespolowyGr3.Models.DbModels.Ticket
+@using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
     ViewData["Title"] = "Szczegóły ticketu";
+    var statusSelectItems = ViewBag.Statuses as List<SelectListItem> ?? new List<SelectListItem>();
+    var adminSelectItems = ViewBag.Admins as List<SelectListItem> ?? new List<SelectListItem>();
 }
 
 <div class="container mt-4">
@@ -75,7 +78,7 @@
                         <div class="mb-2">
                             <label class="form-label">Status:</label>
                             <select name="status" class="form-select">
-                                @foreach (var status in ViewBag.Statuses as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                @foreach (var status in statusSelectItems)
                                 {
                                     <option value="@status.Value" selected="@status.Selected">@status.Text</option>
                                 }
@@ -91,7 +94,7 @@
                             <label class="form-label">Przypisz do:</label>
                             <select name="assigneeId" class="form-select">
                                 <option value="">Nieprzypisany</option>
-                                @foreach (var admin in ViewBag.Admins as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                                @foreach (var admin in adminSelectItems)
                                 {
                                     <option value="@admin.Value" selected="@admin.Selected">@admin.Text</option>
                                 }

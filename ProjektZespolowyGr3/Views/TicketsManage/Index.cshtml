@@ -1,10 +1,14 @@
 @model List<ProjektZespolowyGr3.Models.DbModels.Ticket>
 @using ProjektZespolowyGr3.Models.DbModels
 @using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
     ViewData["Title"] = "Zarządzanie ticketami";
-    
+    var statusSelectItems = ViewBag.Statuses as List<SelectListItem> ?? new List<SelectListItem>();
+    var categorySelectItems = ViewBag.Categories as List<SelectListItem> ?? new List<SelectListItem>();
+    var adminSelectItems = ViewBag.Admins as List<SelectListItem> ?? new List<SelectListItem>();
+
     string GetDisplayName(Enum value)
     {
         var type = value.GetType();
@@ -33,7 +37,7 @@
             <div class="col-md-2">
                 <select name="statusFilter" class="form-select">
                     <option value="">Wszystkie statusy</option>
-                    @foreach (var status in ViewBag.Statuses as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                    @foreach (var status in statusSelectItems)
                     {
                         <option value="@status.Value" selected="@status.Selected">@status.Text</option>
                     }
@@ -42,7 +46,7 @@
             <div class="col-md-2">
                 <select name="categoryFilter" class="form-select">
                     <option value="">Wszystkie kategorie</option>
-                    @foreach (var category in ViewBag.Categories as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                    @foreach (var category in categorySelectItems)
                     {
                         <option value="@category.Value" selected="@category.Selected">@category.Text</option>
                     }
@@ -51,7 +55,7 @@
             <div class="col-md-2">
                 <select name="assigneeFilter" class="form-select">
                     <option value="">Wszyscy</option>
-                    @foreach (var admin in ViewBag.Admins as List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)
+                    @foreach (var admin in adminSelectItems)
                     {
                         <option value="@admin.Value" selected="@admin.Selected">@admin.Text</option>
                     }

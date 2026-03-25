@@ -1,4 +1,4 @@
-﻿using ProjektZespolowyGr3.Models;
+using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.System;
 using ProjektZespolowyGr3.Models.ViewModels;
 using ProjektZespolowyGr3.Models.DbModels;
@@ -15,7 +15,8 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
     [Authorize(Roles = "Admin")]
     public class UserManageController : Controller
     {
-        public MyDBContext _context;
+        private readonly MyDBContext _context;
+
         public UserManageController(MyDBContext context)
         {
             _context = context;

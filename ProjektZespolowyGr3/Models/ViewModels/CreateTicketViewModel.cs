@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using ProjektZespolowyGr3.Models.DbModels;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProjektZespolowyGr3.Models.ViewModels
@@ -6,10 +7,10 @@ namespace ProjektZespolowyGr3.Models.ViewModels
     public class CreateTicketViewModel
     {
         [Required, StringLength(120)]
-        public string Subject { get; set; }
+        public string Subject { get; set; } = string.Empty;
 
         [Required, StringLength(2000)]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [Required]
         public TicketCategory Category { get; set; }

@@ -1,0 +1,220 @@
+@model ProjektZespolowyGr3.Models.ViewModels.ComposeTradeViewModel
+@using ProjektZespolowyGr3.Models.DbModels
+@using System.Globalization
+@{
+    ViewData["Title"] = "Propozycja wymiany";
+    var subject = Model.SubjectListing;
+}
+
+<div class="container mt-4 mb-5">
+    <h2 class="mb-3">@(Model.ParentTradeProposalId.HasValue ? "Kontroferta" : "Propozycja wymiany")</h2>
+    <p class="text-muted mb-2">Kontekst ogłoszenia: <strong>@subject.Title</strong></p>
+
+    @if (!subject.NotExchangeable && (subject.MinExchangeValue.HasValue || (subject.ExchangeAcceptedTags != null && subject.ExchangeAcceptedTags.Any()) || !string.IsNullOrWhiteSpace(subject.ExchangeDescription)))
+    {
+        <div class="card mb-3 border-warning">
+            <div class="card-header bg-warning bg-opacity-25 small fw-semibold">Zasady wymiany ustawione przez sprzedającego dla tego ogłoszenia</div>
+            <div class="card-body small">
+                @if (subject.MinExchangeValue.HasValue)
+                {
+                    var buyerLogin = Model.BuyerOffersFromInitiatorColumn ? Model.InitiatorUsername : Model.ReceiverUsername;
+                    var buyerCol = Model.BuyerOffersFromInitiatorColumn ? "niebieskiej, lewej (składający ofertę)" : "szarej, prawej (otrzymujący ofertę)";
+                    <p class="mb-2"><strong>Minimalna wartość oferty kupującego:</strong> @subject.MinExchangeValue.Value.ToString("C") — suma cen <strong>zaznaczonych</strong> ogłoszeń × sztuki <strong>oraz dopłaty gotówką</strong> wyłącznie u <strong>@buyerLogin</strong> w <strong>@buyerCol</strong> kolumnie.</p>
+                    <p class="mb-2 text-danger"><strong>Uwaga:</strong> ogłoszenia zaznaczone u sprzedającego (druga kolumna) <em>nie wliczają się</em> do tego progu — to przedmioty, które ewentualnie oddaje sprzedawca, a nie „wkład” kupującego.</p>
+                    <p class="mb-0">Jeśli nie masz nic do wymiany po swojej stronie, wpisz brakującą kwotę jako <strong>dopłatę gotówką</strong> w kolumnie kupującego.</p>
+                }
+                @if (subject.ExchangeAcceptedTags != null && subject.ExchangeAcceptedTags.Any())
+                {
+                    <p class="mb-2"><strong>Akceptowane tagi:</strong> każde Twoje ogłoszenie wchodzące w skład oferty kupującego musi mieć co najmniej jeden z tych tagów: @string.Join(", ", subject.ExchangeAcceptedTags.Select(e => e.Tag.Name)).</p>
+                }
+                @if (!string.IsNullOrWhiteSpace(subject.ExchangeDescription))
+                {
+                    <p class="mb-0"><strong>Czego szuka sprzedający w zamian:</strong> @subject.ExchangeDescription</p>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="alert alert-info py-2 small mb-3">
+        <strong>Uczestnicy tej propozycji:</strong><br />
+        <span class="text-primary">Składający Ofertę</span> — <strong>@Model.InitiatorUsername</strong> (lewa kolumna: składa propozycję, wybiera swoje ogłoszenia i dopłatę).<br />
+        <span class="text-secondary">Otrzymujący Ofertę</span> — <strong>@Model.ReceiverUsername</strong> (prawa kolumna: jego ogłoszenia i dopłata po jego stronie).
+    </div>
+
+    @if (Model.ParentProposal != null)
+    {
+        @await Html.PartialAsync("_ParentProposalPreview", Model)
+    }
+
+    @if (TempData["TradeError"] != null)
+    {
+        <div class="alert alert-danger">@TempData["TradeError"]</div>
+    }
+
+    <form asp-controller="TradeProposals" asp-action="Create" method="post" class="row g-4" id="trade-compose-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="subjectListingId" value="@Model.SubjectListingId" />
+        @if (Model.EditTradeProposalId.HasValue)
+        {
+            <input type="hidden" name="editTradeProposalId" value="@Model.EditTradeProposalId" />
+        }
+        @if (Model.ParentTradeProposalId.HasValue)
+        {
+            <input type="hidden" name="parentTradeProposalId" value="@Model.ParentTradeProposalId" />
+        }
+
+        <div class="col-md-6">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                    Składający Ofertę — <strong>@Model.InitiatorUsername</strong>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Wybierz swoje ogłoszenia (bez „nie do wymiany”), podaj liczbę sztuk i ewentualną dopłatę.</p>
+                    <p class="small mb-2"><strong>Szacowana wartość strony:</strong> <span id="sum-initiator" class="text-primary">—</span></p>
+                    @foreach (var l in Model.InitiatorPool)
+                    {
+                        var priceStr = (l.Price ?? 0).ToString(CultureInfo.InvariantCulture);
+                        var qtyVal = Model.InitiatorQuantities.TryGetValue(l.Id, out var iq) ? iq : 1;
+                        <div class="trade-line border rounded px-2 py-2 mb-2 d-flex flex-wrap align-items-center gap-2" data-side="initiator">
+                            <input class="form-check-input flex-shrink-0" type="checkbox" name="initiatorListingIds" value="@l.Id" id="i_@l.Id"
+                                   data-listing-price="@priceStr"
+                                   checked="@(Model.SelectedInitiatorListingIds.Contains(l.Id))" />
+                            <label class="form-check-label flex-grow-1 mb-0" for="i_@l.Id">@l.Title (@(l.Price?.ToString("C") ?? "bez ceny")) · dostępne: @l.StockQuantity</label>
+                            @{
+                                var img = l.Photos?.FirstOrDefault(p => p.IsFeatured)?.Upload?.Url ?? l.Photos?.FirstOrDefault()?.Upload?.Url;
+                            }
+                            @if (!string.IsNullOrEmpty(img))
+                            {
+                                <img src="@img" alt="" class="rounded flex-shrink-0" style="width:40px;height:40px;object-fit:cover;" />
+                            }
+                            <div class="d-flex align-items-center gap-1 ms-auto">
+                                <label class="small text-muted mb-0" for="iq_@l.Id">Szt.</label>
+                                <input type="number" name="initiatorQuantities[@l.Id]" id="iq_@l.Id" class="form-control form-control-sm trade-qty" min="1" max="@l.StockQuantity" value="@qtyVal" style="width:4.5rem;" />
+                            </div>
+                        </div>
+                    }
+                    @if (!Model.InitiatorPool.Any())
+                    {
+                        <p class="text-muted small">Brak dostępnych ogłoszeń (sprawdź, czy nie są oznaczone jako „nie do wymiany”).</p>
+                    }
+                    <hr />
+                    <label class="form-label" for="initiatorCash">Dopłata gotówką (PLN)</label>
+                    <input type="number" name="initiatorCash" id="initiatorCash" class="form-control" step="0.01" min="0" value="@Model.InitiatorCash.ToString(CultureInfo.InvariantCulture)" />
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100 border-secondary">
+                <div class="card-header">
+                    Otrzymujący Ofertę — <strong>@Model.ReceiverUsername</strong>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">Wybierz ogłoszenia drugiej strony (w tym kontekstowe), <strong>liczbę sztuk</strong> (np. 4 z tego samego ogłoszenia, jeśli jest na stanie) i ewentualną dopłatę.</p>
+                    <p class="small mb-2"><strong>Szacowana wartość strony:</strong> <span id="sum-receiver" class="text-secondary">—</span></p>
+                    @foreach (var l in Model.ReceiverPool)
+                    {
+                        var priceStr = (l.Price ?? 0).ToString(CultureInfo.InvariantCulture);
+                        var qtyVal = Model.ReceiverQuantities.TryGetValue(l.Id, out var rq) ? rq : 1;
+                        <div class="trade-line border rounded px-2 py-2 mb-2 d-flex flex-wrap align-items-center gap-2" data-side="receiver">
+                            <input class="form-check-input flex-shrink-0" type="checkbox" name="receiverListingIds" value="@l.Id" id="r_@l.Id"
+                                   data-listing-price="@priceStr"
+                                   checked="@(Model.SelectedReceiverListingIds.Contains(l.Id))" />
+                            <label class="form-check-label flex-grow-1 mb-0" for="r_@l.Id">@l.Title (@(l.Price?.ToString("C") ?? "bez ceny")) · dostępne: @l.StockQuantity</label>
+                            @{
+                                var img = l.Photos?.FirstOrDefault(p => p.IsFeatured)?.Upload?.Url ?? l.Photos?.FirstOrDefault()?.Upload?.Url;
+                            }
+                            @if (!string.IsNullOrEmpty(img))
+                            {
+                                <img src="@img" alt="" class="rounded flex-shrink-0" style="width:40px;height:40px;object-fit:cover;" />
+                            }
+                            <div class="d-flex align-items-center gap-1 ms-auto">
+                                <label class="small text-muted mb-0" for="rq_@l.Id">Szt.</label>
+                                <input type="number" name="receiverQuantities[@l.Id]" id="rq_@l.Id" class="form-control form-control-sm trade-qty" min="1" max="@l.StockQuantity" value="@qtyVal" style="width:4.5rem;" title="Ile sztuk z tego ogłoszenia wchodzi w propozycję (max = stan magazynowy)" />
+                            </div>
+                        </div>
+                    }
+                    <hr />
+                    <label class="form-label" for="receiverCash">Dopłata gotówką po stronie odbiorcy (PLN)</label>
+                    <input type="number" name="receiverCash" id="receiverCash" class="form-control" step="0.01" min="0" value="@Model.ReceiverCash.ToString(CultureInfo.InvariantCulture)" />
+                </div>
+            </div>
+        </div>
+
+        @if (subject.MinExchangeValue.HasValue)
+        {
+            <div class="col-12" id="buyer-min-wrap">
+                <div id="buyer-min-hint" class="alert small py-2 mb-0"></div>
+            </div>
+        }
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary btn-lg">@(Model.EditTradeProposalId.HasValue ? "Zapisz zmiany" : Model.ParentTradeProposalId.HasValue ? "Wyślij kontrofertę" : "Wyślij propozycję")</button>
+            <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.SubjectListingId" class="btn btn-outline-secondary">Anuluj</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var minBuyerThreshold = @(subject.MinExchangeValue.HasValue ? subject.MinExchangeValue.Value.ToString(CultureInfo.InvariantCulture) : "null");
+            var buyerFromInitiatorColumn = @(Model.BuyerOffersFromInitiatorColumn ? "true" : "false");
+
+            function num(el) {
+                if (!el) return 0;
+                var v = el.value.replace(',', '.');
+                var x = parseFloat(v);
+                return isNaN(x) ? 0 : x;
+            }
+            function sumSideRaw(checkboxName, cashEl) {
+                var s = 0;
+                document.querySelectorAll('input[name="' + checkboxName + '"]:checked').forEach(function (cb) {
+                    var row = cb.closest('.trade-line');
+                    var qtyEl = row ? row.querySelector('.trade-qty') : null;
+                    var qty = qtyEl ? (parseInt(qtyEl.value, 10) || 1) : 1;
+                    var unit = parseFloat(cb.getAttribute('data-listing-price') || '0') || 0;
+                    s += unit * qty;
+                });
+                s += num(cashEl);
+                return s;
+            }
+            function sumSide(checkboxName, cashEl, outEl) {
+                var s = sumSideRaw(checkboxName, cashEl);
+                outEl.textContent = s.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' });
+            }
+            function refresh() {
+                sumSide('initiatorListingIds', document.getElementById('initiatorCash'), document.getElementById('sum-initiator'));
+                sumSide('receiverListingIds', document.getElementById('receiverCash'), document.getElementById('sum-receiver'));
+                var hint = document.getElementById('buyer-min-hint');
+                if (hint != null && minBuyerThreshold != null) {
+                    var bi = sumSideRaw('initiatorListingIds', document.getElementById('initiatorCash'));
+                    var br = sumSideRaw('receiverListingIds', document.getElementById('receiverCash'));
+                    var buyerSum = buyerFromInitiatorColumn ? bi : br;
+                    var col = buyerFromInitiatorColumn ? 'niebieskiej (lewej)' : 'szarej (prawej)';
+                    if (buyerSum < minBuyerThreshold) {
+                        hint.className = 'alert alert-warning small py-2 mb-0';
+                        hint.innerHTML = 'Próg sprzedającego: co najmniej <strong>' +
+                            minBuyerThreshold.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' }) +
+                            '</strong> łącznej wartości <strong>po stronie kupującego</strong> (' + col +
+                            ' kolumna: ogłoszenia × szt. + dopłata). Teraz: <strong>' +
+                            buyerSum.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' }) +
+                            '</strong>. Drugą kolumnę (sprzedawca) serwer <em>nie</em> liczy do tego progu.';
+                    } else {
+                        hint.className = 'alert alert-success small py-2 mb-0';
+                        hint.textContent = 'Strona kupującego (' + col + ') spełnia wymagany próg minimalnej wartości.';
+                    }
+                }
+            }
+            document.querySelectorAll('#trade-compose-form input[name="initiatorListingIds"], #trade-compose-form input[name="receiverListingIds"], #initiatorCash, #receiverCash').forEach(function (el) {
+                el.addEventListener('change', refresh);
+                el.addEventListener('input', refresh);
+            });
+            document.querySelectorAll('#trade-compose-form .trade-qty').forEach(function (el) {
+                el.addEventListener('change', refresh);
+                el.addEventListener('input', refresh);
+            });
+            refresh();
+        })();
+    </script>
+}

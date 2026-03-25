@@ -111,17 +111,17 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _controller.ControllerContext.HttpContext.Request.Method = "GET";
 
             // Act
-            var result = await _controller.Login(null, null, null);
+            var result = await _controller.Login("", "", null);
 
             // Assert
             result.Should().BeOfType<ViewResult>();
         }
 
         [Fact]
-        public async Task Register_GET_ShouldReturnView()
+        public void Register_GET_ShouldReturnView()
         {
             // Act
-            var result = await _controller.Register();
+            var result = _controller.Register();
 
             // Assert
             result.Should().BeOfType<ViewResult>();
