@@ -1,0 +1,119 @@
+@model ProjektZespolowyGr3.Models.ViewModels.TradeLabelViewModel
+
+@{
+    ViewData["Title"] = "Etykiety nadawcze – Wymiana #" + Model.TradeProposalId;
+    Layout = "_Layout";
+}
+
+<style>
+    @@media print {
+        .no-print { display: none !important; }
+        body { background: white !important; }
+        .label-card { box-shadow: none !important; border: 2px solid #000 !important; }
+        .page-break { page-break-after: always; }
+    }
+
+    .label-card {
+        border: 2px solid #212529;
+        border-radius: 8px;
+        max-width: 700px;
+        margin: 0 auto;
+        font-family: 'Courier New', monospace;
+    }
+
+    .label-header {
+        background: #212529;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 5px 5px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .label-section {
+        padding: 16px 20px;
+        border-bottom: 1px dashed #999;
+    }
+
+    .label-section:last-child { border-bottom: none; }
+
+    .label-role {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6c757d;
+        margin-bottom: 4px;
+    }
+
+    .label-name { font-size: 1.15rem; font-weight: bold; }
+
+    .barcode {
+        font-size: 2.5rem;
+        letter-spacing: 8px;
+        color: #212529;
+        font-family: 'Libre Barcode 39', monospace;
+    }
+
+    .ref-text {
+        font-size: 0.75rem;
+        text-align: center;
+        letter-spacing: 2px;
+        color: #444;
+    }
+
+    .label-divider {
+        border: none;
+        border-top: 3px dashed #aaa;
+        margin: 40px auto;
+        max-width: 700px;
+    }
+
+    .cut-line {
+        text-align: center;
+        color: #aaa;
+        font-size: 0.75rem;
+        letter-spacing: 3px;
+        margin-bottom: 4px;
+    }
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap" rel="stylesheet">
+
+<div class="container mt-4 mb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+        <div>
+            <h4 class="mb-0">Etykiety nadawcze — Wymiana #@Model.TradeProposalId</h4>
+            <small class="text-muted">Dwie etykiety — jedna dla każdej strony wymiany</small>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-primary">
+                🖨️ Drukuj obie etykiety
+            </button>
+            <a href="javascript:history.back()" class="btn btn-outline-secondary">Wróć</a>
+        </div>
+    </div>
+
+    <div class="alert alert-info no-print" role="alert">
+        <strong>Wskazówka:</strong> Wydrukuj tę stronę i wytnij wzdłuż linii przerywanej. Każda strona wymiany dostaje swoją etykietę. Jeśli adres jest niepełny, uzupełnij go ręcznie.
+    </div>
+
+    @* ── Etykieta A ── *@
+    <div class="no-print mb-2">
+        <span class="badge bg-primary">Etykieta A — @Model.LabelA.From.Name wysyła do @Model.LabelA.To.Name</span>
+    </div>
+    @await Html.PartialAsync("_ShippingLabel", Model.LabelA)
+
+    <div class="page-break"></div>
+
+    <div class="cut-line mt-5 no-print">✂ ─────────────────── wytnij tutaj ───────────────────── ✂</div>
+    <hr class="label-divider" />
+
+    @* ── Etykieta B ── *@
+    <div class="no-print mb-2">
+        <span class="badge bg-secondary">Etykieta B — @Model.LabelB.From.Name wysyła do @Model.LabelB.To.Name</span>
+    </div>
+    @await Html.PartialAsync("_ShippingLabel", Model.LabelB)
+
+</div>

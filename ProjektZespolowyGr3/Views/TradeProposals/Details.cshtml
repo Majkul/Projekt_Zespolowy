@@ -191,5 +191,15 @@
     @{
         var other = cu == Model.InitiatorUserId ? Model.ReceiverUserId : Model.InitiatorUserId;
     }
-    <a asp-controller="Messages" asp-action="Conversation" asp-route-userId="@other" asp-route-listingId="@Model.SubjectListingId" class="btn btn-outline-primary">Wróć do rozmowy</a>
+    <div class="d-flex flex-wrap gap-2 align-items-center mt-3">
+        <a asp-controller="Messages" asp-action="Conversation" asp-route-userId="@other" asp-route-listingId="@Model.SubjectListingId" class="btn btn-outline-primary">Wróć do rozmowy</a>
+
+        @if (Model.Status == TradeProposalStatus.Accepted)
+        {
+            <a asp-controller="ShippingLabel" asp-action="Trade" asp-route-tradeId="@Model.Id"
+               class="btn btn-primary" target="_blank">
+                🖨️ Generuj etykiety wysyłkowe
+            </a>
+        }
+    </div>
 </div>

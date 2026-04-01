@@ -1,23 +1,58 @@
 ﻿@model ProjektZespolowyGr3.Models.DbModels.Order
+@using ProjektZespolowyGr3.Models.DbModels
 
 @{
     ViewData["Title"] = "Płatność przyjęta";
 }
 
-<h2>Płatność została rozpoczęta</h2>
+<div class="container mt-4" style="max-width:600px;">
 
-<p>
-    Dziękujemy za złożenie zamówienia.
-</p>
+    @if (Model.Status == OrderStatus.Paid)
+    {
+        <div class="alert alert-success d-flex align-items-center gap-3 mb-4">
+            <span style="font-size:2rem;">✅</span>
+            <div>
+                <h4 class="mb-1">Płatność potwierdzona!</h4>
+                <p class="mb-0">Zamówienie nr <strong>@Model.Id</strong> zostało opłacone.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning d-flex align-items-center gap-3 mb-4">
+            <span style="font-size:2rem;">⏳</span>
+            <div>
+                <h4 class="mb-1">Płatność w trakcie przetwarzania</h4>
+                <p class="mb-0">Zamówienie nr <strong>@Model.Id</strong> — status zostanie potwierdzony automatycznie.</p>
+            </div>
+        </div>
+    }
 
-<p>
-    Numer zamówienia: <strong>@Model.Id</strong>
-</p>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Szczegóły zamówienia</h5>
+            <ul class="list-unstyled mb-0">
+                <li><strong>Nr zamówienia:</strong> @Model.Id</li>
+                <li><strong>Kwota:</strong> @Model.Amount.ToString("C")</li>
+                <li><strong>Ilość:</strong> @Model.Quantity szt.</li>
+                <li><strong>Data:</strong> @Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</li>
+            </ul>
+        </div>
+    </div>
 
-<p>
-    Status płatności zostanie potwierdzony automatycznie.
-</p>
+    <div class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white">📦 Etykieta wysyłkowa</div>
+        <div class="card-body">
+            <p class="mb-3">Wygeneruj etykietę nadawczą dla tej paczki. Sprzedawca wyśle towar na Twój adres.</p>
+            <a asp-controller="ShippingLabel" asp-action="Order" asp-route-orderId="@Model.Id"
+               class="btn btn-primary" target="_blank">
+                🖨️ Generuj etykietę wysyłkową
+            </a>
+        </div>
+    </div>
 
-<a asp-controller="Home" asp-action="Index" class="btn btn-primary">
-    Wróć na stronę główną
-</a>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+        Wróć na stronę główną
+    </a>
+
+</div>
