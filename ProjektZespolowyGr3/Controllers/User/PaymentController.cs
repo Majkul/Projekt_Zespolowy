@@ -47,12 +47,15 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         [HttpPost]
-        public async Task<IActionResult> Buy(int listingId, int quantity = 1)
+        public async Task<IActionResult> Buy(int listingId, int quantity = 1, int? shippingOptionId = null)
         {
             var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out var userId))
                 return Unauthorized();
-            var listing = await _context.Listings.FindAsync(listingId);
+
+            var listing = await _context.Listings
+                .Include(l => l.ShippingOptions)
+                .FirstOrDefaultAsync(l => l.Id == listingId);
 
             if (listing == null || listing.IsArchived || !ListingStockHelper.CanSell(listing, quantity))
                 return BadRequest("Oferta nie istnieje, jest niedostępna lub podano złą ilość.");
@@ -60,20 +63,38 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (listing.Type != ListingType.Sale || !listing.Price.HasValue)
                 return BadRequest("Ta oferta nie jest na sprzedaż.");
 
-            // wlasne
             if (listing.SellerId == userId)
-            {
                 return BadRequest("Nie można kupić własnej oferty");
-            }
 
             var unitPrice = listing.Price!.Value;
+            decimal shippingCost = 0;
+            string? shippingName = null;
+
+            if (shippingOptionId.HasValue)
+            {
+                var opt = listing.ShippingOptions.FirstOrDefault(o => o.Id == shippingOptionId.Value);
+                if (opt != null)
+                {
+                    shippingCost = opt.Price;
+                    shippingName = opt.Name;
+                }
+            }
+            else if (listing.ShippingOptions.Any())
+            {
+                // Seller has shipping options but buyer didn't pick one — redirect back
+                TempData["BuyError"] = "Proszę wybrać metodę dostawy przed zakupem.";
+                return RedirectToAction("Details", "Listings", new { id = listingId });
+            }
+
             var order = new Order
             {
                 ListingId = listing.Id,
                 BuyerId = userId,
                 SellerId = listing.SellerId,
-                Amount = unitPrice * quantity,
+                Amount = unitPrice * quantity + shippingCost,
                 Quantity = quantity,
+                SelectedShippingName = shippingName,
+                ShippingCost = shippingCost,
                 Status = OrderStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
                 PayUOrderId = ""

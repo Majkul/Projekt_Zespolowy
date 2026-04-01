@@ -33,7 +33,21 @@
             <h5 class="card-title">Szczegóły zamówienia</h5>
             <ul class="list-unstyled mb-0">
                 <li><strong>Nr zamówienia:</strong> @Model.Id</li>
-                <li><strong>Kwota:</strong> @Model.Amount.ToString("C")</li>
+                @if (Model.ShippingCost > 0)
+                {
+                    <li><strong>Cena towaru:</strong> @((Model.Amount - Model.ShippingCost).ToString("C"))</li>
+                    <li><strong>Dostawa (@(Model.SelectedShippingName ?? "—")):</strong> @Model.ShippingCost.ToString("C")</li>
+                    <li class="mt-1"><strong>Łącznie:</strong> @Model.Amount.ToString("C")</li>
+                }
+                else
+                {
+                    <li><strong>Kwota:</strong> @Model.Amount.ToString("C")
+                        @if (!string.IsNullOrEmpty(Model.SelectedShippingName))
+                        {
+                            <span class="text-muted small ms-1">(dostawa: @Model.SelectedShippingName)</span>
+                        }
+                    </li>
+                }
                 <li><strong>Ilość:</strong> @Model.Quantity szt.</li>
                 <li><strong>Data:</strong> @Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</li>
             </ul>

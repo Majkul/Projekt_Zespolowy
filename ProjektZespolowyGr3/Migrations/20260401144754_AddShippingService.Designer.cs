@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjektZespolowyGr3.Models;
@@ -11,9 +12,11 @@ using ProjektZespolowyGr3.Models;
 namespace ProjektZespolowyGr3.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    partial class MyDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260401144754_AddShippingService")]
+    partial class AddShippingService
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -144,32 +147,6 @@ namespace ProjektZespolowyGr3.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("ListingTags");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingShippingOption", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ListingId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ListingId");
-
-                    b.ToTable("ListingShippingOptions");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Message", b =>
@@ -303,14 +280,6 @@ namespace ProjektZespolowyGr3.Migrations
 
                     b.Property<int>("SellerId")
                         .HasColumnType("integer");
-
-                    b.Property<string?>("SelectedShippingName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<decimal>("ShippingCost")
-                        .HasDefaultValue(0m)
-                        .HasColumnType("numeric");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -765,17 +734,6 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Tag");
                 });
 
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingShippingOption", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
-                        .WithMany("ShippingOptions")
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Listing");
-                });
-
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingPhoto", b =>
                 {
                     b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
@@ -1108,8 +1066,6 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Reviews");
 
                     b.Navigation("Tags");
-
-                    b.Navigation("ShippingOptions");
 
                     b.Navigation("TradeProposalsAsSubject");
                 });

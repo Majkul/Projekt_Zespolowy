@@ -153,6 +153,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .Include(l => l.Reviews)
                     .ThenInclude(r => r.Photos)
                         .ThenInclude(rp => rp.Upload)
+                .Include(l => l.ShippingOptions)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (listing == null)
@@ -247,6 +248,15 @@ namespace ProjektZespolowyGr3.Controllers.User
                 ExchangeDescription = string.IsNullOrWhiteSpace(model.ExchangeDescription) ? null : model.ExchangeDescription.Trim()
             };
             ListingStockHelper.SyncSoldFlag(listing);
+
+            foreach (var opt in model.ShippingOptions.Where(o => !string.IsNullOrWhiteSpace(o.Name)))
+            {
+                listing.ShippingOptions.Add(new ListingShippingOption
+                {
+                    Name = opt.Name.Trim(),
+                    Price = Math.Max(0, opt.Price)
+                });
+            }
 
             if (model.SelectedTagIds != null && model.SelectedTagIds.Any())
             {

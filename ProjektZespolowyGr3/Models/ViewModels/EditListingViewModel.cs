@@ -33,6 +33,9 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         public List<int>? SelectedTagIds { get; set; } = new();
         public IEnumerable<SelectListItem> AvailableTags { get; set; } = new List<SelectListItem>();
 
+        /// <summary>Opcje dostawy dodane przez sprzedającego.</summary>
+        public List<ShippingOptionInput> ShippingOptions { get; set; } = new();
+
         public bool NotExchangeable { get; set; }
 
         public decimal? MinExchangeValue { get; set; }

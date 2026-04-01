@@ -145,6 +145,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags)
                 .Include(l => l.ExchangeAcceptedTags)
+                .Include(l => l.ShippingOptions)
                 .FirstOrDefault(l => l.Id == id);
 
             if (listing == null)
@@ -167,6 +168,11 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 ExchangeDescription = listing.ExchangeDescription,
                 StockQuantity = listing.StockQuantity,
                 SelectedExchangeAcceptedTagIds = listing.ExchangeAcceptedTags.Select(e => e.TagId).ToList(),
+                ShippingOptions = listing.ShippingOptions.Select(o => new ShippingOptionInput
+                {
+                    Name = o.Name,
+                    Price = o.Price
+                }).ToList(),
                 AvailableTags = _context.Tags.Select(t => new SelectListItem
                 {
                     Value = t.Id.ToString(),
@@ -200,6 +206,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags)
                 .Include(l => l.ExchangeAcceptedTags)
+                .Include(l => l.ShippingOptions)
                 .FirstOrDefault(l => l.Id == id);
 
             if (listing == null)
@@ -247,6 +254,21 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                     listing.ExchangeAcceptedTags.Add(new ListingExchangeAcceptedTag
                     {
                         TagId = tagId,
+                        ListingId = listing.Id
+                    });
+                }
+            }
+
+            _context.ListingShippingOptions.RemoveRange(
+                _context.ListingShippingOptions.Where(o => o.ListingId == listing.Id));
+            if (vm.ShippingOptions != null)
+            {
+                foreach (var opt in vm.ShippingOptions.Where(o => !string.IsNullOrWhiteSpace(o.Name)))
+                {
+                    listing.ShippingOptions.Add(new ListingShippingOption
+                    {
+                        Name = opt.Name.Trim(),
+                        Price = Math.Max(0, opt.Price),
                         ListingId = listing.Id
                     });
                 }

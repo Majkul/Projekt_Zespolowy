@@ -87,6 +87,18 @@
                     <span asp-validation-for="StockQuantity" class="text-danger"></span>
                 </div>
 
+                <div class="card mb-3 border-success">
+                    <div class="card-header bg-success bg-opacity-10">
+                        🚚 Opcje dostawy <span class="text-muted small ms-2">Dodaj metody wysyłki jakie oferujesz kupującym</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="shipping-options-container">
+                        </div>
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addShippingRow()">+ Dodaj metodę dostawy</button>
+                        <div class="form-text text-muted mt-2">Wpisz 0 PLN dla bezpłatnej dostawy / odbioru osobistego.</div>
+                    </div>
+                </div>
+
                 <div class="mb-3">
                     <label asp-for="PhotoFiles" class="form-label fw-bold">Zdjęcia (maksymalnie 5)</label>
                     <input asp-for="PhotoFiles" type="file" multiple accept="image/*" class="form-control" />
@@ -104,6 +116,43 @@
 </div>
 
 @section Scripts {
+<script>
+    let shippingCount = 0;
+    function addShippingRow() {
+        const container = document.getElementById('shipping-options-container');
+        const row = document.createElement('div');
+        row.className = 'row g-2 mb-2 shipping-option-row';
+        row.innerHTML = `
+            <div class="col-7">
+                <input name="ShippingOptions[${shippingCount}].Name" class="form-control" placeholder="Np. InPost Paczkomat, DPD, Odbiór osobisty…" />
+            </div>
+            <div class="col-3">
+                <div class="input-group">
+                    <input name="ShippingOptions[${shippingCount}].Price" type="number" step="0.01" min="0" value="0" class="form-control" placeholder="0.00" />
+                    <span class="input-group-text">PLN</span>
+                </div>
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-outline-danger w-100" onclick="removeShippingRow(this)">✕</button>
+            </div>`;
+        container.appendChild(row);
+        shippingCount++;
+    }
+    function removeShippingRow(btn) {
+        btn.closest('.shipping-option-row').remove();
+        reindexShippingRows();
+    }
+    function reindexShippingRows() {
+        const rows = document.querySelectorAll('.shipping-option-row');
+        rows.forEach((row, i) => {
+            const nameInput = row.querySelector('input[name*=".Name"]');
+            const priceInput = row.querySelector('input[name*=".Price"]');
+            if (nameInput) nameInput.name = `ShippingOptions[${i}].Name`;
+            if (priceInput) priceInput.name = `ShippingOptions[${i}].Price`;
+        });
+        shippingCount = rows.length;
+    }
+</script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }

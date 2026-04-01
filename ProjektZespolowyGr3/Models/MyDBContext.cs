@@ -27,6 +27,7 @@ namespace ProjektZespolowyGr3.Models
         public DbSet<TradeProposalHistoryEntry> TradeProposalHistoryEntries { get; set; }
         public DbSet<ListingExchangeAcceptedTag> ListingExchangeAcceptedTags { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<ListingShippingOption> ListingShippingOptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -144,6 +145,12 @@ namespace ProjektZespolowyGr3.Models
                 .WithMany()
                 .HasForeignKey(o => o.ListingId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ListingShippingOption>()
+                .HasOne(s => s.Listing)
+                .WithMany(l => l.ShippingOptions)
+                .HasForeignKey(s => s.ListingId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.User)

@@ -31,7 +31,9 @@ else
     connectionString = $"Host={pgHost};Port={pgPort};Database={pgDatabase};Username={pgUser};Password={pgPassword};SSL Mode=Disable";
 }
 
-builder.Services.AddDbContext<MyDBContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<MyDBContext>(options =>
+    options.UseNpgsql(connectionString)
+           .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)));
 
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPayuOrderSyncService, PayuOrderSyncService>();

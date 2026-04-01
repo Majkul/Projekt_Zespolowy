@@ -286,16 +286,87 @@
                     }
                     else if (!Model.IsSold && Model.StockQuantity > 0 && Model.Type == ListingType.Sale)
                     {
-                        <form asp-controller="Payment" asp-action="Buy" method="post" class="mb-2">
+                        @if (TempData["BuyError"] != null)
+                        {
+                            <div class="alert alert-warning py-2 mb-2">@TempData["BuyError"]</div>
+                        }
+                        <form asp-controller="Payment" asp-action="Buy" method="post" class="mb-2" id="buy-form">
                             <input type="hidden" name="listingId" value="@Model.Id" />
                             <div class="mb-2">
                                 <label for="buy-quantity" class="form-label small mb-0">Ilość</label>
                                 <input id="buy-quantity" name="quantity" type="number" class="form-control" value="1" min="1" max="@Model.StockQuantity" required />
                             </div>
+
+                            @if (Model.ShippingOptions != null && Model.ShippingOptions.Any())
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold mb-1">🚚 Dostawa</label>
+                                    @foreach (var opt in Model.ShippingOptions)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input shipping-radio"
+                                                   type="radio"
+                                                   name="shippingOptionId"
+                                                   id="ship-@opt.Id"
+                                                   value="@opt.Id"
+                                                   data-price="@opt.Price.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                                                   required />
+                                            <label class="form-check-label" for="ship-@opt.Id">
+                                                @opt.Name
+                                                @if (opt.Price == 0)
+                                                {
+                                                    <span class="badge bg-success ms-1">Gratis</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">— @opt.Price.ToString("C")</span>
+                                                }
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="alert alert-light border py-2 mb-2" id="price-summary">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted small">Przedmiot</span>
+                                        <span id="item-total" class="small">@((Model.Price ?? 0).ToString("C"))</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted small">Dostawa</span>
+                                        <span id="ship-total" class="small">—</span>
+                                    </div>
+                                    <hr class="my-1" />
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Razem</span>
+                                        <span id="grand-total">—</span>
+                                    </div>
+                                </div>
+                            }
+
                             <button type="submit" class="btn btn-primary w-100 btn-lg">
                                 Kup teraz
                             </button>
                         </form>
+
+                        @if (Model.ShippingOptions != null && Model.ShippingOptions.Any())
+                        {
+                            <script>
+                                const basePrice = @((Model.Price ?? 0).ToString("F2", System.Globalization.CultureInfo.InvariantCulture));
+                                const formatPLN = v => v.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' });
+                                document.querySelectorAll('.shipping-radio').forEach(r => {
+                                    r.addEventListener('change', updateTotal);
+                                });
+                                document.getElementById('buy-quantity').addEventListener('input', updateTotal);
+                                function updateTotal() {
+                                    const qty = parseInt(document.getElementById('buy-quantity').value) || 1;
+                                    const sel = document.querySelector('.shipping-radio:checked');
+                                    const ship = sel ? parseFloat(sel.dataset.price) : 0;
+                                    document.getElementById('item-total').textContent = formatPLN(basePrice * qty);
+                                    document.getElementById('ship-total').textContent = sel ? (ship === 0 ? 'Gratis' : formatPLN(ship)) : '—';
+                                    document.getElementById('grand-total').textContent = sel ? formatPLN(basePrice * qty + ship) : '—';
+                                }
+                            </script>
+                        }
                     }
 
                     @if (!isUserSeller)

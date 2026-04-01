@@ -34,6 +34,9 @@ namespace ProjektZespolowyGr3.Models.DbModels
         [StringLength(100)]
         public string? Location { get; set; }
 
+        /// <summary>Opcje dostawy oferowane przez sprzedawcę.</summary>
+        public ICollection<ListingShippingOption> ShippingOptions { get; set; } = new List<ListingShippingOption>();
+
         /// <summary>Liczba wyświetleń ogłoszenia (nie licząc wizyt właściciela).</summary>
         public int ViewCount { get; set; } = 0;
 
