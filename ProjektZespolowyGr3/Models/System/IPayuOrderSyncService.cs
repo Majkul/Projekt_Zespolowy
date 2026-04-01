@@ -6,6 +6,8 @@ public interface IPayuOrderSyncService
 
     Task TryFinalizeOrderFromPayuApiAsync(int orderId, CancellationToken cancellationToken = default);
 
+    Task TryFinalizeTradeOrderFromPayuApiAsync(int tradeOrderId, CancellationToken cancellationToken = default);
+
     Task SyncPendingOrdersForSellerAsync(int sellerUserId, CancellationToken cancellationToken = default);
 
     Task EnsureListingPurchasedNotificationIfNeededAsync(int orderId, CancellationToken cancellationToken = default);

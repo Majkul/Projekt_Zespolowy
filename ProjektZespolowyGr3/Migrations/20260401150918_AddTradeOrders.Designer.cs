@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ProjektZespolowyGr3.Models;
@@ -11,9 +12,11 @@ using ProjektZespolowyGr3.Models;
 namespace ProjektZespolowyGr3.Migrations
 {
     [DbContext(typeof(MyDBContext))]
-    partial class MyDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260401150918_AddTradeOrders")]
+    partial class AddTradeOrders
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,55 +158,6 @@ namespace ProjektZespolowyGr3.Migrations
                     b.HasIndex("ListingId");
 
                     b.ToTable("ListingShippingOptions");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.TradeOrder", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
-
-                    b.Property<int>("TradeProposalId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PayerUserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ReceiverUserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PayerSide")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("CashAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("ShippingCost")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("TotalAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("SelectedShippingName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("PayUOrderId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TradeProposalId");
-
-                    b.ToTable("TradeOrders");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingTag", b =>
@@ -1193,17 +1147,6 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Items");
 
                     b.Navigation("Messages");
-                });
-
-            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.TradeOrder", b =>
-                {
-                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.TradeProposal", "TradeProposal")
-                        .WithMany()
-                        .HasForeignKey("TradeProposalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TradeProposal");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.User", b =>

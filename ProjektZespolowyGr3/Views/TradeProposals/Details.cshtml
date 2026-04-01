@@ -8,6 +8,7 @@
     var receiverSum = (decimal)(ViewBag.ReceiverSum ?? 0m);
     var thread = ViewBag.Thread as List<TradeProposal> ?? new List<TradeProposal>();
     var cu = ViewBag.CurrentUserId is int cid ? cid : 0;
+    var tradeOrders = ViewBag.TradeOrders as List<TradeOrder> ?? new List<TradeOrder>();
 
     string StatusName(TradeProposalStatus s)
     {
@@ -186,6 +187,141 @@
                 <li>@h.ChangedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") — @h.User.Username: @h.Summary</li>
             }
         </ul>
+    }
+
+    @if (Model.Status == TradeProposalStatus.Accepted)
+    {
+        var myPayerSide = cu == Model.InitiatorUserId ? TradeProposalSide.Initiator : TradeProposalSide.Receiver;
+        var myItems = Model.Items.Where(i => i.Side == myPayerSide).ToList();
+        var myCash = myItems.Where(i => i.CashAmount.HasValue).Sum(i => i.CashAmount!.Value);
+        var myShippingOptions = myItems
+            .Where(i => i.Listing != null)
+            .SelectMany(i => i.Listing!.ShippingOptions)
+            .ToList();
+        var myOrder = tradeOrders.FirstOrDefault(o => o.PayerSide == myPayerSide);
+        bool myPaid = myOrder?.Status == OrderStatus.Paid;
+        bool hasSomethingToPay = myCash > 0 || myShippingOptions.Any();
+
+        @if (TempData["TradePaymentError"] != null)
+        {
+            <div class="alert alert-warning mt-3">@TempData["TradePaymentError"]</div>
+        }
+        @if (TempData["TradePaymentInfo"] != null)
+        {
+            <div class="alert alert-info mt-3">@TempData["TradePaymentInfo"]</div>
+        }
+
+        @if (hasSomethingToPay)
+        {
+            <div class="card mt-4 border-success">
+                <div class="card-header bg-success bg-opacity-10 fw-bold">
+                    💳 Twoja płatność za wymianę
+                </div>
+                <div class="card-body">
+                    @if (myPaid)
+                    {
+                        <div class="alert alert-success mb-0">
+                            ✅ Płatność zrealizowana!
+                            @if (myOrder!.SelectedShippingName != null)
+                            {
+                                <span class="text-muted small ms-2">Dostawa: @myOrder.SelectedShippingName</span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-controller="Payment" asp-action="BuyTradeOrder" method="post">
+                            <input type="hidden" name="tradeId" value="@Model.Id" />
+
+                            @if (myCash > 0)
+                            {
+                                <div class="mb-3">
+                                    <strong>Dopłata gotówkowa:</strong>
+                                    <span class="text-primary fs-5 ms-2">@myCash.ToString("C")</span>
+                                    <div class="form-text">Kwota wynikająca z warunków uzgodnionych w propozycji wymiany.</div>
+                                </div>
+                            }
+
+                            @if (myShippingOptions.Any())
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">🚚 Wybierz metodę dostawy Twoich przedmiotów</label>
+                                    @foreach (var opt in myShippingOptions)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input trade-ship-radio"
+                                                   type="radio"
+                                                   name="shippingOptionId"
+                                                   id="tship-@opt.Id"
+                                                   value="@opt.Id"
+                                                   data-price="@opt.Price.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                                                   required />
+                                            <label class="form-check-label" for="tship-@opt.Id">
+                                                @opt.Name
+                                                @if (opt.Price == 0)
+                                                {
+                                                    <span class="badge bg-success ms-1">Gratis</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">— @opt.Price.ToString("C")</span>
+                                                }
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            @if (myCash > 0 || myShippingOptions.Any())
+                            {
+                                <div class="alert alert-light border py-2 mb-3" id="trade-price-summary">
+                                    @if (myCash > 0)
+                                    {
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted small">Dopłata</span>
+                                            <span class="small">@myCash.ToString("C")</span>
+                                        </div>
+                                    }
+                                    @if (myShippingOptions.Any())
+                                    {
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted small">Dostawa</span>
+                                            <span class="small" id="tship-cost-display">—</span>
+                                        </div>
+                                    }
+                                    <hr class="my-1" />
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Razem</span>
+                                        <span id="ttrade-total">@(myShippingOptions.Any() ? "—" : myCash.ToString("C"))</span>
+                                    </div>
+                                </div>
+                            }
+
+                            <button type="submit" class="btn btn-success">
+                                💳 Zapłać przez PayU
+                            </button>
+                        </form>
+
+                        @if (myShippingOptions.Any())
+                        {
+                            <script>
+                                const tradeCash = @myCash.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                                const fmtPLN = v => v.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' });
+                                document.querySelectorAll('.trade-ship-radio').forEach(r => {
+                                    r.addEventListener('change', () => {
+                                        const ship = parseFloat(r.dataset.price);
+                                        document.getElementById('tship-cost-display').textContent =
+                                            ship === 0 ? 'Gratis' : fmtPLN(ship);
+                                        document.getElementById('ttrade-total').textContent =
+                                            fmtPLN(tradeCash + ship);
+                                    });
+                                });
+                            </script>
+                        }
+                    }
+                </div>
+            </div>
+        }
     }
 
     @{

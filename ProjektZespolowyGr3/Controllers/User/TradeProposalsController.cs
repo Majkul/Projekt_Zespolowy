@@ -679,6 +679,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .Include(p => p.SubjectListing)
                 .Include(p => p.Items).ThenInclude(i => i.Listing)!.ThenInclude(l => l!.Photos).ThenInclude(ph => ph.Upload)
                 .Include(p => p.Items).ThenInclude(i => i.Listing)!.ThenInclude(l => l!.Tags).ThenInclude(lt => lt.Tag)
+                .Include(p => p.Items).ThenInclude(i => i.Listing)!.ThenInclude(l => l!.ShippingOptions)
                 .Include(p => p.ParentTradeProposal!).ThenInclude(pt => pt!.Initiator)
                 .Include(p => p.ParentTradeProposal!).ThenInclude(pt => pt!.Receiver)
                 .Include(p => p.ParentTradeProposal!).ThenInclude(pt => pt!.Items).ThenInclude(i => i.Listing!).ThenInclude(l => l!.Photos).ThenInclude(ph => ph.Upload)
@@ -706,6 +707,12 @@ namespace ProjektZespolowyGr3.Controllers.User
                 ViewBag.ParentInitiatorSum = SumSide(par.Items, TradeProposalSide.Initiator, parentMap);
                 ViewBag.ParentReceiverSum = SumSide(par.Items, TradeProposalSide.Receiver, parentMap);
             }
+
+            // Load existing TradeOrders for this proposal
+            var tradeOrders = await _context.TradeOrders
+                .Where(o => o.TradeProposalId == id)
+                .ToListAsync();
+            ViewBag.TradeOrders = tradeOrders;
 
             var rootId = await ResolveTradeThreadRootIdAsync(proposal.Id);
             var thread = await _context.TradeProposals

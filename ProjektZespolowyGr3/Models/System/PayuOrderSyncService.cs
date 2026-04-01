@@ -43,25 +43,35 @@ public class PayuOrderSyncService : IPayuOrderSyncService
         if (string.IsNullOrEmpty(payuOrderId))
             return;
 
-        var order = await _context.Orders
-            .FirstOrDefaultAsync(o => o.PayUOrderId == payuOrderId, cancellationToken);
-        if (order == null)
-            return;
-
         var completed = !string.IsNullOrEmpty(payuStatus) &&
             payuStatus.Equals("COMPLETED", StringComparison.OrdinalIgnoreCase);
 
-        if (completed && order.Status != OrderStatus.Paid)
+        // Check regular Order first
+        var order = await _context.Orders
+            .FirstOrDefaultAsync(o => o.PayUOrderId == payuOrderId, cancellationToken);
+        if (order != null)
         {
-            order.Status = OrderStatus.Paid;
-            var listing = await _context.Listings.FindAsync(new object?[] { order.ListingId }, cancellationToken);
-            if (listing != null)
-                ListingStockHelper.ApplySale(listing, Math.Max(1, order.Quantity));
-            await _context.SaveChangesAsync(cancellationToken);
+            if (completed && order.Status != OrderStatus.Paid)
+            {
+                order.Status = OrderStatus.Paid;
+                var listing = await _context.Listings.FindAsync(new object?[] { order.ListingId }, cancellationToken);
+                if (listing != null)
+                    ListingStockHelper.ApplySale(listing, Math.Max(1, order.Quantity));
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            if (order.Status == OrderStatus.Paid)
+                await EnsureListingPurchasedNotificationAsync(order, cancellationToken);
+            return;
         }
 
-        if (order.Status == OrderStatus.Paid)
-            await EnsureListingPurchasedNotificationAsync(order, cancellationToken);
+        // Check TradeOrder
+        var tradeOrder = await _context.TradeOrders
+            .FirstOrDefaultAsync(o => o.PayUOrderId == payuOrderId, cancellationToken);
+        if (tradeOrder != null && completed && tradeOrder.Status != OrderStatus.Paid)
+        {
+            tradeOrder.Status = OrderStatus.Paid;
+            await _context.SaveChangesAsync(cancellationToken);
+        }
     }
 
     public async Task TryFinalizeOrderFromPayuApiAsync(int orderId, CancellationToken cancellationToken = default)
@@ -91,6 +101,30 @@ public class PayuOrderSyncService : IPayuOrderSyncService
         await _context.SaveChangesAsync(cancellationToken);
 
         await EnsureListingPurchasedNotificationAsync(order, cancellationToken);
+    }
+
+    public async Task TryFinalizeTradeOrderFromPayuApiAsync(int tradeOrderId, CancellationToken cancellationToken = default)
+    {
+        var tradeOrder = await _context.TradeOrders.FirstOrDefaultAsync(o => o.Id == tradeOrderId, cancellationToken);
+        if (tradeOrder == null || tradeOrder.Status != OrderStatus.Pending || string.IsNullOrEmpty(tradeOrder.PayUOrderId))
+            return;
+
+        string? apiStatus;
+        try
+        {
+            apiStatus = await FetchPayuOrderStatusAsync(tradeOrder.PayUOrderId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "PayU: nie udało się odczytać statusu dla TradeOrderId={Id}", tradeOrderId);
+            return;
+        }
+
+        if (string.IsNullOrEmpty(apiStatus) || !apiStatus.Equals("COMPLETED", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        tradeOrder.Status = OrderStatus.Paid;
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task SyncPendingOrdersForSellerAsync(int sellerUserId, CancellationToken cancellationToken = default)
