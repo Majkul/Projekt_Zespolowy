@@ -6,6 +6,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
     public class ListingsFilterViewModel
     {
         public string? SearchString { get; set; }
+        public string? Location { get; set; }
         public string? Type { get; set; }
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
@@ -18,6 +19,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
 
         public bool HasActiveFilters =>
             !string.IsNullOrWhiteSpace(SearchString) ||
+            !string.IsNullOrWhiteSpace(Location) ||
             !string.IsNullOrWhiteSpace(Type) ||
             MinPrice.HasValue ||
             MaxPrice.HasValue ||

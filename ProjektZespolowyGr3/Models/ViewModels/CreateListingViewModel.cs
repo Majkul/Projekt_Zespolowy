@@ -8,6 +8,10 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         [Required, StringLength(120)]
         public string Title { get; set; } = string.Empty;
 
+        [StringLength(100)]
+        [Display(Name = "Lokalizacja (miasto)")]
+        public string? Location { get; set; }
+
         [StringLength(1000)]
         public string? Description { get; set; }
 

@@ -30,6 +30,10 @@ namespace ProjektZespolowyGr3.Models.DbModels
         /// <summary>Co sprzedający przyjąłby w zamian (opis oczekiwań przy wymianie).</summary>
         public string? ExchangeDescription { get; set; }
 
+        /// <summary>Miasto / lokalizacja ogłoszenia.</summary>
+        [StringLength(100)]
+        public string? Location { get; set; }
+
         /// <summary>Liczba wyświetleń ogłoszenia (nie licząc wizyt właściciela).</summary>
         public int ViewCount { get; set; } = 0;
 

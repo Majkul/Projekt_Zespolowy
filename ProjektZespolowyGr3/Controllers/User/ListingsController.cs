@@ -36,6 +36,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         // GET: Listings
         public async Task<IActionResult> Index(
             string? searchString,
+            string? location,
             string? type,
             decimal? minPrice,
             decimal? maxPrice,
@@ -58,6 +59,13 @@ namespace ProjektZespolowyGr3.Controllers.User
                 query = query.Where(l =>
                     EF.Functions.ILike(l.Title, $"%{term}%") ||
                     (l.Description != null && EF.Functions.ILike(l.Description, $"%{term}%")));
+            }
+
+            // Location filter
+            if (!string.IsNullOrWhiteSpace(location))
+            {
+                var locTerm = location.Trim();
+                query = query.Where(l => l.Location != null && EF.Functions.ILike(l.Location, $"%{locTerm}%"));
             }
 
             // Type filter
@@ -110,6 +118,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             var filterModel = new ListingsFilterViewModel
             {
                 SearchString = searchString,
+                Location = location,
                 Type = type,
                 MinPrice = minPrice,
                 MaxPrice = maxPrice,
@@ -226,6 +235,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 Title = model.Title,
                 Description = model.Description,
+                Location = string.IsNullOrWhiteSpace(model.Location) ? null : model.Location.Trim(),
                 Type = model.Type,
                 Price = model.Type == ListingType.Trade ? null : model.Price,
                 StockQuantity = model.StockQuantity,

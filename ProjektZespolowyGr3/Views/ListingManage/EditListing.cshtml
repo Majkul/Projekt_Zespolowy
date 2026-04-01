@@ -26,6 +26,12 @@
     </div>
 
     <div class="mb-3">
+        <label asp-for="Location" class="form-label">Lokalizacja (miasto)</label>
+        <input asp-for="Location" class="form-control" placeholder="Np. Warszawa" />
+        <span asp-validation-for="Location" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
         <label asp-for="Description" class="form-label" id="label-Description">Description</label>
         <textarea asp-for="Description" class="form-control" rows="4" id="input-Description"></textarea>
     </div>

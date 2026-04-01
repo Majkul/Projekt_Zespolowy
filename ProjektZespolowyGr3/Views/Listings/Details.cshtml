@@ -178,6 +178,14 @@
 
                     <hr />
 
+                    @if (!string.IsNullOrEmpty(Model.Location))
+                    {
+                        <div class="mb-3">
+                            <strong>📍 Lokalizacja:</strong>
+                            <span>@Model.Location</span>
+                        </div>
+                    }
+
                     <div class="mb-3">
                         <strong>Cena:</strong>
                         @if (Model.Price.HasValue)
