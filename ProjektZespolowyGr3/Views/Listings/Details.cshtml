@@ -274,3 +274,23 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        (function() {
+            var listing = {
+                id: '@Model.Id',
+                title: '@Model.Title',
+                image: '@(Model.Photos?.FirstOrDefault()?.Upload?.Url ?? "")'
+            };
+
+            var listingHistory = JSON.parse(localStorage.getItem('listingHistory') || '[]');
+
+            listingHistory = listingHistory.filter(l => l.id !== listing.id);
+            listingHistory.unshift(listing);
+            listingHistory = listingHistory.slice(0, 5);
+
+            localStorage.setItem('listingHistory', JSON.stringify(listingHistory));
+        })();
+    </script>
+}
