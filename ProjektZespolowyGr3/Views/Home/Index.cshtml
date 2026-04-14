@@ -77,12 +77,6 @@
                 </div>
             }
         </div>
-        
-        <div class="row mt-4">
-            <div class="col-12 text-center">
-                <a asp-controller="Listings" asp-action="Index" class="btn btn-outline-primary btn-lg">Zobacz wszystkie oferty</a>
-            </div>
-        </div>
     }
     else
     {
@@ -93,3 +87,51 @@
         </div>
     }
 </div>
+
+<div class="container mb-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-4">Ostatnio oglądane</h2>
+            <div id="viewing-history" class="row"></div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a asp-controller="Listings" asp-action="Index" class="btn btn-outline-primary btn-lg">Zobacz wszystkie oferty</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var history = JSON.parse(localStorage.getItem('listingHistory') || '[]');
+            var container = document.getElementById('viewing-history');
+            if (history.length === 0) {
+                container.innerHTML = '<div class="col-12 text-muted">Brak historii oglądania.</div>';
+                return;
+            }
+            history.forEach(function(listing) {
+                var html = `
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100">
+                        ${listing.image ? `<img src="${listing.image}" class="card-img-top" style="height: 200px; object-fit: cover;">` : `
+                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <span class="text-white">Brak zdjęcia</span>
+                        </div>`}
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${listing.title}</h5>
+                            <div class="mt-auto">
+                                <a href="/Listings/Details/${listing.id}" class="btn btn-primary btn-sm w-100">Zobacz szczegóły</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                container.innerHTML += html;
+            });
+        });
+    </script>
+}
