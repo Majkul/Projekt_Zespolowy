@@ -11,6 +11,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public int SellerId { get; set; }
         public User Seller { get; set; } = null!;
         public ListingType Type { get; set; }
+        public int ViewCount { get; set; }
         public decimal? Price { get; set; }
 
         /// <summary>Liczba dostępnych sztuk (ogłoszenie widoczne jako do kupna/wymiany dopóki &gt; 0).</summary>

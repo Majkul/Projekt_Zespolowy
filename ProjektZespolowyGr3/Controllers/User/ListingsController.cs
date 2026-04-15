@@ -109,7 +109,8 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 return NotFound();
             }
-
+            listing.ViewCount++;
+            await _context.SaveChangesAsync();
             return View(listing);
         }
 

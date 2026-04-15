@@ -158,7 +158,6 @@
             <div class="card shadow-sm sticky-top" style="top: 20px;">
                 <div class="card-body">
                     <h5 class="card-title">Szczegóły</h5>
-
                     @if (Model.IsArchived)
                     {
                         <div class="alert alert-secondary mb-2">
@@ -225,6 +224,11 @@
                     <div class="mb-3">
                         <strong>Data utworzenia:</strong><br />
                         <small class="text-muted">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Liczba wyświetleń:</strong><br />
+                        <small class="text-muted">@Model.ViewCount</small>
                     </div>
 
                     <hr />
