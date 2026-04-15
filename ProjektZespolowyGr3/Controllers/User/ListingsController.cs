@@ -241,8 +241,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 SellerId = currentUserId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                NotExchangeable = model.NotExchangeable,
-                MinExchangeValue = model.MinExchangeValue,
+                NotExchangeable = model.Type == ListingType.Trade ? false : model.NotExchangeable,
+                MinExchangeValue = model.Type == ListingType.Trade ? null : model.MinExchangeValue,
                 ExchangeDescription = string.IsNullOrWhiteSpace(model.ExchangeDescription) ? null : model.ExchangeDescription.Trim()
             };
             ListingStockHelper.SyncSoldFlag(listing);
