@@ -160,7 +160,6 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 return NotFound();
             }
-
             // Increment view count for everyone except the listing's own seller
             var viewerIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             bool isSeller = viewerIdClaim != null && viewerIdClaim == listing.SellerId.ToString();
@@ -171,7 +170,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                     .ExecuteUpdateAsync(s => s.SetProperty(l => l.ViewCount, l => l.ViewCount + 1));
                 listing.ViewCount++;
             }
-
             return View(listing);
         }
 
