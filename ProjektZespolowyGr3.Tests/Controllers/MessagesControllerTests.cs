@@ -8,12 +8,14 @@ using ProjektZespolowyGr3.Controllers.User;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.System;
+using Moq;
 
 namespace ProjektZespolowyGr3.Tests.Controllers
 {
     public class MessagesControllerTests : IDisposable
     {
         private readonly MyDBContext _context;
+        private readonly IFileService _fileService;
         private readonly MessagesController _controller;
 
         public MessagesControllerTests()
@@ -22,7 +24,8 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _context = new MyDBContext(options);
-            _controller = new MessagesController(_context, new NotificationService(_context));
+            _fileService = new Mock<IFileService>().Object;
+            _controller = new MessagesController(_context, new NotificationService(_context), _fileService);
         }
 
         private void SetupAuthenticatedUser(int userId)

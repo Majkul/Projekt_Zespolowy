@@ -30,6 +30,9 @@ namespace ProjektZespolowyGr3.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -47,6 +50,10 @@ namespace ProjektZespolowyGr3.Migrations
 
                     b.Property<bool>("IsSold")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<decimal?>("MinExchangeValue")
                         .HasColumnType("numeric");
@@ -66,6 +73,9 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -119,6 +129,81 @@ namespace ProjektZespolowyGr3.Migrations
                     b.HasIndex("UploadId");
 
                     b.ToTable("ListingPhotos");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingShippingOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ListingId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
+
+                    b.ToTable("ListingShippingOptions");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.TradeOrder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn);
+
+                    b.Property<int>("TradeProposalId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PayerUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ReceiverUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PayerSide")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("CashAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("ShippingCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("SelectedShippingName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PayUOrderId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TradeProposalId");
+
+                    b.ToTable("TradeOrders");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingTag", b =>
@@ -193,6 +278,29 @@ namespace ProjektZespolowyGr3.Migrations
                     b.ToTable("Messages");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.MessagePhoto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MessageId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UploadId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId");
+
+                    b.HasIndex("UploadId");
+
+                    b.ToTable("MessagePhotos");
+                });
+
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Notification", b =>
                 {
                     b.Property<int>("Id")
@@ -265,8 +373,15 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
+                    b.Property<string>("SelectedShippingName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<int>("SellerId")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("ShippingCost")
+                        .HasColumnType("numeric");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -376,6 +491,9 @@ namespace ProjektZespolowyGr3.Migrations
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("LastActivity")
                         .HasColumnType("timestamp with time zone");
@@ -524,6 +642,12 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Property<decimal?>("CashAmount")
                         .HasColumnType("numeric");
 
+                    b.Property<decimal?>("CustomOfferEstimatedValue")
+                        .HasColumnType("numeric");
+
+                    b.Property<string?>("CustomOfferTitle")
+                        .HasColumnType("text");
+
                     b.Property<int?>("ListingId")
                         .HasColumnType("integer");
 
@@ -626,6 +750,35 @@ namespace ProjektZespolowyGr3.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.UserProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("_UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("base64Avatar")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("base64Banner")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("_UserId");
+
+                    b.ToTable("UserProfiles");
+                });
+
             modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
                 {
                     b.Property<int>("UserId")
@@ -708,6 +861,17 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Upload");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingShippingOption", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
+                        .WithMany("ShippingOptions")
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+                });
+
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.ListingTag", b =>
                 {
                     b.HasOne("ProjektZespolowyGr3.Models.DbModels.Listing", "Listing")
@@ -770,6 +934,25 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Ticket");
 
                     b.Navigation("TradeProposal");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.MessagePhoto", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Message", "Message")
+                        .WithMany("Photos")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.Upload", "Upload")
+                        .WithMany()
+                        .HasForeignKey("UploadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Message");
+
+                    b.Navigation("Upload");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Notification", b =>
@@ -990,6 +1173,17 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Uploader");
                 });
 
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.UserProfile", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "_User")
+                        .WithMany()
+                        .HasForeignKey("_UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("_User");
+                });
+
             modelBuilder.Entity("ProjektZespolowyGr3.Models.UserAuth", b =>
                 {
                     b.HasOne("ProjektZespolowyGr3.Models.DbModels.User", "User")
@@ -1009,6 +1203,8 @@ namespace ProjektZespolowyGr3.Migrations
 
                     b.Navigation("Reviews");
 
+                    b.Navigation("ShippingOptions");
+
                     b.Navigation("Tags");
 
                     b.Navigation("TradeProposalsAsSubject");
@@ -1016,6 +1212,8 @@ namespace ProjektZespolowyGr3.Migrations
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.Message", b =>
                 {
+                    b.Navigation("Photos");
+
                     b.Navigation("Replies");
                 });
 
@@ -1045,6 +1243,17 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Navigation("Items");
 
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.TradeOrder", b =>
+                {
+                    b.HasOne("ProjektZespolowyGr3.Models.DbModels.TradeProposal", "TradeProposal")
+                        .WithMany()
+                        .HasForeignKey("TradeProposalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TradeProposal");
                 });
 
             modelBuilder.Entity("ProjektZespolowyGr3.Models.DbModels.User", b =>

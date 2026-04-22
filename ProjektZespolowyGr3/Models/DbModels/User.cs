@@ -1,7 +1,10 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProjektZespolowyGr3.Models.DbModels
 {
     public class User
     {
+        [Required, Key]
         public int Id { get; set; }
         public string Username { get; set; } = string.Empty;
         public string? FirstName { get; set; }

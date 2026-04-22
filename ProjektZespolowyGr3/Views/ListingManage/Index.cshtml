@@ -67,19 +67,27 @@
 <table class="table table-striped table-bordered table-hover align-middle">
     <thead class="table-dark">
         <tr>
+            <th scope="col">★</th>
             <th scope="col">Title</th>
             <th scope="col">Description</th>
             <th scope="col">Username</th>
             <th scope="col">Rating</th>
             <th scope="col">IsArchived</th>
             <th scope="col">Price</th>
-            <th scope="col" style="width: 140px;">Actions</th>
+            <th scope="col">Status</th>
+            <th scope="col" style="width: 260px;">Actions</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
+            <tr class="@(item.Listing.IsFeatured ? "table-warning" : "")">
+                <td class="text-center">
+                    @if (item.Listing.IsFeatured)
+                    {
+                        <span class="text-warning fs-5" title="Wyróżniona">★</span>
+                    }
+                </td>
                 <td>
                     <a asp-controller="Listings" asp-action="Details" asp-route-id="@item.Listing.Id" class="text-decoration-none">
                         @item.Listing.Title
@@ -97,9 +105,40 @@
                 <td>@(item.Listing.IsArchived ? "Yes" : "No")</td>
                 <td>@item.Listing.Price</td>
                 <td>
-                    <a asp-action="EditListing" asp-route-id="@item.Listing.Id" class="btn btn-sm btn-warning me-2">Edit</a>
+                    @if (item.Listing.IsArchived)
+                    {
+                        <span class="badge bg-secondary">Zarchiwizowane</span>
+                        @if (item.Listing.ArchivedAt.HasValue)
+                        {
+                            <br /><small class="text-muted">@item.Listing.ArchivedAt.Value.ToString("dd.MM.yyyy")</small>
+                        }
+                    }
+                    else if (item.Listing.IsSold)
+                    {
+                        <span class="badge bg-danger">Sprzedane</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Aktywne</span>
+                    }
+                </td>
+                <td>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <form asp-action="ToggleFeature" asp-route-id="@item.Listing.Id" method="post" style="display:inline;" class="me-1">
+                            <button type="submit" class="btn btn-sm @(item.Listing.IsFeatured ? "btn-warning" : "btn-outline-warning")" title="@(item.Listing.IsFeatured ? "Usuń wyróżnienie" : "Wyróżnij ofertę")">
+                                ★
+                            </button>
+                        </form>
+                    }
+                    <a asp-action="EditListing" asp-route-id="@item.Listing.Id" class="btn btn-sm btn-warning me-1">Edit</a>
+                    <form asp-action="ArchiveListing" asp-route-id="@item.Listing.Id" method="post" style="display:inline;" class="me-1">
+                        <button type="submit" class="btn btn-sm @(item.Listing.IsArchived ? "btn-outline-success" : "btn-outline-secondary")">
+                            @(item.Listing.IsArchived ? "Przywróć" : "Archiwizuj")
+                        </button>
+                    </form>
                     <form asp-action="DeleteListing" asp-route-id="@item.Listing.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this listing?');">
-                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                     </form>
                 </td>
             </tr>

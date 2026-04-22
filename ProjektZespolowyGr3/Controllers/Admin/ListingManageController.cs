@@ -18,12 +18,12 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
     public class ListingManageController : Controller
     {
         private readonly MyDBContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileService _fileService;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public ListingManageController(MyDBContext context, IWebHostEnvironment env, IHttpContextAccessor httpContextAccessor)
+        public ListingManageController(MyDBContext context, IFileService fileService, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
-            _env = env;
+            _fileService = fileService;
             _httpContextAccessor = httpContextAccessor;
         }
         public async Task<IActionResult> Index(string? searchString = null, int pageSize = 25, int pageNumber = 1, string? tagFilter = null)
@@ -134,7 +134,6 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             if (!isAdmin)
             {
                 var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
                 if (!string.IsNullOrEmpty(userIdClaim))
                 {
                     int.TryParse(userIdClaim, out userId);
@@ -145,6 +144,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags)
                 .Include(l => l.ExchangeAcceptedTags)
+                .Include(l => l.ShippingOptions)
                 .FirstOrDefault(l => l.Id == id);
 
             if (listing == null)
@@ -157,6 +157,8 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             {
                 Title = listing.Title,
                 Description = listing.Description,
+                Location = listing.Location,
+                Type = listing.Type,
                 Price = listing.Price,
                 SelectedTagIds = listing.Tags.Select(t => t.TagId).ToList(),
                 Photos = listing.Photos,
@@ -166,6 +168,11 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 StockQuantity = listing.StockQuantity,
                 IsFeatured = listing.IsFeatured,
                 SelectedExchangeAcceptedTagIds = listing.ExchangeAcceptedTags.Select(e => e.TagId).ToList(),
+                ShippingOptions = listing.ShippingOptions.Select(o => new ShippingOptionInput
+                {
+                    Name = o.Name,
+                    Price = o.Price
+                }).ToList(),
                 AvailableTags = _context.Tags.Select(t => new SelectListItem
                 {
                     Value = t.Id.ToString(),
@@ -199,6 +206,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags)
                 .Include(l => l.ExchangeAcceptedTags)
+                .Include(l => l.ShippingOptions)
                 .FirstOrDefault(l => l.Id == id);
 
             if (listing == null)
@@ -206,6 +214,9 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
             if (!isAdmin && listing.SellerId != userId)
                 return Forbid();
+
+            foreach (var (field, message) in _fileService.ValidateImages(vm.PhotoFiles))
+                ModelState.AddModelError(field, message);
 
             if (!ModelState.IsValid)
             {
@@ -216,6 +227,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
             listing.Title = vm.Title;
             listing.Description = vm.Description;
+            listing.Location = string.IsNullOrWhiteSpace(vm.Location) ? null : vm.Location.Trim();
             listing.Price = vm.Price;
             listing.NotExchangeable = vm.NotExchangeable;
             listing.MinExchangeValue = vm.MinExchangeValue;
@@ -250,6 +262,21 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 }
             }
 
+            _context.ListingShippingOptions.RemoveRange(
+                _context.ListingShippingOptions.Where(o => o.ListingId == listing.Id));
+            if (vm.ShippingOptions != null)
+            {
+                foreach (var opt in vm.ShippingOptions.Where(o => !string.IsNullOrWhiteSpace(o.Name)))
+                {
+                    listing.ShippingOptions.Add(new ListingShippingOption
+                    {
+                        Name = opt.Name.Trim(),
+                        Price = Math.Max(0, opt.Price),
+                        ListingId = listing.Id
+                    });
+                }
+            }
+
             if (vm.PhotosToDelete != null)
             {
                 foreach (var photoId in vm.PhotosToDelete)
@@ -257,49 +284,23 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                     var photo = listing.Photos.FirstOrDefault(x => x.Id == photoId);
                     if (photo != null)
                     {
-                        var path = Path.Combine(_env.WebRootPath, photo.Upload.Url.TrimStart('/'));
-                        if (System.IO.File.Exists(path))
-                            System.IO.File.Delete(path);
-
-                        _context.Uploads.Remove(photo.Upload);
+                        _fileService.DeleteFile(photo.Upload);
                         _context.ListingPhotos.Remove(photo);
                     }
                 }
             }
 
-            if (vm.PhotoFiles != null && vm.PhotoFiles.Count > 0)
+            if (vm.PhotoFiles?.Count > 0)
             {
-                var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
-                if (!Directory.Exists(uploadsPath))
-                    Directory.CreateDirectory(uploadsPath);
-
                 foreach (var file in vm.PhotoFiles)
                 {
-                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    var fileName = $"{Guid.NewGuid()}{ext}";
-                    var path = Path.Combine(uploadsPath, fileName);
-
-                    using (var stream = new FileStream(path, FileMode.Create))
-                        await file.CopyToAsync(stream);
-
-                    var upload = new Upload
-                    {
-                        FileName = file.FileName,
-                        Extension = ext,
-                        Url = "/uploads/" + fileName,
-                        SizeBytes = file.Length,
-                        UploadedAt = DateTime.UtcNow,
-                        UploaderId = listing.SellerId
-                    };
-
-                    var newPhoto = new ListingPhoto
+                    var upload = await _fileService.SaveFileAsync(file, listing.SellerId);
+                    listing.Photos.Add(new ListingPhoto
                     {
                         ListingId = listing.Id,
                         Upload = upload,
                         IsFeatured = false
-                    };
-
-                    listing.Photos.Add(newPhoto);
+                    });
                 }
             }
 
@@ -310,6 +311,60 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             return RedirectToAction("Index");
         }
 
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleFeature(int id)
+        {
+            if (!User.IsInRole("Admin"))
+                return Forbid();
+
+            var listing = await _context.Listings.FindAsync(id);
+            if (listing == null) return NotFound();
+
+            listing.IsFeatured = !listing.IsFeatured;
+            listing.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ArchiveListing(int id)
+        {
+            int userId = 0;
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!string.IsNullOrEmpty(userIdClaim))
+                    int.TryParse(userIdClaim, out userId);
+            }
+
+            var listing = await _context.Listings.FindAsync(id);
+            if (listing == null) return NotFound();
+            if (!isAdmin && listing.SellerId != userId) return Forbid();
+
+            listing.IsArchived = !listing.IsArchived;
+            listing.ArchivedAt = listing.IsArchived ? DateTime.UtcNow : null;
+            listing.UpdatedAt = DateTime.UtcNow;
+
+            var relatedTickets = await _context.Tickets
+                .Where(t => t.ReportedListingId == id)
+                .ToListAsync();
+            foreach (var ticket in relatedTickets)
+                ticket.IsArchived = listing.IsArchived;
+
+            var relatedMessages = await _context.Messages
+                .Where(m => m.ListingId == id)
+                .ToListAsync();
+            foreach (var message in relatedMessages)
+                message.IsArchived = listing.IsArchived;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
 
         [HttpPost]
         public IActionResult DeleteListing(int id)
@@ -333,30 +388,22 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             if (!isAdmin && listing.SellerId != userId)
                 return Forbid();
 
-            _context.ListingPhotos.Where(lp => lp.ListingId == id)
+            _context.ListingPhotos
+                .Where(lp => lp.ListingId == id)
                 .Include(lp => lp.Upload)
                 .ToList()
-                .ForEach(lp =>
-                {
-                    var path = Path.Combine(_env.WebRootPath, lp.Upload.Url.TrimStart('/'));
-                    if (System.IO.File.Exists(path))
-                        System.IO.File.Delete(path);
-
-                    _context.Uploads.Remove(lp.Upload);
-                });
+                .ForEach(lp => _fileService.DeleteFile(lp.Upload));
             listing.IsArchived = true;
-            
-            _context.Tickets.Where(lp => lp.ReportedListingId == id)
-                .ToList().ForEach(lp =>
-                {
-                    _context.Tickets.Remove(lp);
-                });
 
-            _context.Messages.Where(m => m.ListingId == id)
-                .ToList().ForEach(m =>
-                {
-                    m.IsArchived = true;
-                });
+            _context.Tickets
+                .Where(t => t.ReportedListingId == id)
+                .ToList()
+                .ForEach(t => _context.Tickets.Remove(t));
+
+            _context.Messages
+                .Where(m => m.ListingId == id)
+                .ToList()
+                .ForEach(m => m.IsArchived = true);
 
             _context.SaveChanges();
 

@@ -19,67 +19,117 @@ namespace ProjektZespolowyGr3.Controllers.User
     public class ListingsController : Controller
     {
         private readonly MyDBContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileService _fileService;
         private readonly AuthService _auth;
         private readonly HelperService _helper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ListingsController(MyDBContext context, IWebHostEnvironment env, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor)
+        public ListingsController(MyDBContext context, IFileService fileService, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
-            _env = env;
+            _fileService = fileService;
             _auth = auth;
             _helper = helper;
             _httpContextAccessor = httpContextAccessor;
         }
 
         // GET: Listings
-        public async Task<IActionResult> Index(string? searchString)
+        public async Task<IActionResult> Index(
+            string? searchString,
+            string? location,
+            string? type,
+            decimal? minPrice,
+            decimal? maxPrice,
+            List<int>? selectedTagIds,
+            string? sortBy)
         {
-            IQueryable<Listing> query = _context.Listings
-                .Include(l => l.Photos)
-                    .ThenInclude(lp => lp.Upload)
-                .Include(l => l.Reviews)
-                .Include(l => l.Seller)
-                    .ThenInclude(s => s.Listings)
-                        .ThenInclude(sl => sl.Reviews)
-                .Where(l => l.IsArchived == false);
+            selectedTagIds ??= new List<int>();
 
+            IQueryable<Listing> query = _context.Listings
+                .Where(l => !l.IsArchived)
+                .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
+                .Include(l => l.Reviews)
+                .Include(l => l.Tags).ThenInclude(lt => lt.Tag)
+                .Include(l => l.Seller).ThenInclude(s => s.Listings).ThenInclude(sl => sl.Reviews);
+
+            // Text search
             if (!string.IsNullOrWhiteSpace(searchString))
             {
                 var term = searchString.Trim();
-
-                // Wyszukiwanie po tytule i opisie, case-insensitive, jak LIKE %fraza%
                 query = query.Where(l =>
                     EF.Functions.ILike(l.Title, $"%{term}%") ||
                     (l.Description != null && EF.Functions.ILike(l.Description, $"%{term}%")));
-
-                ViewBag.SearchString = term;
             }
+
+            // Location filter
+            if (!string.IsNullOrWhiteSpace(location))
+            {
+                var locTerm = location.Trim();
+                query = query.Where(l => l.Location != null && EF.Functions.ILike(l.Location, $"%{locTerm}%"));
+            }
+
+            // Type filter
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                if (type == "Sale")
+                    query = query.Where(l => l.Type == ListingType.Sale);
+                else if (type == "Trade")
+                    query = query.Where(l => l.Type == ListingType.Trade);
+            }
+
+            // Price range (only meaningful for Sale listings)
+            if (minPrice.HasValue)
+                query = query.Where(l => l.Price == null || l.Price >= minPrice.Value);
+            if (maxPrice.HasValue)
+                query = query.Where(l => l.Price == null || l.Price <= maxPrice.Value);
+
+            // Tag filter
+            if (selectedTagIds.Any())
+            {
+                foreach (var tagId in selectedTagIds)
+                    query = query.Where(l => l.Tags.Any(lt => lt.TagId == tagId));
+            }
+
+            // Sort
+            query = sortBy switch
+            {
+                "price_asc"   => query.OrderBy(l => l.Price),
+                "price_desc"  => query.OrderByDescending(l => l.Price),
+                "oldest"      => query.OrderBy(l => l.CreatedAt),
+                "most_viewed" => query.OrderByDescending(l => l.ViewCount),
+                _             => query.OrderByDescending(l => l.CreatedAt),
+            };
 
             var listings = await query.ToListAsync();
 
-            var model = listings.Select(l => new BrowseListingsViewModel
+            var results = listings.Select(l => new BrowseListingsViewModel
             {
                 Listing = l,
                 ListingId = l.Id,
                 Seller = l.Seller,
                 SellerId = l.SellerId,
                 PhotoUrl = l.Photos.FirstOrDefault(lp => lp.IsFeatured)?.Upload.Url,
-                AverageRating = l.Seller.Listings
-                        .SelectMany(sl => sl.Reviews)
-                        .Any()
-                        ? l.Seller.Listings.SelectMany(sl => sl.Reviews).Average(r => r.Rating)
-                        : 0,
+                AverageRating = l.Seller.Listings.SelectMany(sl => sl.Reviews).Any()
+                    ? l.Seller.Listings.SelectMany(sl => sl.Reviews).Average(r => r.Rating)
+                    : 0,
                 ReviewCount = l.Seller.Listings.SelectMany(sl => sl.Reviews).Count(),
             }).ToList();
 
-            if (!model.Any() && !string.IsNullOrWhiteSpace(searchString))
+            var filterModel = new ListingsFilterViewModel
             {
-                ViewBag.NoResultsMessage = "Nie znaleziono niczego co mogłoby Ciebie zainteresować.";
-            }
+                SearchString = searchString,
+                Location = location,
+                Type = type,
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                SelectedTagIds = selectedTagIds,
+                SortBy = sortBy,
+                AvailableTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync(),
+                FeaturedResults = results.Where(r => r.Listing.IsFeatured),
+                Results = results.Where(r => !r.Listing.IsFeatured),
+            };
 
-            return View(model);
+            return View(filterModel);
         }
 
         // GET: Listings/Details/5
@@ -103,14 +153,23 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .Include(l => l.Reviews)
                     .ThenInclude(r => r.Photos)
                         .ThenInclude(rp => rp.Upload)
+                .Include(l => l.ShippingOptions)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (listing == null)
             {
                 return NotFound();
             }
-            listing.ViewCount++;
-            await _context.SaveChangesAsync();
+            // Increment view count for everyone except the listing's own seller
+            var viewerIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            bool isSeller = viewerIdClaim != null && viewerIdClaim == listing.SellerId.ToString();
+            if (!isSeller)
+            {
+                await _context.Listings
+                    .Where(l => l.Id == listing.Id)
+                    .ExecuteUpdateAsync(s => s.SetProperty(l => l.ViewCount, l => l.ViewCount + 1));
+                listing.ViewCount++;
+            }
             return View(listing);
         }
 
@@ -158,16 +217,12 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (model.StockQuantity < 1)
                 ModelState.AddModelError(nameof(CreateListingViewModel.StockQuantity), "Liczba sztuk musi być co najmniej 1.");
 
+            foreach (var (field, message) in _fileService.ValidateImages(model.PhotoFiles, maxCount: 5))
+                ModelState.AddModelError(field, message);
+
             if (!ModelState.IsValid)
             {
                 _helper.PopulateAvailableTags(model);
-                return View(model);
-            }
-
-            var photoFiles = model.PhotoFiles ?? new List<IFormFile>();
-            if (photoFiles.Count > 5)
-            {
-                ModelState.AddModelError("PhotoFiles", "You can upload a maximum of 5 photos.");
                 return View(model);
             }
 
@@ -175,16 +230,27 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 Title = model.Title,
                 Description = model.Description,
-                Price = model.Price,
+                Location = string.IsNullOrWhiteSpace(model.Location) ? null : model.Location.Trim(),
+                Type = model.Type,
+                Price = model.Type == ListingType.Trade ? null : model.Price,
                 StockQuantity = model.StockQuantity,
                 SellerId = currentUserId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                NotExchangeable = model.NotExchangeable,
-                MinExchangeValue = model.MinExchangeValue,
+                NotExchangeable = model.Type == ListingType.Trade ? false : model.NotExchangeable,
+                MinExchangeValue = model.Type == ListingType.Trade ? null : model.MinExchangeValue,
                 ExchangeDescription = string.IsNullOrWhiteSpace(model.ExchangeDescription) ? null : model.ExchangeDescription.Trim()
             };
             ListingStockHelper.SyncSoldFlag(listing);
+
+            foreach (var opt in model.ShippingOptions.Where(o => !string.IsNullOrWhiteSpace(o.Name)))
+            {
+                listing.ShippingOptions.Add(new ListingShippingOption
+                {
+                    Name = opt.Name.Trim(),
+                    Price = Math.Max(0, opt.Price)
+                });
+            }
 
             if (model.SelectedTagIds != null && model.SelectedTagIds.Any())
             {
@@ -192,97 +258,32 @@ namespace ProjektZespolowyGr3.Controllers.User
                 {
                     var tag = _context.Tags.Find(tagId);
                     if (tag != null)
-                    {
-                        listing.Tags.Add(new ListingTag
-                        {
-                            TagId = tag.Id,
-                            Listing = listing
-                        });
-                    }
+                        listing.Tags.Add(new ListingTag { TagId = tag.Id, Listing = listing });
                 }
             }
 
-            if (model.SelectedExchangeAcceptedTagIds != null && model.SelectedExchangeAcceptedTagIds.Any())
+            if (model.SelectedExchangeAcceptedTagIds?.Any() == true)
             {
                 foreach (var tagId in model.SelectedExchangeAcceptedTagIds.Distinct())
                 {
                     var tag = _context.Tags.Find(tagId);
                     if (tag != null)
-                    {
-                        listing.ExchangeAcceptedTags.Add(new ListingExchangeAcceptedTag
-                        {
-                            TagId = tag.Id,
-                            Listing = listing
-                        });
-                    }
+                        listing.ExchangeAcceptedTags.Add(new ListingExchangeAcceptedTag { TagId = tag.Id, Listing = listing });
                 }
             }
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-
-            if (photoFiles.Count != 0)
+            if (model.PhotoFiles?.Count > 0)
             {
-                foreach (var file in photoFiles)
+                bool first = true;
+                foreach (var file in model.PhotoFiles)
                 {
-                    if (file.Length > 5 * 1024 * 1024)
-                    {
-                        ModelState.AddModelError("PhotoFiles", "Each photo must be less than 5 MB.");
-                        _helper.PopulateAvailableTags(model);
-                        return View(model);
-                    }
-
-                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    if (!allowedExtensions.Contains(ext))
-                    {
-                        ModelState.AddModelError("PhotoFiles", "Only .jpg, .jpeg, .png files are allowed.");
-                        _helper.PopulateAvailableTags(model);
-                        return View(model);
-                    }
-
-                    if (!file.ContentType.StartsWith("image/"))
-                    {
-                        ModelState.AddModelError("PhotoFiles", "Invalid file type.");
-                        return View(model);
-                    }
-                }
-
-                bool first = true; // pierwsze staje sie featured
-
-                var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
-                if (!Directory.Exists(uploadsPath))
-                    Directory.CreateDirectory(uploadsPath);
-
-                foreach (var file in photoFiles)
-                {
-                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    var fileName = $"{Guid.NewGuid()}{ext}";
-                    var filePath = Path.Combine(uploadsPath, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    var upload = new Upload
-                    {
-                        FileName = Path.GetFileName(file.FileName),
-                        Extension = ext,
-                        Url = $"/uploads/{fileName}",
-                        SizeBytes = file.Length,
-                        UploaderId = currentUserId,
-                        UploadedAt = DateTime.UtcNow
-                    };
-                    _context.Uploads.Add(upload);
-
-                    var listingPhoto = new ListingPhoto
+                    var upload = await _fileService.SaveFileAsync(file, currentUserId);
+                    listing.Photos.Add(new ListingPhoto
                     {
                         Listing = listing,
                         Upload = upload,
                         IsFeatured = first
-                    };
-
-                    listing.Photos.Add(listingPhoto);
-
+                    });
                     first = false;
                 }
             }

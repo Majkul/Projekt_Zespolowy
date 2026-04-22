@@ -21,12 +21,12 @@ namespace ProjektZespolowyGr3.Controllers.User
     public class TicketsController : Controller
     {
         private readonly MyDBContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileService _fileService;
 
-        public TicketsController(MyDBContext context, IWebHostEnvironment env)
+        public TicketsController(MyDBContext context, IFileService fileService)
         {
             _context = context;
-            _env = env;
+            _fileService = fileService;
         }
 
         private int GetCurrentUserId()
@@ -149,7 +149,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             };
             return View("Create", vm);
         }
-
+        [Authorize]
         // GET: Tickets/Create
         public IActionResult Create()
         {
@@ -159,7 +159,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             };
             return View(vm);
         }
-
+        [Authorize]
         // POST: Tickets/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -177,13 +177,10 @@ namespace ProjektZespolowyGr3.Controllers.User
                 ModelState.AddModelError(string.Empty, "No listing specified.");
             }
 
-            if (!ModelState.IsValid) {
-                return View(model);
-            }
+            foreach (var (field, message) in _fileService.ValidateAttachments(model.Attachments, maxCount: 10))
+                ModelState.AddModelError(field, message);
 
-            if ((model.Attachments?.Count ?? 0) > 10)
-            {
-                ModelState.AddModelError("Attachments", "You can upload a maximum of 10 attachments.");
+            if (!ModelState.IsValid) {
                 return View(model);
             }
 
@@ -207,67 +204,12 @@ namespace ProjektZespolowyGr3.Controllers.User
                 ReportedListingId = model.ReportedListingId
             };
 
-            // moze jakies dozwolone typy plikow ale idk
-            //var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-
-            if (model.Attachments != null && model.Attachments.Count > 0)
+            if (model.Attachments?.Count > 0)
             {
                 foreach (var file in model.Attachments)
                 {
-                    if (file.Length > 10 * 1024 * 1024)
-                    {
-                        ModelState.AddModelError("Attachments", "Each attachment must be less than 10 MB.");
-                        return View(model);
-                    }
-
-                    //var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    //if (!allowedExtensions.Contains(ext))
-                    //{
-                    //    ModelState.AddModelError("Attachments", "Only .jpg, .jpeg, .png files are allowed.");
-                    //    return View(model);
-                    //}
-
-                    //if (!file.ContentType.StartsWith("image/"))
-                    //{
-                    //    ModelState.AddModelError("PhotoFiles", "Invalid file type.");
-                    //    return View(model);
-                    //}
-                }
-
-                var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
-                if (!Directory.Exists(uploadsPath))
-                    Directory.CreateDirectory(uploadsPath);
-
-                // to pewnie bedzie mozna do jakiegos serwisu przerzucic pozniej bo sie powtarza kilkukrotnie
-                foreach (var file in model.Attachments)
-                {
-                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    var fileName = $"{Guid.NewGuid()}{ext}";
-                    var filePath = Path.Combine(uploadsPath, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    var upload = new Upload
-                    {
-                        FileName = Path.GetFileName(file.FileName),
-                        Extension = ext,
-                        Url = $"/uploads/{fileName}",
-                        SizeBytes = file.Length,
-                        UploaderId = userId,
-                        UploadedAt = DateTime.UtcNow
-                    };
-                    _context.Uploads.Add(upload);
-
-                    var ticketUpload = new TicketAttachment
-                    {
-                        Ticket = ticket,
-                        Upload = upload
-                    };
-
-                    _context.TicketAttachments.Add(ticketUpload);
+                    var upload = await _fileService.SaveFileAsync(file, userId);
+                    _context.TicketAttachments.Add(new TicketAttachment { Ticket = ticket, Upload = upload });
                 }
             }
 

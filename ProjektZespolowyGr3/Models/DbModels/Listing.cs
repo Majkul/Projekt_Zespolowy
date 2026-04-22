@@ -10,7 +10,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
         public int SellerId { get; set; }
         public User Seller { get; set; } = null!;
-        public int ViewCount { get; set; }
+        public ListingType Type { get; set; }
         public decimal? Price { get; set; }
 
         /// <summary>Liczba dostępnych sztuk (ogłoszenie widoczne jako do kupna/wymiany dopóki &gt; 0).</summary>
@@ -19,15 +19,26 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public bool IsFeatured { get; set; } = false;
         public bool IsSold { get; set; } = false;
         public bool IsArchived { get; set; } = false;
+        public DateTime? ArchivedAt { get; set; }
 
         /// <summary>Jeśli true, ogłoszenie nie może być dodane do propozycji wymiany.</summary>
-        public bool NotExchangeable { get; set; }
+        public bool NotExchangeable { get; set; } = false;
 
         /// <summary>Minimalna suma szacowanej wartości po stronie oferującego (kupującego), aby wymiana była dozwolona.</summary>
         public decimal? MinExchangeValue { get; set; }
 
         /// <summary>Co sprzedający przyjąłby w zamian (opis oczekiwań przy wymianie).</summary>
         public string? ExchangeDescription { get; set; }
+
+        /// <summary>Miasto / lokalizacja ogłoszenia.</summary>
+        [StringLength(100)]
+        public string? Location { get; set; }
+
+        /// <summary>Opcje dostawy oferowane przez sprzedawcę.</summary>
+        public ICollection<ListingShippingOption> ShippingOptions { get; set; } = new List<ListingShippingOption>();
+
+        /// <summary>Liczba wyświetleń ogłoszenia (nie licząc wizyt właściciela).</summary>
+        public int ViewCount { get; set; } = 0;
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
@@ -37,5 +48,13 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public ICollection<ListingExchangeAcceptedTag> ExchangeAcceptedTags { get; set; } = new List<ListingExchangeAcceptedTag>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<TradeProposal> TradeProposalsAsSubject { get; set; } = new List<TradeProposal>();
+    }
+
+    public enum ListingType
+    {
+        [Display(Name = "Sprzedaż")]
+        Sale = 0,
+        [Display(Name = "Wymiana")]
+        Trade = 1
     }
 }

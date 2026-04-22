@@ -1,0 +1,64 @@
+@model ProjektZespolowyGr3.Models.ViewModels.ShippingLabelViewModel
+
+<div class="label-card shadow mt-2 mb-4">
+
+    <div class="label-header">
+        <div>
+            <div style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; opacity:0.7;">HandlujZTym</div>
+            <div style="font-size:1rem; font-weight:bold;">📦 @Model.LabelType</div>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:0.7rem; opacity:0.7;">Data</div>
+            <div>@Model.Date.ToLocalTime().ToString("dd.MM.yyyy")</div>
+        </div>
+    </div>
+
+    <div class="label-section">
+        <div class="label-role">Nadawca (Od)</div>
+        <div class="label-name">@Model.From.Name</div>
+        @if (!string.IsNullOrWhiteSpace(Model.From.Address))
+        {
+            <div>@Model.From.Address</div>
+        }
+        else
+        {
+            <div class="text-muted fst-italic" style="font-size:0.85rem;">Adres nie został podany w profilu</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.From.Phone))
+        {
+            <div class="text-muted" style="font-size:0.85rem;">Tel: @Model.From.Phone</div>
+        }
+    </div>
+
+    <div class="label-section" style="background:#f8f9fa;">
+        <div class="label-role" style="color:#0d6efd; font-weight:bold;">Odbiorca (Do) ▼</div>
+        <div class="label-name" style="font-size:1.35rem;">@Model.To.Name</div>
+        @if (!string.IsNullOrWhiteSpace(Model.To.Address))
+        {
+            <div style="font-size:1.05rem;">@Model.To.Address</div>
+        }
+        else
+        {
+            <div class="text-muted fst-italic" style="font-size:0.85rem;">Adres nie został podany w profilu — uzupełnij ręcznie</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.To.Phone))
+        {
+            <div class="text-muted" style="font-size:0.85rem;">Tel: @Model.To.Phone</div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.To.Email))
+        {
+            <div class="text-muted" style="font-size:0.85rem;">E-mail: @Model.To.Email</div>
+        }
+    </div>
+
+    <div class="label-section">
+        <div class="label-role">Zawartość</div>
+        <div>@Model.Contents</div>
+    </div>
+
+    <div class="label-section text-center">
+        <div class="barcode">*@Model.ReferenceNumber*</div>
+        <div class="ref-text">@Model.ReferenceNumber</div>
+    </div>
+
+</div>
