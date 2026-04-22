@@ -11,9 +11,6 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         [StringLength(1000)]
         public string? Description { get; set; }
 
-        [Required]
-        public ListingType Type { get; set; }
-
         public decimal? Price { get; set; }
 
         [Range(1, 1_000_000, ErrorMessage = "Ilość musi być między 1 a 1 000 000.")]
@@ -25,6 +22,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         public List<int>? SelectedTagIds { get; set; } = new();
         public IEnumerable<SelectListItem> AvailableTags { get; set; } = new List<SelectListItem>();
 
+        public bool IsFeatured { get; set; }
         /// <summary>Nie uwzględniaj tego ogłoszenia w propozycjach wymiany.</summary>
         public bool NotExchangeable { get; set; }
 

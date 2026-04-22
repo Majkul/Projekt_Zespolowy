@@ -8,6 +8,7 @@
 @{
     bool isUserAuthenticated = User.Identity?.IsAuthenticated == true;
     bool isUserSeller = isUserAuthenticated && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.SellerId.ToString();
+    bool isSaleOffer = Model.Price.HasValue;
 }
 
 <div class="container mt-4">
@@ -168,22 +169,11 @@
                     <hr />
 
                     <div class="mb-3">
-                        <strong>Cena:</strong>
                         @if (Model.Price.HasValue)
                         {
+                            <strong>Cena:</strong>
                             <span class="@(Model.IsArchived ? "text-muted fs-4" : "text-primary fs-4")">@Model.Price.Value.ToString("C")</span>
                         }
-                        else
-                        {
-                            <span class="badge bg-@(Model.IsArchived ? "secondary" : "info")">Wymiana</span>
-                        }
-                    </div>
-
-                    <div class="mb-3">
-                        <strong>Typ:</strong>
-                        <span class="badge bg-@(Model.IsArchived ? "secondary" : Model.Type == ListingType.Sale ? "success" : "info")">
-                            @(Model.Type == ListingType.Sale ? "Sprzedaż" : "Wymiana")
-                        </span>
                     </div>
 
                     <div class="mb-3">
@@ -253,7 +243,7 @@
                             <button type="submit" class="btn btn-danger w-100 btn-lg">Delete</button>
                         </form>
                     }
-                    else if (!Model.IsSold && Model.StockQuantity > 0 && Model.Type == ListingType.Sale)
+                    else if (!Model.IsSold && Model.StockQuantity > 0 && isSaleOffer)
                     {
                         <form asp-controller="Payment" asp-action="Buy" method="post" class="mb-2">
                             <input type="hidden" name="listingId" value="@Model.Id" />

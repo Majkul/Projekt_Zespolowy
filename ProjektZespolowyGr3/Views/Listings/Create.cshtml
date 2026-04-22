@@ -40,7 +40,7 @@
                     <div class="card-header bg-info bg-opacity-10">Wymiana (opcjonalnie)</div>
                     <div class="card-body">
                         <div class="form-check mb-3">
-                            <input asp-for="NotExchangeable" class="form-check-input" />
+                            <input asp-for="NotExchangeable" class="form-check-input" id="not-exchangable-select" />
                             <label asp-for="NotExchangeable" class="form-check-label">Nie do wymiany — nie pokazuj tego ogłoszenia w propozycjach wymiany</label>
                         </div>
                         <div class="mb-3">
@@ -61,15 +61,8 @@
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label asp-for="Type" class="form-label fw-bold">Typ ogłoszenia *</label>
-                    <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<ListingType>()" id="type-select">
-                    </select>
-                    <span asp-validation-for="Type" class="text-danger"></span>
-                </div>
-
                 <div class="mb-3" id="price-group">
-                    <label asp-for="Price" class="form-label fw-bold">Cena (PLN) *</label>
+                    <label asp-for="Price" class="form-label fw-bold" id="price-label">Cena (PLN)</label>
                     <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
                     <span asp-validation-for="Price" class="text-danger"></span>
                 </div>
@@ -88,6 +81,11 @@
                     <span asp-validation-for="PhotoFiles" class="text-danger"></span>
                 </div>
 
+                <div class="form-check mb-3">
+                    <label asp-for="IsFeatured" class="form-check-label">Wyróżnij na profilu</label>
+                    <input asp-for="IsFeatured" class="form-check-input" />
+                </div>
+
                 <div class="d-flex justify-content-between mt-4">
                     <a asp-action="Index" class="btn btn-outline-secondary">Anuluj</a>
                     <input type="submit" value="Utwórz ogłoszenie" class="btn btn-primary" />
@@ -103,18 +101,15 @@
     }
 
     <script>
-        const typeSelect = document.getElementById('type-select');
-        const priceGroup = document.getElementById('price-group');
+        const notExchnagableSelect = document.getElementById('not-exchangable-select');
+        const priceLabel = document.getElementById('price-label');
 
-        function togglePriceInput() {
-            console.log(typeSelect.value);
-            if (typeSelect.value === '@((int)ListingType.Trade)') {
-                priceGroup.style.display = 'none';
-            } else {
-                priceGroup.style.display = 'block';
-            }
+        const priceLabelText = "Cena (PLN)";
+
+        function toggleIsPriceRequired() {
+            priceLabel.textContent = priceLabelText + notExchnagableSelect.checked ? " *" : "";
         }
-        typeSelect.addEventListener('change', togglePriceInput);
-        togglePriceInput();
+        notExchnagableSelect.addEventListener('change', toggleIsPriceRequired);
+        toggleIsPriceRequired();
     </script>
 }

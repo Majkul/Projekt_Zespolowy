@@ -70,7 +70,6 @@ public class NotificationsControllerTests : IDisposable
         {
             Title = "L",
             SellerId = other.Id,
-            Type = ListingType.Trade,
             Price = 1,
             StockQuantity = 1,
             CreatedAt = DateTime.UtcNow,

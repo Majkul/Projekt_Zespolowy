@@ -12,7 +12,6 @@ public class ListingStockHelperTests
         {
             Title = "x",
             SellerId = 1,
-            Type = ListingType.Sale,
             Price = 10,
             StockQuantity = stock,
             IsArchived = archived,
