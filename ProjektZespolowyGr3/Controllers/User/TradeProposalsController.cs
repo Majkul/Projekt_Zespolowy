@@ -61,6 +61,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                     s += EstimateListingValue(listing) * Math.Max(1, it.Quantity);
                 if (it.CashAmount.HasValue)
                     s += it.CashAmount.Value;
+                if (it.CustomOfferEstimatedValue.HasValue && !it.ListingId.HasValue && !it.CashAmount.HasValue)
+                    s += it.CustomOfferEstimatedValue.Value;
             }
             return s;
         }
@@ -95,6 +97,29 @@ namespace ProjektZespolowyGr3.Controllers.User
                     result[listingId] = qty;
             }
 
+            return result;
+        }
+
+        private static List<(string Title, decimal Value)> ParseCustomItemsFromForm(IFormCollection form, string titlePrefix, string valuePrefix)
+        {
+            var result = new List<(string Title, decimal Value)>();
+            var head = titlePrefix + "[";
+            var indexSet = new SortedSet<int>();
+            foreach (var kv in form)
+            {
+                if (!kv.Key.StartsWith(head, StringComparison.OrdinalIgnoreCase)) continue;
+                var end = kv.Key.IndexOf(']', head.Length);
+                if (end < 0) continue;
+                if (int.TryParse(kv.Key.AsSpan(head.Length, end - head.Length), out var idx))
+                    indexSet.Add(idx);
+            }
+            foreach (var idx in indexSet)
+            {
+                var title = form[$"{titlePrefix}[{idx}]"].ToString().Trim();
+                if (string.IsNullOrWhiteSpace(title)) continue;
+                decimal.TryParse(form[$"{valuePrefix}[{idx}]"].ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var value);
+                result.Add((title, Math.Max(0, value)));
+            }
             return result;
         }
 
@@ -201,6 +226,14 @@ namespace ProjektZespolowyGr3.Controllers.User
                     .ToDictionary(g => g.Key, g => Math.Max(1, g.Sum(x => x.Quantity)));
                 vm.InitiatorCash = edit.Items.Where(i => i.Side == TradeProposalSide.Initiator).Sum(i => i.CashAmount ?? 0);
                 vm.ReceiverCash = edit.Items.Where(i => i.Side == TradeProposalSide.Receiver).Sum(i => i.CashAmount ?? 0);
+                vm.InitiatorCustomItems = edit.Items
+                    .Where(i => i.Side == TradeProposalSide.Initiator && i.CustomOfferTitle != null)
+                    .Select(i => new CustomItemInput { Title = i.CustomOfferTitle!, EstimatedValue = i.CustomOfferEstimatedValue ?? 0 })
+                    .ToList();
+                vm.ReceiverCustomItems = edit.Items
+                    .Where(i => i.Side == TradeProposalSide.Receiver && i.CustomOfferTitle != null)
+                    .Select(i => new CustomItemInput { Title = i.CustomOfferTitle!, EstimatedValue = i.CustomOfferEstimatedValue ?? 0 })
+                    .ToList();
             }
             else if (parent != null)
             {
@@ -263,6 +296,8 @@ namespace ProjektZespolowyGr3.Controllers.User
             receiverListingIds ??= new List<int>();
             var initiatorQuantities = ParseListingQuantitiesFromForm(Request.Form, "initiatorQuantities");
             var receiverQuantities = ParseListingQuantitiesFromForm(Request.Form, "receiverQuantities");
+            var initiatorCustomItems = ParseCustomItemsFromForm(Request.Form, "initiatorCustomTitles", "initiatorCustomValues");
+            var receiverCustomItems = ParseCustomItemsFromForm(Request.Form, "receiverCustomTitles", "receiverCustomValues");
 
             if (editTradeProposalId.HasValue)
             {
@@ -285,7 +320,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 var editInitiatorId = existing.InitiatorUserId;
                 var editReceiverId = existing.ReceiverUserId;
                 var editResult = await ValidateAndBuildSides(
-                    subject, editInitiatorId, editReceiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash);
+                    subject, editInitiatorId, editReceiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash,
+                    initiatorCustomItems, receiverCustomItems);
                 if (editResult.Error != null)
                 {
                     TempData["TradeError"] = editResult.Error;
@@ -368,7 +404,8 @@ namespace ProjektZespolowyGr3.Controllers.User
             }
 
             var sidesResult = await ValidateAndBuildSides(
-                subjectNew, initiatorId, receiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash);
+                subjectNew, initiatorId, receiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash,
+                initiatorCustomItems, receiverCustomItems);
             if (sidesResult.Error != null)
             {
                 TempData["TradeError"] = sidesResult.Error;
@@ -435,6 +472,8 @@ namespace ProjektZespolowyGr3.Controllers.User
             public List<Listing>? ReceiverListings { get; set; }
             public Dictionary<int, int> InitiatorQtyByListingId { get; set; } = new();
             public Dictionary<int, int> ReceiverQtyByListingId { get; set; } = new();
+            public List<(string Title, decimal Value)> InitiatorCustomItems { get; set; } = new();
+            public List<(string Title, decimal Value)> ReceiverCustomItems { get; set; } = new();
         }
 
         private async Task<TradeSidesResult> ValidateAndBuildSides(
@@ -446,7 +485,9 @@ namespace ProjektZespolowyGr3.Controllers.User
             Dictionary<int, int>? initiatorQuantities,
             Dictionary<int, int>? receiverQuantities,
             decimal initiatorCash,
-            decimal receiverCash)
+            decimal receiverCash,
+            List<(string Title, decimal Value)>? initiatorCustomItems = null,
+            List<(string Title, decimal Value)>? receiverCustomItems = null)
         {
             if (subject.SellerId == initiatorId && !initiatorListingIds.Contains(subject.Id))
                 return new TradeSidesResult { Error = "Musisz uwzględnić ogłoszenie, w którego kontekście wysyłasz wymianę (po Twojej stronie)." };
@@ -524,7 +565,9 @@ namespace ProjektZespolowyGr3.Controllers.User
                 InitiatorListings = initiatorListings,
                 ReceiverListings = receiverListings,
                 InitiatorQtyByListingId = initiatorQtyByListingId,
-                ReceiverQtyByListingId = receiverQtyByListingId
+                ReceiverQtyByListingId = receiverQtyByListingId,
+                InitiatorCustomItems = initiatorCustomItems ?? new(),
+                ReceiverCustomItems = receiverCustomItems ?? new()
             };
         }
 
@@ -550,6 +593,11 @@ namespace ProjektZespolowyGr3.Controllers.User
                 proposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Initiator, CashAmount = initiatorCash, Quantity = 1 });
             if (receiverCash > 0)
                 proposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Receiver, CashAmount = receiverCash, Quantity = 1 });
+
+            foreach (var (title, value) in sides.InitiatorCustomItems)
+                proposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Initiator, CustomOfferTitle = title, CustomOfferEstimatedValue = value > 0 ? value : null, Quantity = 1 });
+            foreach (var (title, value) in sides.ReceiverCustomItems)
+                proposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Receiver, CustomOfferTitle = title, CustomOfferEstimatedValue = value > 0 ? value : null, Quantity = 1 });
         }
 
         [HttpPost]
@@ -706,7 +754,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             };
 
             // Copy listing items, swap sides to match role swap, skip old cash items
-            foreach (var item in parent.Items.Where(i => i.ListingId.HasValue))
+            foreach (var item in parent.Items.Where(i => i.ListingId.HasValue || i.CustomOfferTitle != null))
             {
                 var swappedSide = item.Side == TradeProposalSide.Initiator
                     ? TradeProposalSide.Receiver
@@ -715,6 +763,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 newProposal.Items.Add(new TradeProposalItem
                 {
                     ListingId = item.ListingId,
+                    CustomOfferTitle = item.CustomOfferTitle,
+                    CustomOfferEstimatedValue = item.CustomOfferEstimatedValue,
                     Side = swappedSide,
                     Quantity = item.Quantity
                 });

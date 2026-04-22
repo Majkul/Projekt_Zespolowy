@@ -96,6 +96,20 @@
                                         Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
                                     </div>
                                 }
+                                if (it.CustomOfferTitle != null)
+                                {
+                                    <div class="border rounded p-2 mb-2 bg-light small d-flex justify-content-between align-items-center">
+                                        <span>📦 <strong>@it.CustomOfferTitle</strong></span>
+                                        @if (it.CustomOfferEstimatedValue.HasValue)
+                                        {
+                                            <span class="text-muted ms-2">est. @it.CustomOfferEstimatedValue.Value.ToString("C")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted ms-2">bez wyceny</span>
+                                        }
+                                    </div>
+                                }
                             }
                         </div>
                     </div>
@@ -117,6 +131,20 @@
                                 {
                                     <div class="border rounded p-2 mb-2 bg-light small">
                                         Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                                    </div>
+                                }
+                                if (it.CustomOfferTitle != null)
+                                {
+                                    <div class="border rounded p-2 mb-2 bg-light small d-flex justify-content-between align-items-center">
+                                        <span>📦 <strong>@it.CustomOfferTitle</strong></span>
+                                        @if (it.CustomOfferEstimatedValue.HasValue)
+                                        {
+                                            <span class="text-muted ms-2">est. @it.CustomOfferEstimatedValue.Value.ToString("C")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted ms-2">bez wyceny</span>
+                                        }
                                     </div>
                                 }
                             }
@@ -149,6 +177,20 @@
                                 Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
                             </div>
                         }
+                        if (it.CustomOfferTitle != null)
+                        {
+                            <div class="border rounded p-2 mb-2 bg-light small d-flex justify-content-between align-items-center">
+                                <span>📦 <strong>@it.CustomOfferTitle</strong></span>
+                                @if (it.CustomOfferEstimatedValue.HasValue)
+                                {
+                                    <span class="text-muted ms-2">est. @it.CustomOfferEstimatedValue.Value.ToString("C")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted ms-2">bez wyceny</span>
+                                }
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -170,6 +212,20 @@
                         {
                             <div class="border rounded p-2 mb-2 bg-light small">
                                 Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                            </div>
+                        }
+                        if (it.CustomOfferTitle != null)
+                        {
+                            <div class="border rounded p-2 mb-2 bg-light small d-flex justify-content-between align-items-center">
+                                <span>📦 <strong>@it.CustomOfferTitle</strong></span>
+                                @if (it.CustomOfferEstimatedValue.HasValue)
+                                {
+                                    <span class="text-muted ms-2">est. @it.CustomOfferEstimatedValue.Value.ToString("C")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted ms-2">bez wyceny</span>
+                                }
                             </div>
                         }
                     }

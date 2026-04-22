@@ -642,6 +642,12 @@ namespace ProjektZespolowyGr3.Migrations
                     b.Property<decimal?>("CashAmount")
                         .HasColumnType("numeric");
 
+                    b.Property<decimal?>("CustomOfferEstimatedValue")
+                        .HasColumnType("numeric");
+
+                    b.Property<string?>("CustomOfferTitle")
+                        .HasColumnType("text");
+
                     b.Property<int?>("ListingId")
                         .HasColumnType("integer");
 
