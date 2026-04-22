@@ -18,12 +18,12 @@ namespace ProjektZespolowyGr3.Controllers.User
     public class ReviewsController : Controller
     {
         private readonly MyDBContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileService _fileService;
 
-        public ReviewsController(MyDBContext context, IWebHostEnvironment env)
+        public ReviewsController(MyDBContext context, IFileService fileService)
         {
             _context = context;
-            _env = env;
+            _fileService = fileService;
         }
 
         private int GetCurrentUserId()
@@ -104,37 +104,27 @@ namespace ProjektZespolowyGr3.Controllers.User
         {
             // ZMIENIC TODO tylko ogloszenia ktore zakupil i ogolnie nieprototypowy review system
 
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
+            foreach (var (field, message) in _fileService.ValidateImages(model.PhotoFiles, maxCount: 5))
+                ModelState.AddModelError(field, message);
 
-            if ((model.PhotoFiles?.Count ?? 0) > 5)
-            {
-                ModelState.AddModelError("PhotoFiles", "Możesz przesłać maksymalnie 5 zdjęć.");
+            if (!ModelState.IsValid)
                 return View(model);
-            }
 
             var userId = GetCurrentUserId();
 
             var listing = _context.Listings.FirstOrDefault(l => l.Id == model.ListingId);
-
             if (listing == null)
             {
                 ModelState.AddModelError("", "Ogłoszenie nie zostało znalezione.");
                 return View(model);
             }
 
-            // czy uzytkownik juz dodal recenzje do ogloszenia
-            var existingReview = _context.Reviews.FirstOrDefault(r => r.ListingId == model.ListingId && r.ReviewerId == userId);
-
-            if (existingReview != null)
+            if (_context.Reviews.Any(r => r.ListingId == model.ListingId && r.ReviewerId == userId))
             {
                 ModelState.AddModelError("", "Już oceniłeś to ogłoszenie.");
                 return View(model);
             }
 
-            // czy nie jestes wlascicielem zgloszenia
             if (listing.SellerId == userId)
             {
                 ModelState.AddModelError("", "Nie możesz oceniać własnego ogłoszenia.");
@@ -151,65 +141,12 @@ namespace ProjektZespolowyGr3.Controllers.User
                 CreatedAt = DateTime.UtcNow
             };
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-
-            if (model.PhotoFiles != null && model.PhotoFiles.Count != 0)
+            if (model.PhotoFiles?.Count > 0)
             {
                 foreach (var file in model.PhotoFiles)
                 {
-                    if (file.Length > 5 * 1024 * 1024)
-                    {
-                        ModelState.AddModelError("PhotoFiles", "Each photo must be less than 5 MB.");
-                        return View(model);
-                    }
-
-                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    if (!allowedExtensions.Contains(ext))
-                    {
-                        ModelState.AddModelError("PhotoFiles", "Only .jpg, .jpeg, .png files are allowed.");
-                        return View(model);
-                    }
-
-                    if (!file.ContentType.StartsWith("image/"))
-                    {
-                        ModelState.AddModelError("PhotoFiles", "Invalid file type.");
-                        return View(model);
-                    }
-                }
-
-                var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
-                if (!Directory.Exists(uploadsPath))
-                    Directory.CreateDirectory(uploadsPath);
-
-                foreach (var file in model.PhotoFiles)
-                {
-                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    var fileName = $"{Guid.NewGuid()}{ext}";
-                    var filePath = Path.Combine(uploadsPath, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    var upload = new Upload
-                    {
-                        FileName = Path.GetFileName(file.FileName),
-                        Extension = ext,
-                        Url = $"/uploads/{fileName}",
-                        SizeBytes = file.Length,
-                        UploaderId = userId,
-                        UploadedAt = DateTime.UtcNow
-                    };
-                    _context.Uploads.Add(upload);
-
-                    var reviewPhoto = new ReviewPhoto
-                    {
-                        Review = review,
-                        Upload = upload
-                    };
-
-                    review.Photos.Add(reviewPhoto);
+                    var upload = await _fileService.SaveFileAsync(file, userId);
+                    review.Photos.Add(new ReviewPhoto { Review = review, Upload = upload });
                 }
             }
 

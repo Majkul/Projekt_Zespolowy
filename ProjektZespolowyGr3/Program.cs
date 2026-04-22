@@ -17,6 +17,9 @@ builder.Services.AddScoped<IPayuOrderSyncService, PayuOrderSyncService>();
 // TODO ZMIENIC potem wywalic
 builder.Services.AddTransient<HelperService>();
 
+// files
+builder.Services.AddScoped<IFileService, FileService>();
+
 //Authentication
 builder.Services.AddAuthorization();
 builder.Services.AddTransient<AuthService>();
