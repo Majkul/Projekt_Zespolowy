@@ -58,7 +58,6 @@ public class TradeProposalsControllerTests : IDisposable
             Title = title,
             Description = "d",
             SellerId = sellerId,
-            Type = ListingType.Trade,
             Price = price,
             StockQuantity = stock,
             NotExchangeable = false,

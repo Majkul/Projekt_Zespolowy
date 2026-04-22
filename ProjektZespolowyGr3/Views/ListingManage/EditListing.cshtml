@@ -31,16 +31,6 @@
     </div>
 
     <div class="mb-3">
-        <label asp-for="Type" class="form-label" id="label-Type">Type</label>
-        <select asp-for="Type" class="form-control" id="input-Type">
-            @foreach (var type in Enum.GetValues(typeof(ListingType)))
-            {
-                <option value="@type">@type</option>
-            }
-        </select>
-    </div>
-
-    <div class="mb-3">
         <label asp-for="Price" class="form-label" id="label-Price">Price</label>
         <input asp-for="Price" type="number" class="form-control" step="0.01" id="input-Price" />
     </div>
@@ -63,7 +53,7 @@
         <div class="card-header">Wymiana</div>
         <div class="card-body">
             <div class="form-check mb-3">
-                <input asp-for="NotExchangeable" class="form-check-input" />
+                <input asp-for="NotExchangeable" class="form-check-input" id="not-exchangable-select" />
                 <label asp-for="NotExchangeable" class="form-check-label">Nie do wymiany</label>
             </div>
             <div class="mb-3">
@@ -109,6 +99,11 @@
         <small class="text-muted">Max 5 photos, only .jpg/.jpeg/.png</small>
     </div>
 
+    <div class="form-check mb-3">
+        <label asp-for="IsFeatured" class="form-check-label">Wyróżnij na profilu</label>
+        <input asp-for="IsFeatured" class="form-check-input" />
+    </div>
+
     <div class="d-flex gap-2 mt-4">
         <button type="submit" class="btn btn-primary">Save</button>
         <a class="btn btn-danger" asp-action="Index">Cancel</a>
@@ -116,12 +111,27 @@
 </form>
 
 <script>
+    const notExchnagableSelect = document.getElementById('not-exchangable-select');
+    const priceLabel = document.getElementById('label-Price');
+
+    const priceLabelText = "Cena (PLN)";
+
+    function toggleIsPriceRequired() {
+        priceLabel.textContent = priceLabelText + notExchnagableSelect.checked ? " *" : "";
+    }
+    notExchnagableSelect.addEventListener('change', toggleIsPriceRequired);
+    toggleIsPriceRequired();
+
     const initialValues = {
         Title: '@(Model.Title ?? "")',
         Description: '@(Model.Description ?? "")',
-        Type: '@Model.Type',
         Price: '@Model.Price',
-        SelectedTagIds: '@string.Join(",", (Model.SelectedTagIds ?? new List<int>()).OrderBy(id => id))'
+        SelectedTagIds: '@string.Join(",", (Model.SelectedTagIds ?? new List<int>()).OrderBy(id => id))',
+        StockQuantity: '@Model.StockQuantity',
+        NotExchnagable: '@Model.NotExchangeable',
+        MinExchangeValue: '@Model.MinExchangeValue',
+        ExchangeDescription: '@(Model.ExchangeDescription ?? "")',
+        SelectedExchangeAcceptedTagIds: '@string.Join(",", (Model.SelectedExchangeAcceptedTagIds ?? new List<int>()).OrderBy(id => id))'
     };
 
     function updateLabel(field, value) {
@@ -132,7 +142,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        const fields = ['Title', 'Description', 'Type', 'Price', 'SelectedTagIds'];
+        const fields = initialValues ? Object.keys(initialValues) : [];
 
         fields.forEach(function (field) {
             const input = document.getElementById('input-' + field);
@@ -171,6 +181,7 @@
                 const fieldNames = changedFields.map(f => {
                     switch (f) {
                         case 'SelectedTagIds': return 'Tags';
+                        case 'SelectedExchangeAcceptedTagIds': return 'Accepted exchange tags'
                         default: return f;
                     }
                 });

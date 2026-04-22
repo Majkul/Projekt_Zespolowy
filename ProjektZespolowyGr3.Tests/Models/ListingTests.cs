@@ -16,7 +16,6 @@ namespace ProjektZespolowyGr3.Tests.Models
                 Title = "Test Listing",
                 Description = "Test Description",
                 SellerId = 1,
-                Type = ListingType.Sale,
                 Price = 100.50m,
                 IsFeatured = false,
                 IsSold = false,
@@ -30,7 +29,6 @@ namespace ProjektZespolowyGr3.Tests.Models
             listing.Title.Should().Be("Test Listing");
             listing.Description.Should().Be("Test Description");
             listing.SellerId.Should().Be(1);
-            listing.Type.Should().Be(ListingType.Sale);
             listing.Price.Should().Be(100.50m);
             listing.IsFeatured.Should().BeFalse();
             listing.IsSold.Should().BeFalse();
@@ -46,14 +44,12 @@ namespace ProjektZespolowyGr3.Tests.Models
                 Title = "Trade Listing",
                 Description = "Want to trade",
                 SellerId = 1,
-                Type = ListingType.Trade,
                 Price = null,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
 
             // Assert
-            listing.Type.Should().Be(ListingType.Trade);
             listing.Price.Should().BeNull();
         }
 
@@ -66,7 +62,6 @@ namespace ProjektZespolowyGr3.Tests.Models
                 Title = "Listing without description",
                 Description = null,
                 SellerId = 1,
-                Type = ListingType.Sale,
                 Price = 50,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
