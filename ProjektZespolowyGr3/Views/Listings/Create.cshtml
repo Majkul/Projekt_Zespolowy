@@ -43,6 +43,7 @@
                 </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
                 <div class="mb-3">
                     <label asp-for="Type" class="form-label fw-bold">Typ ogłoszenia *</label>
                     <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<ListingType>()" id="type-select">
@@ -76,11 +77,16 @@
 =======
                 <div class="card mb-3 border-info">
                     <div class="card-header bg-info bg-opacity-10">Wymiana (opcjonalnie)</div>
+=======
+                <div class="form-check mb-3">
+                    <input asp-for="NotExchangeable" class="form-check-input" id="not-exchangable-select" />
+                    <label asp-for="NotExchangeable" class="form-check-label">Nie do wymiany - nie pokazuj tego ogłoszenia w propozycjach wymiany</label>
+                </div>
+
+                <div class="card mb-3 border-info" id="trade-group">
+                    <div class="card-header bg-info bg-opacity-10">Wymiana</div>
+>>>>>>> origin/message-images
                     <div class="card-body">
-                        <div class="form-check mb-3">
-                            <input asp-for="NotExchangeable" class="form-check-input" id="not-exchangable-select" />
-                            <label asp-for="NotExchangeable" class="form-check-label">Nie do wymiany — nie pokazuj tego ogłoszenia w propozycjach wymiany</label>
-                        </div>
                         <div class="mb-3">
                             <label asp-for="MinExchangeValue" class="form-label">Minimalna wartość oferty kupującego (PLN)</label>
                             <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" class="form-control" />
@@ -190,6 +196,7 @@
 
     <script>
 <<<<<<< HEAD
+<<<<<<< HEAD
         const typeSelect = document.getElementById('type-select');
         const priceGroup = document.getElementById('price-group');
         const exchangeCard = document.getElementById('exchange-card');
@@ -228,15 +235,34 @@
         syncTypeUI();
 =======
         const notExchnagableSelect = document.getElementById('not-exchangable-select');
+=======
+        const notExchangeableSelect = document.getElementById('not-exchangable-select');
+>>>>>>> origin/message-images
         const priceLabel = document.getElementById('price-label');
 
         const priceLabelText = "Cena (PLN)";
 
         function toggleIsPriceRequired() {
-            priceLabel.textContent = priceLabelText + notExchnagableSelect.checked ? " *" : "";
+            priceLabel.textContent = priceLabelText + (notExchangeableSelect.checked ? " *" : "");
         }
-        notExchnagableSelect.addEventListener('change', toggleIsPriceRequired);
+        notExchangeableSelect.addEventListener('change', toggleIsPriceRequired);
+
+        const tradeGroup = document.getElementById('trade-group');
+
+        function toggleTradeGroup() {
+            if (notExchangeableSelect.checked) {
+                tradeGroup.style.display = 'none';
+            } else {
+                tradeGroup.style.display = 'block';
+            }
+        }
+        notExchangeableSelect.addEventListener('change', toggleTradeGroup);
+
         toggleIsPriceRequired();
+<<<<<<< HEAD
 >>>>>>> origin/main
+=======
+        toggleTradeGroup();
+>>>>>>> origin/message-images
     </script>
 }

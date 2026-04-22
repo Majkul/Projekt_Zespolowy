@@ -71,8 +71,8 @@
         <div class="card-header">Wymiana</div>
         <div class="card-body">
             <div class="form-check mb-3">
-                <input asp-for="NotExchangeable" class="form-check-input" id="input-NotExchangable" />
-                <label asp-for="NotExchangeable" class="form-check-label" id="label-NotExchangable">Nie do wymiany</label>
+                <input asp-for="NotExchangeable" class="form-check-input" id="input-NotExchangeable" />
+                <label asp-for="NotExchangeable" class="form-check-label" id="label-NotExchangeable">Nie do wymiany</label>
             </div>
             <div class="mb-3">
                 <label asp-for="MinExchangeValue" class="form-label" id="label-MinExchangeValue">Minimalna wartość oferty kupującego (PLN)</label>
@@ -158,15 +158,15 @@
 </form>
 
 <script>
-    const notExchangableSelect = document.getElementById('input-NotExchangable');
+    const notExchangeableSelect = document.getElementById('input-NotExchangable');
     const priceLabel = document.getElementById('label-Price');
 
     const priceLabelText = "Cena (PLN)";
 
     function toggleIsPriceRequired() {
-        priceLabel.textContent = priceLabelText + (notExchangableSelect.checked ? " *" : "");
+        priceLabel.textContent = priceLabelText + (notExchangeableSelect.checked ? " *" : "");
     }
-    notExchangableSelect.addEventListener('change', toggleIsPriceRequired);
+    notExchangeableSelect.addEventListener('change', toggleIsPriceRequired);
     toggleIsPriceRequired();
 
     const initialValues = {

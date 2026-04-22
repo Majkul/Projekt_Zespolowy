@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.System;
+using System.Net.Mail;
 using System.Security.Claims;
 
 namespace ProjektZespolowyGr3.Controllers.User
@@ -13,11 +14,13 @@ namespace ProjektZespolowyGr3.Controllers.User
     {
         private readonly MyDBContext _context;
         private readonly INotificationService _notifications;
+        private readonly IFileService _fileService;
 
-        public MessagesController(MyDBContext context, INotificationService notifications)
+        public MessagesController(MyDBContext context, INotificationService notifications, IFileService fileService)
         {
             _context = context;
             _notifications = notifications;
+            _fileService = fileService;
         }
 
         private int GetCurrentUserId()
@@ -93,10 +96,12 @@ namespace ProjektZespolowyGr3.Controllers.User
             var messages = await query
                 .Include(m => m.TradeProposal!).ThenInclude(t => t.Initiator)
                 .Include(m => m.TradeProposal!).ThenInclude(t => t.Receiver)
-                .Include(m => m.TradeProposal!).ThenInclude(t => t.Items).ThenInclude(i => i.Listing!).ThenInclude(l => l!.Photos).ThenInclude(p => p.Upload)
-                .Include(m => m.TradeProposal!).ThenInclude(t => t.Items).ThenInclude(i => i.Listing!).ThenInclude(l => l!.Tags).ThenInclude(lt => lt.Tag)
-                .Include(m => m.ReplyToMessage!)
-                    .ThenInclude(rm => rm.TradeProposal)
+                .Include(m => m.TradeProposal!).ThenInclude(t => t.Items)
+                    .ThenInclude(i => i.Listing!).ThenInclude(l => l!.Photos).ThenInclude(p => p.Upload)
+                .Include(m => m.TradeProposal!).ThenInclude(t => t.Items)
+                    .ThenInclude(i => i.Listing!).ThenInclude(l => l!.Tags).ThenInclude(lt => lt.Tag)
+                .Include(m => m.ReplyToMessage!).ThenInclude(rm => rm.TradeProposal)
+                .Include(m => m.Photos).ThenInclude(a => a.Upload)
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
 
@@ -122,7 +127,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         // POST: /Messages/Send
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Send(int receiverId, string content, int? listingId, int? ticketId)
+        public async Task<IActionResult> Send(int receiverId, string content, int? listingId, int? ticketId, IList<IFormFile>? photos = null)
         {
             var currentUserId = GetCurrentUserId();
 
@@ -131,8 +136,15 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return BadRequest("Nie możesz wysłać wiadomości do siebie.");
             }
 
-            if (string.IsNullOrWhiteSpace(content))
+            bool hasText = !string.IsNullOrWhiteSpace(content);
+            bool hasPhotos = photos?.Count > 0;
+
+            if (!hasText && !hasPhotos)
+                return RedirectToAction(nameof(Conversation), new { userId = receiverId, listingId, ticketId });
+
+            foreach (var (field, errorMessage) in _fileService.ValidateImages(photos, maxCount: 5, field: "Photos"))
             {
+                TempData[$"Error_{field}"] = errorMessage;
                 return RedirectToAction(nameof(Conversation), new { userId = receiverId, listingId, ticketId });
             }
 
@@ -140,11 +152,20 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 SenderId = currentUserId,
                 ReceiverId = receiverId,
-                Content = content.Trim(),
+                Content = hasText ? content.Trim() : string.Empty,
                 ListingId = listingId,
                 TicketId = ticketId,
                 SentAt = DateTime.UtcNow
             };
+
+            if (hasPhotos)
+            {
+                foreach (var file in photos!)
+                {
+                    var upload = await _fileService.SaveFileAsync(file, currentUserId);
+                    message.Photos.Add(new MessagePhoto { Message = message, Upload = upload });
+                }
+            }
 
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();

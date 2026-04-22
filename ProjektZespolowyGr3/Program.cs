@@ -40,6 +40,10 @@ builder.Services.AddScoped<IPayuOrderSyncService, PayuOrderSyncService>();
 
 builder.Services.AddTransient<HelperService>();
 
+// files
+builder.Services.AddScoped<IFileService, FileService>();
+
+//Authentication
 builder.Services.AddAuthorization();
 builder.Services.AddTransient<AuthService>();
 builder.Services.AddHttpContextAccessor();

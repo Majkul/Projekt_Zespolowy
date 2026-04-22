@@ -23,7 +23,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public DateTime? ArchivedAt { get; set; }
 
         /// <summary>Jeśli true, ogłoszenie nie może być dodane do propozycji wymiany.</summary>
-        public bool NotExchangeable { get; set; }
+        public bool NotExchangeable { get; set; } = true;
 
         /// <summary>Minimalna suma szacowanej wartości po stronie oferującego (kupującego), aby wymiana była dozwolona.</summary>
         public decimal? MinExchangeValue { get; set; }
