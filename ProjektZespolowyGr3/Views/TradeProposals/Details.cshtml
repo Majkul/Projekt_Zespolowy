@@ -178,15 +178,151 @@
         </div>
     </div>
 
+    @if (TempData["TradeSuccess"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["TradeSuccess"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["TradeInfo"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            @TempData["TradeInfo"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["TradeError"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["TradeError"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.Status == TradeProposalStatus.Pending)
+    {
+        var isReceiver = cu == Model.ReceiverUserId;
+        var isInitiator = cu == Model.InitiatorUserId;
+
+        <div class="card mb-4 border-warning">
+            <div class="card-header bg-warning bg-opacity-10 fw-bold">⏳ Propozycja oczekuje na odpowiedź</div>
+            <div class="card-body">
+
+                @if (isReceiver)
+                {
+                    <p class="text-muted small mb-3">
+                        To Ty jesteś odbiorcą tej propozycji. Możesz ją zaakceptować, odrzucić lub złożyć kontrofertę.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <form asp-action="Accept" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-success"
+                                    onclick="return confirm('Czy na pewno chcesz zaakceptować tę propozycję wymiany?')">
+                                ✅ Zaakceptuj
+                            </button>
+                        </form>
+                        <form asp-action="Reject" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-danger"
+                                    onclick="return confirm('Czy na pewno chcesz odrzucić tę propozycję?')">
+                                ✖ Odrzuć
+                            </button>
+                        </form>
+                        <a asp-action="Compose"
+                           asp-route-listingId="@Model.SubjectListingId"
+                           asp-route-parentTradeProposalId="@Model.Id"
+                           class="btn btn-outline-primary">
+                            🔄 Pełna kontroferta
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary"
+                                data-bs-toggle="collapse" data-bs-target="#quick-bargain-panel">
+                            💬 Szybkie targowanie
+                        </button>
+                    </div>
+
+                    var curInitCash = Model.Items.Where(i => i.Side == TradeProposalSide.Initiator && i.CashAmount.HasValue).Sum(i => i.CashAmount!.Value);
+                    var curRecvCash = Model.Items.Where(i => i.Side == TradeProposalSide.Receiver && i.CashAmount.HasValue).Sum(i => i.CashAmount!.Value);
+
+                    <div class="collapse" id="quick-bargain-panel">
+                        <div class="card card-body bg-light border-primary mt-2">
+                            <h6 class="mb-3">💬 Szybkie targowanie — zmień kwoty dopłat gotówkowych</h6>
+                            <p class="text-muted small mb-3">
+                                Przedmioty pozostają bez zmian. Możesz zaproponować inne kwoty dopłat.
+                                Aktualne: <strong>@Model.Initiator.Username dopłaca @curInitCash.ToString("C")</strong>,
+                                <strong>@Model.Receiver.Username dopłaca @curRecvCash.ToString("C")</strong>.
+                            </p>
+                            <form asp-action="QuickCounterOffer" asp-route-id="@Model.Id" method="post">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Dopłata od <strong>@Model.Initiator.Username</strong> (PLN)</label>
+                                        <div class="input-group">
+                                            <input type="number" name="initiatorCash" step="0.01" min="0"
+                                                   value="@curInitCash.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                                                   class="form-control" placeholder="0.00" />
+                                            <span class="input-group-text">PLN</span>
+                                        </div>
+                                        <small class="text-muted">Kwota, którą @Model.Initiator.Username dopłaca do wymiany</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Dopłata od <strong>@Model.Receiver.Username</strong> (PLN)</label>
+                                        <div class="input-group">
+                                            <input type="number" name="receiverCash" step="0.01" min="0"
+                                                   value="@curRecvCash.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                                                   class="form-control" placeholder="0.00" />
+                                            <span class="input-group-text">PLN</span>
+                                        </div>
+                                        <small class="text-muted">Kwota, którą @Model.Receiver.Username dopłaca do wymiany</small>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Wiadomość (opcjonalnie)</label>
+                                    <textarea name="message" class="form-control" rows="2"
+                                              placeholder="Np. Proponuję zmianę dopłaty, bo…"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    📨 Wyślij kontrofertę
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+
+                @if (isInitiator)
+                {
+                    <p class="text-muted small mb-3">
+                        Propozycja oczekuje na odpowiedź od <strong>@Model.Receiver.Username</strong>.
+                        Możesz ją anulować lub edytować.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-danger"
+                                    onclick="return confirm('Czy na pewno chcesz anulować tę propozycję?')">
+                                ✖ Anuluj propozycję
+                            </button>
+                        </form>
+                        <a asp-action="Compose"
+                           asp-route-listingId="@Model.SubjectListingId"
+                           asp-route-editTradeProposalId="@Model.Id"
+                           class="btn btn-outline-secondary">
+                            ✏️ Edytuj propozycję
+                        </a>
+                    </div>
+                }
+
+            </div>
+        </div>
+    }
+
     @if (Model.History != null && Model.History.Any())
     {
-        <h5>Historia zmian</h5>
-        <ul class="small">
-            @foreach (var h in Model.History.OrderByDescending(x => x.ChangedAt))
-            {
-                <li>@h.ChangedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") — @h.User.Username: @h.Summary</li>
-            }
-        </ul>
+        <details class="mb-4">
+            <summary class="fw-bold text-muted small" style="cursor:pointer;">Historia zmian (@Model.History.Count())</summary>
+            <ul class="small mt-2">
+                @foreach (var h in Model.History.OrderByDescending(x => x.ChangedAt))
+                {
+                    <li>@h.ChangedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") — @h.User.Username: @h.Summary</li>
+                }
+            </ul>
+        </details>
     }
 
     @if (Model.Status == TradeProposalStatus.Accepted)

@@ -49,20 +49,8 @@
     </div>
 
     <div class="mb-3">
-<<<<<<< HEAD
-        <label asp-for="StockQuantity" class="form-label">Liczba sztuk</label>
-        <input asp-for="StockQuantity" type="number" min="0" class="form-control" />
-        <small class="text-muted">0 = wyprzedane (ogłoszenie oznaczone jako sprzedane).</small>
-        <span asp-validation-for="StockQuantity" class="text-danger"></span>
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Tags</label>
-        <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control">
-=======
         <label class="form-label" id="label-SelectedTagIds">Tags</label>
         <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control" id="input-SelectedTagIds">
->>>>>>> origin/main
         </select>
         <small class="text-muted">Hold CTRL to select multiple</small>
     </div>

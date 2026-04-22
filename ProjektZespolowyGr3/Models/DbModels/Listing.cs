@@ -11,7 +11,6 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public int SellerId { get; set; }
         public User Seller { get; set; } = null!;
         public ListingType Type { get; set; }
-        public int ViewCount { get; set; }
         public decimal? Price { get; set; }
 
         /// <summary>Liczba dostępnych sztuk (ogłoszenie widoczne jako do kupna/wymiany dopóki &gt; 0).</summary>
@@ -23,7 +22,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public DateTime? ArchivedAt { get; set; }
 
         /// <summary>Jeśli true, ogłoszenie nie może być dodane do propozycji wymiany.</summary>
-        public bool NotExchangeable { get; set; } = true;
+        public bool NotExchangeable { get; set; } = false;
 
         /// <summary>Minimalna suma szacowanej wartości po stronie oferującego (kupującego), aby wymiana była dozwolona.</summary>
         public decimal? MinExchangeValue { get; set; }
@@ -49,5 +48,13 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public ICollection<ListingExchangeAcceptedTag> ExchangeAcceptedTags { get; set; } = new List<ListingExchangeAcceptedTag>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<TradeProposal> TradeProposalsAsSubject { get; set; } = new List<TradeProposal>();
+    }
+
+    public enum ListingType
+    {
+        [Display(Name = "Sprzedaż")]
+        Sale = 0,
+        [Display(Name = "Wymiana")]
+        Trade = 1
     }
 }

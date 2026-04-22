@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
+using ProjektZespolowyGr3.Models.DbModels;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProjektZespolowyGr3.Models.ViewModels
@@ -14,6 +15,8 @@ namespace ProjektZespolowyGr3.Models.ViewModels
 
         [StringLength(1000)]
         public string? Description { get; set; }
+
+        public ListingType Type { get; set; } = ListingType.Sale;
 
         public decimal? Price { get; set; }
 
@@ -31,7 +34,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
 
         public bool IsFeatured { get; set; }
         /// <summary>Nie uwzględniaj tego ogłoszenia w propozycjach wymiany.</summary>
-        public bool NotExchangeable { get; set; } = true;
+        public bool NotExchangeable { get; set; } = false;
 
         public decimal? MinExchangeValue { get; set; }
 

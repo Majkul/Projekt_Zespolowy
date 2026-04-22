@@ -576,13 +576,13 @@ namespace ProjektZespolowyGr3.Controllers.User
                 if (!listings.TryGetValue(lid, out var list))
                 {
                     TempData["TradeError"] = "Jedno z ogłoszeń w propozycji już nie istnieje.";
-                    return RedirectToAction("Conversation", "Messages", new { userId = proposal.InitiatorUserId, listingId = proposal.SubjectListingId });
+                    return RedirectToAction("Details", new { id });
                 }
 
                 if (!ListingStockHelper.CanSell(list, need) || list.IsArchived || list.NotExchangeable)
                 {
                     TempData["TradeError"] = "Nie można zaakceptować: niewystarczająca liczba sztuk lub ogłoszenie jest niedostępne.";
-                    return RedirectToAction("Conversation", "Messages", new { userId = proposal.InitiatorUserId, listingId = proposal.SubjectListingId });
+                    return RedirectToAction("Details", new { id });
                 }
             }
 
@@ -591,8 +591,17 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             proposal.Status = TradeProposalStatus.Accepted;
             proposal.UpdatedAt = DateTime.UtcNow;
+            proposal.LastModifiedAt = DateTime.UtcNow;
+            _context.TradeProposalHistoryEntries.Add(new TradeProposalHistoryEntry
+            {
+                TradeProposalId = proposal.Id,
+                UserId = userId,
+                Summary = "Propozycja zaakceptowana.",
+                ChangedAt = DateTime.UtcNow
+            });
             await _context.SaveChangesAsync();
-            return RedirectToAction("Conversation", "Messages", new { userId = proposal.InitiatorUserId, listingId = proposal.SubjectListingId });
+            TempData["TradeSuccess"] = "Propozycja wymiany została zaakceptowana!";
+            return RedirectToAction("Details", new { id });
         }
 
         [HttpPost]
@@ -608,8 +617,17 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             proposal.Status = TradeProposalStatus.Rejected;
             proposal.UpdatedAt = DateTime.UtcNow;
+            proposal.LastModifiedAt = DateTime.UtcNow;
+            _context.TradeProposalHistoryEntries.Add(new TradeProposalHistoryEntry
+            {
+                TradeProposalId = proposal.Id,
+                UserId = userId,
+                Summary = "Propozycja odrzucona.",
+                ChangedAt = DateTime.UtcNow
+            });
             await _context.SaveChangesAsync();
-            return RedirectToAction("Conversation", "Messages", new { userId = proposal.InitiatorUserId, listingId = proposal.SubjectListingId });
+            TempData["TradeInfo"] = "Propozycja wymiany została odrzucona.";
+            return RedirectToAction("Details", new { id });
         }
 
         [HttpPost]
@@ -625,8 +643,142 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             proposal.Status = TradeProposalStatus.Cancelled;
             proposal.UpdatedAt = DateTime.UtcNow;
+            proposal.LastModifiedAt = DateTime.UtcNow;
+            _context.TradeProposalHistoryEntries.Add(new TradeProposalHistoryEntry
+            {
+                TradeProposalId = proposal.Id,
+                UserId = userId,
+                Summary = "Propozycja anulowana przez składającego.",
+                ChangedAt = DateTime.UtcNow
+            });
             await _context.SaveChangesAsync();
-            return RedirectToAction("Conversation", "Messages", new { userId = proposal.ReceiverUserId, listingId = proposal.SubjectListingId });
+            TempData["TradeInfo"] = "Propozycja wymiany została anulowana.";
+            return RedirectToAction("Details", new { id });
+        }
+
+        /// <summary>
+        /// Szybka kontroferta — zachowuje te same przedmioty, ale zmienia kwoty dopłat gotówkowych.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> QuickCounterOffer(int id, decimal initiatorCash, decimal receiverCash, string? message)
+        {
+            var userId = GetCurrentUserId();
+
+            var parent = await _context.TradeProposals
+                .Include(p => p.Items).ThenInclude(i => i.Listing!)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (parent == null)
+                return NotFound();
+            if (parent.Status != TradeProposalStatus.Pending)
+            {
+                TempData["TradeError"] = "Nie można złożyć kontroferty — propozycja nie jest już aktywna.";
+                return RedirectToAction("Details", new { id });
+            }
+            if (parent.ReceiverUserId != userId && parent.InitiatorUserId != userId)
+                return Forbid();
+
+            // Only the receiver can make a quick counter-offer on a pending proposal
+            if (parent.ReceiverUserId != userId)
+            {
+                TempData["TradeError"] = "Kontrofertę może złożyć tylko osoba, do której skierowano propozycję.";
+                return RedirectToAction("Details", new { id });
+            }
+
+            initiatorCash = Math.Max(0, initiatorCash);
+            receiverCash = Math.Max(0, receiverCash);
+
+            var now = DateTime.UtcNow;
+
+            // In a counter-offer the roles swap: the current receiver becomes the new initiator
+            var newProposal = new TradeProposal
+            {
+                InitiatorUserId = parent.ReceiverUserId,
+                ReceiverUserId = parent.InitiatorUserId,
+                SubjectListingId = parent.SubjectListingId,
+                Status = TradeProposalStatus.Pending,
+                ParentTradeProposalId = parent.Id,
+                RootTradeProposalId = parent.RootTradeProposalId ?? parent.Id,
+                CreatedAt = now,
+                UpdatedAt = now,
+                LastModifiedAt = now
+            };
+
+            // Copy listing items, swap sides to match role swap, skip old cash items
+            foreach (var item in parent.Items.Where(i => i.ListingId.HasValue))
+            {
+                var swappedSide = item.Side == TradeProposalSide.Initiator
+                    ? TradeProposalSide.Receiver
+                    : TradeProposalSide.Initiator;
+
+                newProposal.Items.Add(new TradeProposalItem
+                {
+                    ListingId = item.ListingId,
+                    Side = swappedSide,
+                    Quantity = item.Quantity
+                });
+            }
+
+            // Add new cash items (using swapped sides: old initiator is now receiver)
+            if (initiatorCash > 0)
+                newProposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Receiver, CashAmount = initiatorCash });
+            if (receiverCash > 0)
+                newProposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Initiator, CashAmount = receiverCash });
+
+            _context.TradeProposals.Add(newProposal);
+
+            // Mark parent as superseded
+            parent.Status = TradeProposalStatus.Superseded;
+            parent.UpdatedAt = now;
+            parent.LastModifiedAt = now;
+
+            _context.TradeProposalHistoryEntries.Add(new TradeProposalHistoryEntry
+            {
+                TradeProposalId = parent.Id,
+                UserId = userId,
+                Summary = "Zastąpiona szybką kontrofertą.",
+                ChangedAt = now
+            });
+
+            await _context.SaveChangesAsync();
+
+            // Fix root id if this is the first in chain
+            if (newProposal.RootTradeProposalId == newProposal.Id)
+            {
+                newProposal.RootTradeProposalId = newProposal.Id;
+                await _context.SaveChangesAsync();
+            }
+
+            // Send message notification
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                _context.Messages.Add(new Message
+                {
+                    SenderId = userId,
+                    ReceiverId = parent.InitiatorUserId,
+                    ListingId = parent.SubjectListingId,
+                    Content = message.Trim(),
+                    TradeProposalId = newProposal.Id,
+                    SentAt = now
+                });
+            }
+
+            _context.Messages.Add(new Message
+            {
+                SenderId = userId,
+                ReceiverId = parent.InitiatorUserId,
+                ListingId = parent.SubjectListingId,
+                Content = "🔄 Kontroferta wymiany",
+                TradeProposalId = newProposal.Id,
+                SentAt = now
+            });
+
+            await _context.SaveChangesAsync();
+            await _notifications.NotifyTradeProposalAsync(parent.InitiatorUserId, newProposal.Id);
+
+            TempData["TradeSuccess"] = "Kontroferta została wysłana!";
+            return RedirectToAction("Details", new { id = newProposal.Id });
         }
 
         [HttpGet]
