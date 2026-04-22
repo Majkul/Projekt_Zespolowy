@@ -11,6 +11,7 @@ using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.ViewModels;
 using System.Threading.Tasks;
+using ProjektZespolowyGr3.Models.System;
 
 namespace ProjektZespolowyGr3.Tests.Controllers
 {
@@ -18,6 +19,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
     {
         private readonly MyDBContext _context;
         private readonly Mock<IWebHostEnvironment> _envMock;
+        private readonly IFileService _fileService;
         private readonly TicketsController _controller;
 
         public TicketsControllerTests()
@@ -26,9 +28,8 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _context = new MyDBContext(options);
-            _envMock = new Mock<IWebHostEnvironment>();
-            _envMock.Setup(e => e.WebRootPath).Returns("/wwwroot");
-            _controller = new TicketsController(_context, _envMock.Object);
+            _fileService = new Mock<IFileService>().Object;
+            _controller = new TicketsController(_context, _fileService);
         }
 
         private void SetupAuthenticatedUser(int userId)

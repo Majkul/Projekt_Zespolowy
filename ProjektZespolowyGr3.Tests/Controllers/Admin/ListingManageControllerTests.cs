@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using ProjektZespolowyGr3.Models;
+using ProjektZespolowyGr3.Models.System;
 using ProjektZespolowyGr3.Models.DbModels;
 using Xunit;
 
@@ -23,10 +24,9 @@ public class ListingManageControllerTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _context = new MyDBContext(options);
-        var env = new Mock<IWebHostEnvironment>();
-        env.Setup(e => e.WebRootPath).Returns("/wwwroot");
         var acc = new Mock<IHttpContextAccessor>();
-        _controller = new ListingManageController(_context, env.Object, acc.Object);
+        var fs = new Mock<IFileService>();
+        _controller = new ListingManageController(_context, fs.Object, acc.Object);
     }
 
     public void Dispose() => _context.Dispose();

@@ -26,6 +26,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
         /// <summary>Odpowiedź na inną wiadomość (np. wątek kontrofert).</summary>
         public int? ReplyToMessageId { get; set; }
         public Message? ReplyToMessage { get; set; }
+        public ICollection<MessagePhoto> Photos { get; set; } = new List<MessagePhoto>();
         public ICollection<Message> Replies { get; set; } = new List<Message>();
 
         [Required]

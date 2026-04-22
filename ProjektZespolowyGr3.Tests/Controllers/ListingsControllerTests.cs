@@ -20,6 +20,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         private readonly Mock<IWebHostEnvironment> _envMock;
         private readonly AuthService _authService;
         private readonly HelperService _helperService;
+        private readonly IFileService _fileService;
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
         private readonly ListingsController _controller;
 
@@ -33,8 +34,9 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _envMock.Setup(e => e.WebRootPath).Returns("/wwwroot");
             _authService = new AuthService(_context);
             _helperService = new HelperService(_context);
+            _fileService = new Mock<IFileService>().Object;
             _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            _controller = new ListingsController(_context, _envMock.Object, _authService, _helperService, _httpContextAccessorMock.Object);
+            _controller = new ListingsController(_context, _fileService, _authService, _helperService, _httpContextAccessorMock.Object);
         }
 
         [Fact]

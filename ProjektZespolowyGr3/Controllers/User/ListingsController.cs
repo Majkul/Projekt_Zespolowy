@@ -19,15 +19,15 @@ namespace ProjektZespolowyGr3.Controllers.User
     public class ListingsController : Controller
     {
         private readonly MyDBContext _context;
-        private readonly IWebHostEnvironment _env;
+        private readonly IFileService _fileService;
         private readonly AuthService _auth;
         private readonly HelperService _helper;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ListingsController(MyDBContext context, IWebHostEnvironment env, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor)
+        public ListingsController(MyDBContext context, IFileService fileService, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
-            _env = env;
+            _fileService = fileService;
             _auth = auth;
             _helper = helper;
             _httpContextAccessor = httpContextAccessor;
@@ -158,16 +158,12 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (model.StockQuantity < 1)
                 ModelState.AddModelError(nameof(CreateListingViewModel.StockQuantity), "Liczba sztuk musi być co najmniej 1.");
 
+            foreach (var (field, message) in _fileService.ValidateImages(model.PhotoFiles, maxCount: 5))
+                ModelState.AddModelError(field, message);
+
             if (!ModelState.IsValid)
             {
                 _helper.PopulateAvailableTags(model);
-                return View(model);
-            }
-
-            var photoFiles = model.PhotoFiles ?? new List<IFormFile>();
-            if (photoFiles.Count > 5)
-            {
-                ModelState.AddModelError("PhotoFiles", "You can upload a maximum of 5 photos.");
                 return View(model);
             }
 
@@ -186,103 +182,38 @@ namespace ProjektZespolowyGr3.Controllers.User
             };
             ListingStockHelper.SyncSoldFlag(listing);
 
-            if (model.SelectedTagIds != null && model.SelectedTagIds.Any())
+            if (model.SelectedTagIds?.Any() == true)
             {
                 foreach (var tagId in model.SelectedTagIds)
                 {
                     var tag = _context.Tags.Find(tagId);
                     if (tag != null)
-                    {
-                        listing.Tags.Add(new ListingTag
-                        {
-                            TagId = tag.Id,
-                            Listing = listing
-                        });
-                    }
+                        listing.Tags.Add(new ListingTag { TagId = tag.Id, Listing = listing });
                 }
             }
 
-            if (model.SelectedExchangeAcceptedTagIds != null && model.SelectedExchangeAcceptedTagIds.Any())
+            if (model.SelectedExchangeAcceptedTagIds?.Any() == true)
             {
                 foreach (var tagId in model.SelectedExchangeAcceptedTagIds.Distinct())
                 {
                     var tag = _context.Tags.Find(tagId);
                     if (tag != null)
-                    {
-                        listing.ExchangeAcceptedTags.Add(new ListingExchangeAcceptedTag
-                        {
-                            TagId = tag.Id,
-                            Listing = listing
-                        });
-                    }
+                        listing.ExchangeAcceptedTags.Add(new ListingExchangeAcceptedTag { TagId = tag.Id, Listing = listing });
                 }
             }
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
-
-            if (photoFiles.Count != 0)
+            if (model.PhotoFiles?.Count > 0)
             {
-                foreach (var file in photoFiles)
+                bool first = true;
+                foreach (var file in model.PhotoFiles)
                 {
-                    if (file.Length > 5 * 1024 * 1024)
-                    {
-                        ModelState.AddModelError("PhotoFiles", "Each photo must be less than 5 MB.");
-                        _helper.PopulateAvailableTags(model);
-                        return View(model);
-                    }
-
-                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    if (!allowedExtensions.Contains(ext))
-                    {
-                        ModelState.AddModelError("PhotoFiles", "Only .jpg, .jpeg, .png files are allowed.");
-                        _helper.PopulateAvailableTags(model);
-                        return View(model);
-                    }
-
-                    if (!file.ContentType.StartsWith("image/"))
-                    {
-                        ModelState.AddModelError("PhotoFiles", "Invalid file type.");
-                        return View(model);
-                    }
-                }
-
-                bool first = true; // pierwsze staje sie featured
-
-                var uploadsPath = Path.Combine(_env.WebRootPath, "uploads");
-                if (!Directory.Exists(uploadsPath))
-                    Directory.CreateDirectory(uploadsPath);
-
-                foreach (var file in photoFiles)
-                {
-                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    var fileName = $"{Guid.NewGuid()}{ext}";
-                    var filePath = Path.Combine(uploadsPath, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    var upload = new Upload
-                    {
-                        FileName = Path.GetFileName(file.FileName),
-                        Extension = ext,
-                        Url = $"/uploads/{fileName}",
-                        SizeBytes = file.Length,
-                        UploaderId = currentUserId,
-                        UploadedAt = DateTime.UtcNow
-                    };
-                    _context.Uploads.Add(upload);
-
-                    var listingPhoto = new ListingPhoto
+                    var upload = await _fileService.SaveFileAsync(file, currentUserId);
+                    listing.Photos.Add(new ListingPhoto
                     {
                         Listing = listing,
                         Upload = upload,
                         IsFeatured = first
-                    };
-
-                    listing.Photos.Add(listingPhoto);
-
+                    });
                     first = false;
                 }
             }

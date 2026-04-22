@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using ProjektZespolowyGr3.Controllers.User;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
+using ProjektZespolowyGr3.Models.System;
 using ProjektZespolowyGr3.Models.ViewModels;
 
 namespace ProjektZespolowyGr3.Tests.Controllers
@@ -16,7 +17,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
     public class ReviewsControllerTests : IDisposable
     {
         private readonly MyDBContext _context;
-        private readonly Mock<IWebHostEnvironment> _envMock;
+        private readonly IFileService _fileService;
         private readonly ReviewsController _controller;
 
         public ReviewsControllerTests()
@@ -25,9 +26,8 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _context = new MyDBContext(options);
-            _envMock = new Mock<IWebHostEnvironment>();
-            _envMock.Setup(e => e.WebRootPath).Returns("/wwwroot");
-            _controller = new ReviewsController(_context, _envMock.Object);
+            _fileService = new Mock<IFileService>().Object;
+            _controller = new ReviewsController(_context, _fileService);
         }
 
         private void SetupAuthenticatedUser(int userId)
