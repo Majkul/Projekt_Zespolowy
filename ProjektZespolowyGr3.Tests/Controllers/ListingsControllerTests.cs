@@ -50,7 +50,6 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 Title = "Test Listing",
                 Description = "Description",
                 SellerId = seller.Id,
-                Type = ListingType.Sale,
                 Price = 100,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -78,7 +77,6 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 Title = "Laptop",
                 Description = "Gaming laptop",
                 SellerId = seller.Id,
-                Type = ListingType.Sale,
                 Price = 1000,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -88,7 +86,6 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 Title = "Phone",
                 Description = "Smartphone",
                 SellerId = seller.Id,
-                Type = ListingType.Sale,
                 Price = 500,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -116,7 +113,6 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 Title = "Test Listing",
                 Description = "Description",
                 SellerId = seller.Id,
-                Type = ListingType.Sale,
                 Price = 100,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow

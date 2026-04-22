@@ -208,8 +208,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return Challenge();
             }
 
-            // cena tylko dla sprzedazy
-            if (model.Type == ListingType.Sale && (!model.Price.HasValue || model.Price <= 0))
+            // cena potzebna jesli "nie do wymiany"
+            if (model.NotExchangeable && (!model.Price.HasValue || model.Price.Value <= 0))
             {
                 ModelState.AddModelError("Price", "Price must be greater than zero.");
             }

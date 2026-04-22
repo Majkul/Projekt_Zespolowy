@@ -42,6 +42,7 @@
                     <span asp-validation-for="SelectedTagIds" class="text-danger"></span>
                 </div>
 
+<<<<<<< HEAD
                 <div class="mb-3">
                     <label asp-for="Type" class="form-label fw-bold">Typ ogłoszenia *</label>
                     <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<ListingType>()" id="type-select">
@@ -72,12 +73,35 @@
                                 </select>
                                 <small class="text-muted">Jeśli nic nie wybierzesz — dowolne kategorie. Inaczej: każda oferta kupującego musi mieć co najmniej jeden z wybranych tagów.</small>
                             </div>
+=======
+                <div class="card mb-3 border-info">
+                    <div class="card-header bg-info bg-opacity-10">Wymiana (opcjonalnie)</div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input asp-for="NotExchangeable" class="form-check-input" id="not-exchangable-select" />
+                            <label asp-for="NotExchangeable" class="form-check-label">Nie do wymiany — nie pokazuj tego ogłoszenia w propozycjach wymiany</label>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="MinExchangeValue" class="form-label">Minimalna wartość oferty kupującego (PLN)</label>
+                            <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" class="form-control" />
+                            <small class="text-muted">Pusta wartość = brak progu. Dotyczy sumy szacowanej po stronie kupującego.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="ExchangeDescription" class="form-label">Czego szukasz w zamian (wymiana)</label>
+                            <textarea asp-for="ExchangeDescription" class="form-control" rows="3" placeholder="Np. interesują mnie tylko książki fantasy…"></textarea>
+                        </div>
+                        <div class="mb-0">
+                            <label for="SelectedExchangeAcceptedTagIds" class="form-label">Akceptowane tagi przy wymianie</label>
+                            <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-select">
+                            </select>
+                            <small class="text-muted">Jeśli nic nie wybierzesz — dowolne kategorie. Inaczej: każda oferta kupującego musi mieć co najmniej jeden z wybranych tagów.</small>
+>>>>>>> origin/main
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-3" id="price-group">
-                    <label asp-for="Price" class="form-label fw-bold">Cena (PLN) *</label>
+                    <label asp-for="Price" class="form-label fw-bold" id="price-label">Cena (PLN)</label>
                     <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
                     <span asp-validation-for="Price" class="text-danger"></span>
                 </div>
@@ -106,6 +130,11 @@
                     <input asp-for="PhotoFiles" type="file" multiple accept="image/*" class="form-control" />
                     <small class="form-text text-muted">Pierwsze zdjęcie będzie zdjęciem głównym. Możesz przesłać maksymalnie 5 zdjęć.</small>
                     <span asp-validation-for="PhotoFiles" class="text-danger"></span>
+                </div>
+
+                <div class="form-check mb-3">
+                    <label asp-for="IsFeatured" class="form-check-label">Wyróżnij na profilu</label>
+                    <input asp-for="IsFeatured" class="form-check-input" />
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">
@@ -160,6 +189,7 @@
     }
 
     <script>
+<<<<<<< HEAD
         const typeSelect = document.getElementById('type-select');
         const priceGroup = document.getElementById('price-group');
         const exchangeCard = document.getElementById('exchange-card');
@@ -196,5 +226,17 @@
 
         typeSelect.addEventListener('change', syncTypeUI);
         syncTypeUI();
+=======
+        const notExchnagableSelect = document.getElementById('not-exchangable-select');
+        const priceLabel = document.getElementById('price-label');
+
+        const priceLabelText = "Cena (PLN)";
+
+        function toggleIsPriceRequired() {
+            priceLabel.textContent = priceLabelText + notExchnagableSelect.checked ? " *" : "";
+        }
+        notExchnagableSelect.addEventListener('change', toggleIsPriceRequired);
+        toggleIsPriceRequired();
+>>>>>>> origin/main
     </script>
 }

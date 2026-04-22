@@ -60,7 +60,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (listing == null || listing.IsArchived || !ListingStockHelper.CanSell(listing, quantity))
                 return BadRequest("Oferta nie istnieje, jest niedostępna lub podano złą ilość.");
 
-            if (listing.Type != ListingType.Sale || !listing.Price.HasValue)
+            if (!listing.Price.HasValue)
                 return BadRequest("Ta oferta nie jest na sprzedaż.");
 
             if (listing.SellerId == userId)

@@ -130,7 +130,6 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 Title = "Test Listing",
                 Description = "Description",
                 SellerId = seller.Id,
-                Type = ListingType.Sale,
                 Price = 100,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow

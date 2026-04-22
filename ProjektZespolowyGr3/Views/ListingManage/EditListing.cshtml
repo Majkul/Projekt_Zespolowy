@@ -37,28 +37,19 @@
     </div>
 
     <div class="mb-3">
-        <label asp-for="Type" class="form-label" id="label-Type">Type</label>
-        <select asp-for="Type" class="form-control" id="input-Type">
-            @foreach (var type in Enum.GetValues(typeof(ListingType)))
-            {
-                <option value="@type">@type</option>
-            }
-        </select>
-    </div>
-
-    <div class="mb-3">
         <label asp-for="Price" class="form-label" id="label-Price">Price</label>
         <input asp-for="Price" type="number" class="form-control" step="0.01" id="input-Price" />
     </div>
 
     <div class="mb-3">
-        <label asp-for="StockQuantity" class="form-label">Liczba sztuk</label>
-        <input asp-for="StockQuantity" type="number" min="0" class="form-control" />
+        <label asp-for="StockQuantity" class="form-label" id="label-StockQuantity">Liczba sztuk</label>
+        <input asp-for="StockQuantity" type="number" min="0" class="form-control" id="input-StockQuantity" />
         <small class="text-muted">0 = wyprzedane (ogłoszenie oznaczone jako sprzedane).</small>
         <span asp-validation-for="StockQuantity" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
+<<<<<<< HEAD
         <label asp-for="StockQuantity" class="form-label">Liczba sztuk</label>
         <input asp-for="StockQuantity" type="number" min="0" class="form-control" />
         <small class="text-muted">0 = wyprzedane (ogłoszenie oznaczone jako sprzedane).</small>
@@ -68,6 +59,10 @@
     <div class="mb-3">
         <label class="form-label">Tags</label>
         <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control">
+=======
+        <label class="form-label" id="label-SelectedTagIds">Tags</label>
+        <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control" id="input-SelectedTagIds">
+>>>>>>> origin/main
         </select>
         <small class="text-muted">Hold CTRL to select multiple</small>
     </div>
@@ -76,20 +71,20 @@
         <div class="card-header">Wymiana</div>
         <div class="card-body">
             <div class="form-check mb-3">
-                <input asp-for="NotExchangeable" class="form-check-input" />
-                <label asp-for="NotExchangeable" class="form-check-label">Nie do wymiany</label>
+                <input asp-for="NotExchangeable" class="form-check-input" id="input-NotExchangable" />
+                <label asp-for="NotExchangeable" class="form-check-label" id="label-NotExchangable">Nie do wymiany</label>
             </div>
             <div class="mb-3">
-                <label asp-for="MinExchangeValue" class="form-label">Minimalna wartość oferty kupującego (PLN)</label>
-                <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" class="form-control" />
+                <label asp-for="MinExchangeValue" class="form-label" id="label-MinExchangeValue">Minimalna wartość oferty kupującego (PLN)</label>
+                <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" class="form-control" id="input-MinExchangeValue"/>
             </div>
             <div class="mb-3">
-                <label asp-for="ExchangeDescription" class="form-label">Czego szukasz w zamian</label>
-                <textarea asp-for="ExchangeDescription" class="form-control" rows="3"></textarea>
+                <label asp-for="ExchangeDescription" class="form-label" id="label-ExchangeDescription">Czego szukasz w zamian</label>
+                <textarea asp-for="ExchangeDescription" class="form-control" rows="3" id="input-ExchangeDescription"></textarea>
             </div>
             <div class="mb-0">
-                <label class="form-label">Akceptowane tagi przy wymianie</label>
-                <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-control"></select>
+                <label class="form-label" id="label-SelectedExchangeAcceptedTagIds">Akceptowane tagi przy wymianie</label>
+                <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-control" id="input-SelectedExchangeAcceptedTagIds"></select>
             </div>
         </div>
     </div>
@@ -151,6 +146,11 @@
         <small class="text-muted">Max 5 photos, only .jpg/.jpeg/.png</small>
     </div>
 
+    <div class="form-check mb-3">
+        <label asp-for="IsFeatured" class="form-check-label" id="label-IsFeatured">Wyróżnij na profilu</label>
+        <input asp-for="IsFeatured" class="form-check-input" id="input-IsFeatured" />
+    </div>
+
     <div class="d-flex gap-2 mt-4">
         <button type="submit" class="btn btn-primary">Save</button>
         <a class="btn btn-danger" asp-action="Index">Cancel</a>
@@ -158,12 +158,28 @@
 </form>
 
 <script>
+    const notExchangableSelect = document.getElementById('input-NotExchangable');
+    const priceLabel = document.getElementById('label-Price');
+
+    const priceLabelText = "Cena (PLN)";
+
+    function toggleIsPriceRequired() {
+        priceLabel.textContent = priceLabelText + (notExchangableSelect.checked ? " *" : "");
+    }
+    notExchangableSelect.addEventListener('change', toggleIsPriceRequired);
+    toggleIsPriceRequired();
+
     const initialValues = {
         Title: '@(Model.Title ?? "")',
         Description: '@(Model.Description ?? "")',
-        Type: '@Model.Type',
         Price: '@Model.Price',
-        SelectedTagIds: '@string.Join(",", (Model.SelectedTagIds ?? new List<int>()).OrderBy(id => id))'
+        SelectedTagIds: '@string.Join(",", (Model.SelectedTagIds ?? new List<int>()).OrderBy(id => id))',
+        StockQuantity: '@Model.StockQuantity',
+        NotExchangable: '@Model.NotExchangeable.ToString().ToLower()',
+        MinExchangeValue: '@Model.MinExchangeValue',
+        ExchangeDescription: '@(Model.ExchangeDescription ?? "")',
+        SelectedExchangeAcceptedTagIds: '@string.Join(",", (Model.SelectedExchangeAcceptedTagIds ?? new List<int>()).OrderBy(id => id))',
+        IsFeatured: '@Model.IsFeatured.ToString().ToLower()'
     };
 
     function updateLabel(field, value) {
@@ -174,12 +190,16 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        const fields = ['Title', 'Description', 'Type', 'Price', 'SelectedTagIds'];
+        const fields = initialValues ? Object.keys(initialValues) : [];
 
         fields.forEach(function (field) {
             const input = document.getElementById('input-' + field);
             if (input) {
-                if (input.multiple) {
+                if (input.type === "checkbox") {
+                    input.addEventListener('change', function () {
+                        updateLabel(field, input.checked.toString());
+                    });
+                } else if (input.multiple) {
                     input.addEventListener('change', function () {
                         const selectedValues = Array.from(input.selectedOptions).map(option => option.value).join(",");
                         updateLabel(field, selectedValues);
@@ -199,7 +219,9 @@
                 const input = document.getElementById('input-' + field);
                 let value;
                 if (input) {
-                    if (input.multiple) {
+                    if (input.type === "checkbox") {
+                        value = input.checked.toString();
+                    } else if (input.multiple) {
                         value = Array.from(input.selectedOptions).map(option => option.value).join(",");
                     } else {
                         value = input.value;
@@ -209,10 +231,12 @@
                     }
                 }
             });
+
             if (changedFields.length > 0) {
                 const fieldNames = changedFields.map(f => {
                     switch (f) {
                         case 'SelectedTagIds': return 'Tags';
+                        case 'SelectedExchangeAcceptedTagIds': return 'Accepted exchange tags'
                         default: return f;
                     }
                 });

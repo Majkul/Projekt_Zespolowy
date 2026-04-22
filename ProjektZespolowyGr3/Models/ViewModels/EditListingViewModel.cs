@@ -16,9 +16,6 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         [StringLength(1000)]
         public string? Description { get; set; }
 
-        [Required]
-        public ListingType Type { get; set; }
-
         public decimal? Price { get; set; }
 
         [Range(0, 1_000_000, ErrorMessage = "Ilość musi być między 0 a 1 000 000.")]
@@ -37,6 +34,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         public List<ShippingOptionInput> ShippingOptions { get; set; } = new();
 
         public bool NotExchangeable { get; set; }
+        public bool IsFeatured { get; set; }
 
         public decimal? MinExchangeValue { get; set; }
 

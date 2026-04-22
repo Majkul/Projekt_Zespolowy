@@ -85,7 +85,6 @@ public class PaymentControllerTests : IDisposable
         {
             Title = "Sale item",
             SellerId = u.Id,
-            Type = ListingType.Sale,
             Price = 100,
             StockQuantity = 2,
             CreatedAt = DateTime.UtcNow,
@@ -111,8 +110,6 @@ public class PaymentControllerTests : IDisposable
         {
             Title = "Trade only",
             SellerId = seller.Id,
-            Type = ListingType.Trade,
-            Price = 100,
             StockQuantity = 1,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

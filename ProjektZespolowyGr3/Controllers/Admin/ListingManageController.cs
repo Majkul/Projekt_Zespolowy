@@ -167,6 +167,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 MinExchangeValue = listing.MinExchangeValue,
                 ExchangeDescription = listing.ExchangeDescription,
                 StockQuantity = listing.StockQuantity,
+                IsFeatured = listing.IsFeatured,
                 SelectedExchangeAcceptedTagIds = listing.ExchangeAcceptedTags.Select(e => e.TagId).ToList(),
                 ShippingOptions = listing.ShippingOptions.Select(o => new ShippingOptionInput
                 {
@@ -226,11 +227,11 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             listing.Description = vm.Description;
             listing.Location = string.IsNullOrWhiteSpace(vm.Location) ? null : vm.Location.Trim();
             listing.Price = vm.Price;
-            listing.Type = vm.Type;
             listing.NotExchangeable = vm.NotExchangeable;
             listing.MinExchangeValue = vm.MinExchangeValue;
             listing.ExchangeDescription = string.IsNullOrWhiteSpace(vm.ExchangeDescription) ? null : vm.ExchangeDescription.Trim();
             listing.StockQuantity = vm.StockQuantity;
+            listing.IsFeatured = vm.IsFeatured;
             ListingStockHelper.SyncSoldFlag(listing);
 
             listing.Tags.Clear();

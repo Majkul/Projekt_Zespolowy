@@ -54,7 +54,6 @@ public class ListingManageControllerTests : IDisposable
         {
             Title = "L",
             SellerId = u.Id,
-            Type = ListingType.Sale,
             Price = 10,
             StockQuantity = 1,
             CreatedAt = DateTime.UtcNow,
