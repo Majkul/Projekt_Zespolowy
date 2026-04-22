@@ -5,9 +5,8 @@
     var averageRating = ViewBag.AverageRating as double? ?? 0;
     var reviewCount = ViewBag.ReviewCount as int? ?? 0;
     var activeListings = ViewBag.ActiveListings as List<ProjektZespolowyGr3.Models.DbModels.Listing> ?? new List<ProjektZespolowyGr3.Models.DbModels.Listing>();
-}
+    activeListings = activeListings.OrderByDescending(l => l.IsFeatured).ToList();
 
-@{
     bool isAuthenticated = User.Identity?.IsAuthenticated == true;
     bool isProfileOwner = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.Id.ToString();
 }
@@ -24,9 +23,9 @@
                             @Model.FirstName @Model.LastName
                         </p>
                     }
-                    
+
                     <hr />
-                    
+
                     <h5>Statystyki</h5>
                     <p>
                         <strong>Średnia ocena:</strong> 
@@ -42,9 +41,9 @@
                     <p><strong>Liczba opinii:</strong> @reviewCount</p>
                     <p><strong>Aktywne oferty:</strong> @activeListings.Count</p>
                     <p><strong>Członek od:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy")</p>
-                    
+
                     <hr />
-                    
+
                     <h5>Dane kontaktowe</h5>
                     @if (!string.IsNullOrEmpty(Model.Email))
                     {
@@ -63,28 +62,27 @@
                     {
                         <hr />
                         <a asp-controller="Messages"
-                           asp-action="Conversation"
-                           asp-route-userId="@Model.Id"
-                           class="btn btn-outline-primary w-100">
+                        asp-action="Conversation"
+                        asp-route-userId="@Model.Id"
+                        class="btn btn-outline-primary w-100">
                             Napisz wiadomość
                         </a>
 
                         <hr />
                         <a asp-controller="Tickets"
-                           asp-action="ReportUser"
-                           asp-route-userId="@Model.Id"
-                           class="btn btn-danger w-100">
+                        asp-action="ReportUser"
+                        asp-route-userId="@Model.Id"
+                        class="btn btn-danger w-100">
                             Zgłoś użytkownika
                         </a>
                     }
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-8">
             <h4>Aktywne oferty</h4>
             <hr />
-            
             @if (activeListings.Any())
             {
                 <div class="row">
@@ -98,7 +96,14 @@
                                     <img src="@featuredPhoto.Upload.Url" class="card-img-top" alt="@listing.Title" style="height: 200px; object-fit: cover;">
                                 }
                                 <div class="card-body">
-                                    <h5 class="card-title">@listing.Title</h5>
+                                    <h5 class="card-title d-flex justify-content-between align-items-center">
+                                        <span>@listing.Title</span>
+                                        @if (listing.IsFeatured)
+                                        {
+                                            <span title="Wyróżniona oferta" style="color: goldenrod; font-size: 1.2em;">★</span>
+                                        }
+                                    </h5>
+                                    
                                     @if (listing.Price.HasValue)
                                     {
                                         <p class="card-text"><strong>@listing.Price.Value.ToString("C")</strong></p>
