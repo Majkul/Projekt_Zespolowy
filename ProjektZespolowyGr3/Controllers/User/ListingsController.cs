@@ -34,8 +34,22 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         // GET: Listings
-        public async Task<IActionResult> Index(string? searchString)
+        public async Task<IActionResult> Index(
+            string? searchString,
+            List<int>? tagIds,
+            decimal? minPrice,
+            decimal? maxPrice,
+            string? listingType,
+            string? sortBy)
         {
+            ViewBag.AllTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
+            ViewBag.SearchString = searchString;
+            ViewBag.TagIds = tagIds ?? new List<int>();
+            ViewBag.MinPrice = minPrice;
+            ViewBag.MaxPrice = maxPrice;
+            ViewBag.ListingType = listingType ?? "";
+            ViewBag.SortBy = sortBy ?? "newest";
+
             IQueryable<Listing> query = _context.Listings
                 .Include(l => l.Photos)
                     .ThenInclude(lp => lp.Upload)
@@ -43,19 +57,39 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .Include(l => l.Seller)
                     .ThenInclude(s => s.Listings)
                         .ThenInclude(sl => sl.Reviews)
+                .Include(l => l.Tags)
+                    .ThenInclude(lt => lt.Tag)
                 .Where(l => l.IsArchived == false);
 
             if (!string.IsNullOrWhiteSpace(searchString))
             {
                 var term = searchString.Trim();
-
-                // Wyszukiwanie po tytule i opisie, case-insensitive, jak LIKE %fraza%
                 query = query.Where(l =>
                     EF.Functions.ILike(l.Title, $"%{term}%") ||
                     (l.Description != null && EF.Functions.ILike(l.Description, $"%{term}%")));
-
-                ViewBag.SearchString = term;
             }
+
+            if (tagIds?.Any() == true)
+                query = query.Where(l => l.Tags.Any(lt => tagIds.Contains(lt.TagId)));
+
+            if (minPrice.HasValue)
+                query = query.Where(l => l.Price >= minPrice.Value);
+
+            if (maxPrice.HasValue)
+                query = query.Where(l => l.Price <= maxPrice.Value);
+
+            if (listingType == "sale")
+                query = query.Where(l => l.Price.HasValue);
+            else if (listingType == "trade")
+                query = query.Where(l => !l.NotExchangeable);
+
+            query = sortBy switch
+            {
+                "price_asc"  => query.OrderBy(l => l.Price),
+                "price_desc" => query.OrderByDescending(l => l.Price),
+                "views"      => query.OrderByDescending(l => l.ViewCount),
+                _            => query.OrderByDescending(l => l.CreatedAt),
+            };
 
             var listings = await query.ToListAsync();
 
@@ -66,18 +100,17 @@ namespace ProjektZespolowyGr3.Controllers.User
                 Seller = l.Seller,
                 SellerId = l.SellerId,
                 PhotoUrl = l.Photos.FirstOrDefault(lp => lp.IsFeatured)?.Upload.Url,
-                AverageRating = l.Seller.Listings
-                        .SelectMany(sl => sl.Reviews)
-                        .Any()
-                        ? l.Seller.Listings.SelectMany(sl => sl.Reviews).Average(r => r.Rating)
-                        : 0,
+                AverageRating = l.Seller.Listings.SelectMany(sl => sl.Reviews).Any()
+                    ? l.Seller.Listings.SelectMany(sl => sl.Reviews).Average(r => r.Rating)
+                    : 0,
                 ReviewCount = l.Seller.Listings.SelectMany(sl => sl.Reviews).Count(),
             }).ToList();
 
-            if (!model.Any() && !string.IsNullOrWhiteSpace(searchString))
-            {
-                ViewBag.NoResultsMessage = "Nie znaleziono niczego co mogłoby Ciebie zainteresować.";
-            }
+            if (sortBy == "rating")
+                model = model.OrderByDescending(m => m.AverageRating).ToList();
+
+            if (!model.Any())
+                ViewBag.NoResultsMessage = "Nie znaleziono ofert spełniających kryteria.";
 
             return View(model);
         }
