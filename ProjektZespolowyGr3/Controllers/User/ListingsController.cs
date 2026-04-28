@@ -374,11 +374,11 @@ namespace ProjektZespolowyGr3.Controllers.User
             var listing = await _context.Listings.FindAsync(id);
             if (listing != null)
             {
-                //_context.Listings.Remove(listing);
                 listing.IsArchived = true;
+                listing.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
             }
 
-            //await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

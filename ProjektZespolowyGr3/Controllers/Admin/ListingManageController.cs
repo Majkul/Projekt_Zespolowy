@@ -26,7 +26,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             _env = env;
             _httpContextAccessor = httpContextAccessor;
         }
-        public async Task<IActionResult> Index(string? searchString = null, int pageSize = 25, int pageNumber = 1, string? tagFilter = null)
+        public async Task<IActionResult> Index(string? searchString = null, int pageSize = 25, int pageNumber = 1, string? tagFilter = null, bool showArchived = false)
         {
             int userId = 0;
             var isAdmin = User.IsInRole("Admin");
@@ -41,25 +41,27 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 }
             }
 
-            object? model = await GetFilteredListingsAsync(searchString, pageSize, pageNumber, tagFilter, userId, isAdmin);
-            int totalClients = await GetListingsCountAsync(searchString, tagFilter, userId, isAdmin);
+            object? model = await GetFilteredListingsAsync(searchString, pageSize, pageNumber, tagFilter, userId, isAdmin, showArchived);
+            int totalClients = await GetListingsCountAsync(searchString, tagFilter, userId, isAdmin, showArchived);
 
             ViewBag.CurrentFilter = searchString;
             ViewBag.CurrentPageSize = pageSize;
             ViewBag.CurrentPage = pageNumber;
             ViewBag.CurrentTag = tagFilter;
+            ViewBag.ShowArchived = showArchived;
             ViewBag.TotalPages = (int)Math.Ceiling(totalClients / (double)pageSize);
 
             return View(model);
         }
 
-        private async Task<List<BrowseListingsViewModel>> GetFilteredListingsAsync(string? searchString, int pageSize, int pageNumber, string? tagFilter, int userId, bool isAdmin)
+        private async Task<List<BrowseListingsViewModel>> GetFilteredListingsAsync(string? searchString, int pageSize, int pageNumber, string? tagFilter, int userId, bool isAdmin, bool showArchived = false)
         {
             var listings = _context.Listings
                         .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
                         .Include(l => l.Reviews)
                         .Include(l => l.Seller)
                         .Include(l => l.Tags).ThenInclude(lt => lt.Tag)
+                        .Where(l => l.IsArchived == showArchived)
                         .AsQueryable();
 
             if (!isAdmin)
@@ -101,9 +103,11 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 })
                 .ToListAsync();
         }
-        private async Task<int> GetListingsCountAsync(string? searchString, string? tagFilter, int userId, bool isAdmin)
+        private async Task<int> GetListingsCountAsync(string? searchString, string? tagFilter, int userId, bool isAdmin, bool showArchived = false)
         {
-            var listings = _context.Listings.AsQueryable();
+            var listings = _context.Listings
+                .Where(l => l.IsArchived == showArchived)
+                .AsQueryable();
 
             if (!isAdmin)
             {
@@ -310,6 +314,35 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             return RedirectToAction("Index");
         }
 
+
+        [HttpPost]
+        public IActionResult RestoreListing(int id)
+        {
+            int userId = 0;
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin)
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (!string.IsNullOrEmpty(userIdClaim))
+                {
+                    int.TryParse(userIdClaim, out userId);
+                }
+            }
+
+            var listing = _context.Listings.Find(id);
+            if (listing == null) return NotFound();
+
+            if (!isAdmin && listing.SellerId != userId)
+                return Forbid();
+
+            listing.IsArchived = false;
+            listing.UpdatedAt = DateTime.UtcNow;
+            _context.SaveChanges();
+
+            return RedirectToAction("Index", new { showArchived = true });
+        }
 
         [HttpPost]
         public IActionResult DeleteListing(int id)
