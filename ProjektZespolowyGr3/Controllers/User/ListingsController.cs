@@ -149,8 +149,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return Challenge();
             }
 
-            // cena tylko dla sprzedazy
-            if (model.Type == ListingType.Sale && (!model.Price.HasValue || model.Price <= 0))
+            // cena potzebna jesli "nie do wymiany"
+            if (model.NotExchangeable && (!model.Price.HasValue || model.Price.Value <= 0))
             {
                 ModelState.AddModelError("Price", "Price must be greater than zero.");
             }
@@ -175,8 +175,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 Title = model.Title,
                 Description = model.Description,
-                Type = model.Type,
-                Price = model.Type == ListingType.Trade ? null : model.Price,
+                Price = model.Price,
                 StockQuantity = model.StockQuantity,
                 SellerId = currentUserId,
                 CreatedAt = DateTime.UtcNow,

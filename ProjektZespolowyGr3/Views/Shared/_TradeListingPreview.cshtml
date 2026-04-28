@@ -36,10 +36,6 @@
                     {
                         <span>Bez podanej ceny</span>
                     }
-                    @if (Model.Type == ListingType.Trade)
-                    {
-                        <span class="ms-1">· Wymiana</span>
-                    }
                     <span class="ms-1">· @Model.StockQuantity szt.</span>
                 </p>
                 @if (!string.IsNullOrWhiteSpace(Model.Description))
