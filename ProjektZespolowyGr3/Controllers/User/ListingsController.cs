@@ -23,14 +23,16 @@ namespace ProjektZespolowyGr3.Controllers.User
         private readonly AuthService _auth;
         private readonly HelperService _helper;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IGeocodingService _geocodingService;
 
-        public ListingsController(MyDBContext context, IFileService fileService, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor)
+        public ListingsController(MyDBContext context, IFileService fileService, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor, IGeocodingService geocodingService)
         {
             _context = context;
             _fileService = fileService;
             _auth = auth;
             _helper = helper;
             _httpContextAccessor = httpContextAccessor;
+            _geocodingService = geocodingService;
         }
 
         // GET: Listings
@@ -40,7 +42,11 @@ namespace ProjektZespolowyGr3.Controllers.User
             decimal? minPrice,
             decimal? maxPrice,
             string? listingType,
-            string? sortBy)
+            string? sortBy,
+            int? maxDistanceKm,
+            double? userLat,
+            double? userLng
+            )
         {
             ViewBag.AllTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
             ViewBag.SearchString = searchString;
@@ -49,6 +55,9 @@ namespace ProjektZespolowyGr3.Controllers.User
             ViewBag.MaxPrice = maxPrice;
             ViewBag.ListingType = listingType ?? "";
             ViewBag.SortBy = sortBy ?? "newest";
+            ViewBag.MaxDistanceKm = maxDistanceKm;
+            ViewBag.UserLat = userLat;
+            ViewBag.UserLng = userLng;
 
             IQueryable<Listing> query = _context.Listings
                 .Include(l => l.Photos)
@@ -92,6 +101,22 @@ namespace ProjektZespolowyGr3.Controllers.User
             };
 
             var listings = await query.ToListAsync();
+
+            if (maxDistanceKm.HasValue && userLat.HasValue && userLng.HasValue)
+            {
+                listings = listings
+                .Where(l =>
+                    l.Seller?.Latitude.HasValue == true &&
+                    l.Seller?.Longitude.HasValue == true &&
+                    (l.Seller?.Latitude.Value != 0 || l.Seller?.Longitude.Value != 0) &&
+                    _geocodingService.CalculateDistanceKm(
+                        userLat.Value,
+                        userLng.Value,
+                        l.Seller.Latitude.Value,
+                        l.Seller.Longitude.Value
+                    ) <= maxDistanceKm.Value)
+                .ToList();
+            }
 
             var model = listings.Select(l => new BrowseListingsViewModel
             {

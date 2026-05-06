@@ -60,7 +60,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _context.SaveChanges();
 
             // Act
-            var result = await _controller.Index(null);
+            var result = await _controller.Index(null, null, null, null, null, null);
 
             // Assert
             result.Should().BeOfType<ViewResult>();
@@ -96,7 +96,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _context.SaveChanges();
 
             // Act
-            var result = await _controller.Index("Laptop");
+            var result = await _controller.Index("Laptop", null, null, null, null, null);
 
             // Assert
             result.Should().BeOfType<ViewResult>();

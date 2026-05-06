@@ -121,6 +121,8 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 LastName = user.LastName,
                 Email = user.Email,
                 Address = user.Address,
+                Longitude = user.Longitude,
+                Latitude = user.Latitude,
                 IsBanned = user.IsBanned,
                 IsAdmin = user.IsAdmin,
                 IsDeleted = user.IsDeleted,
@@ -155,6 +157,10 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 user.Email = u.Email;
             if (u.Address != null)
                 user.Address = u.Address;
+            if (u.Longitude != null)
+                user.Longitude = u.Longitude;
+            if (u.Latitude != null)
+                user.Latitude = u.Latitude;
             if (u.PhoneNumber != null)
                 user.PhoneNumber = u.PhoneNumber;
 

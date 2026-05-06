@@ -38,6 +38,14 @@
         <input asp-for="Address" class="form-control" id="input-Address" />
     </div>
     <div class="mb-3">
+        <label asp-for="Latitude" class="form-label" id="label-Latitude">Latitude</label>
+        <input asp-for="Latitude" class="form-control" id="input-Latitude" />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Longitude" class="form-label" id="label-Longitude">Longitude</label>
+        <input asp-for="Longitude" class="form-control" id="input-Longitude" />
+    </div>
+    <div class="mb-3">
         <label asp-for="PhoneNumber" class="form-label" id="label-PhoneNumber">Phone number</label>
         <input asp-for="PhoneNumber" class="form-control" id="input-PhoneNumber" />
     </div>
@@ -67,6 +75,8 @@
         LastName: '@(Model.LastName ?? "")',
         Email: '@(Model.Email ?? "")',
         Address: '@(Model.Address ?? "")',
+        Latitude: '@(Model.Latitude.ToString() ?? "")',
+        Longitude: '@(Model.Longitude.ToString() ?? "")',
         PhoneNumber: '@(Model.PhoneNumber ?? "")',
         IsAdmin: '@Model.IsAdmin'.toLowerCase() === 'true',
         IsBanned: '@Model.IsBanned'.toLowerCase() === 'true',
@@ -81,7 +91,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        ['Username', 'FirstName', 'LastName', 'Email', 'Address', 'PhoneNumber'].forEach(function (field) {
+        ['Username', 'FirstName', 'LastName', 'Email', 'Address', "Longitude", "Latitude", 'PhoneNumber'].forEach(function (field) {
             const input = document.getElementById('input-' + field);
             if (input) {
                 input.addEventListener('input', function () {
@@ -99,7 +109,7 @@
             }
         });
 
-        const fields = ['Username', 'FirstName', 'LastName', 'Email', 'Address', 'PhoneNumber', 'IsAdmin', 'IsBanned'];
+        const fields = ['Username', 'FirstName', 'LastName', 'Email', 'Address', "Longitude", "Latitude", 'PhoneNumber', 'IsAdmin', 'IsBanned']
 
         const form = document.getElementById('edit-user-form');
         form.addEventListener('submit', function (e) {

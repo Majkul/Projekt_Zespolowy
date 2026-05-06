@@ -11,6 +11,9 @@
     var maxPrice      = ViewBag.MaxPrice as decimal?;
     var listingType   = ViewBag.ListingType as string ?? "";
     var sortBy        = ViewBag.SortBy as string ?? "newest";
+    var maxDistanceKm = ViewBag.MaxDistanceKm as int?;
+    var userLat = ViewBag.UserLat as double?;
+    var userLng = ViewBag.UserLng as double?;
 }
 
 <div class="container mt-4">
@@ -98,6 +101,38 @@
                             <hr class="my-2" />
                         }
 
+                        <hr class="my-2" />
+
+                        @* Odległość *@
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-uppercase text-muted">
+                                Maksymalna odległość (km)
+                            </label>
+
+                            <input type="number"
+                                   name="maxDistanceKm"
+                                   class="form-control form-control-sm"
+                                   min="1"
+                                   step="1"
+                                   placeholder="np. 25"
+                                   value="@(maxDistanceKm.HasValue ? maxDistanceKm.Value.ToString() : "")" />
+
+                            @if (maxDistanceKm.HasValue && (!userLat.HasValue || !userLng.HasValue))
+                            {
+                                <div class="mt-1 text-sm text-danger">
+                                    Nie można określić lokalizacji.
+                                </div>
+                            }
+
+                        </div>
+
+                        @* ukryte GPS *@
+                        <input type="hidden" name="userLat" id="userLat"
+                               value="@(userLat.HasValue ? userLat.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")" />
+
+                        <input type="hidden" name="userLng" id="userLng"
+                               value="@(userLng.HasValue ? userLng.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")" />
+
                         <button type="submit" class="btn btn-primary w-100">Zastosuj filtry</button>
                     </div>
                 </div>
@@ -184,11 +219,25 @@
                                     </div>
                                 </div>
                                 <div class="card-footer bg-white py-2">
-                                    <small class="text-muted">
-                                        <a asp-controller="UserProfile" asp-action="Details"
-                                           asp-route-id="@item.SellerId"
-                                           class="text-decoration-none">@item.Seller?.Username</a>
-                                    </small>
+                                    <div class="small text-muted">
+                                        <div>
+                                            <a asp-controller="UserProfile"
+                                               asp-action="Details"
+                                               asp-route-id="@item.SellerId"
+                                               class="text-decoration-none">
+                                                @item.Seller?.Username
+                                            </a>
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(item.Seller?.Address))
+                                        {
+                                            <div class="mt-1 text-truncate"
+                                                 style="max-width: 100%;"
+                                                 title="@item.Seller.Address">
+                                                @item.Seller.Address
+                                            </div>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -199,3 +248,44 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("filterForm");
+            const distanceInput = document.querySelector('input[name="maxDistanceKm"]');
+            const userLatInput = document.getElementById("userLat");
+            const userLngInput = document.getElementById("userLng");
+
+            form.addEventListener("submit", function (e) {
+                const maxDistanceValue = distanceInput.value;
+
+                if (maxDistanceValue && (!userLatInput.value || !userLngInput.value)) {
+                    e.preventDefault();
+
+                    if (!navigator.geolocation) {
+                        userLatInput.value = "";
+                        userLngInput.value = "";
+
+                        form.submit();
+                        return;
+                    }
+
+                    navigator.geolocation.getCurrentPosition(
+                        function (position) {
+                            userLatInput.value = position.coords.latitude;
+                            userLngInput.value = position.coords.longitude;
+                            form.submit();
+                        },
+                        function (error) {
+                            console.warn(error);
+                            userLatInput.value = "";
+                            userLngInput.value = "";
+                            form.submit();
+                        }
+                    );
+                }
+            });
+        });
+    </script>
+}

@@ -10,6 +10,8 @@ namespace DomPogrzebowyProjekt.Models.ViewModels
         public string? LastName { get; set; }
         public string? Email { get; set; }
         public string? Address { get; set; }
+        public double? Longitude { get; set; }
+        public double? Latitude { get; set; }
         public bool IsBanned { get; set; } = false;
         public bool IsAdmin { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
