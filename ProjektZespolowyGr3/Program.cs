@@ -59,6 +59,7 @@ builder.Services.AddHttpClient("PayU")
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IGeocodingService, GeocodingService>();
 
 builder.Services.AddAuthentication(options =>
 {

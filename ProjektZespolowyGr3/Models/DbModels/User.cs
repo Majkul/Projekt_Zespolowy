@@ -15,6 +15,8 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public bool IsAdmin { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
         public string? PhoneNumber { get; set; }
+        public double? Longitude { get; set; }
+        public double? Latitude { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<Listing> Listings { get; set; } = new List<Listing>();

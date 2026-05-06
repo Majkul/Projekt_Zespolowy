@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @model ProjektZespolowyGr3.Models.ViewModels.ListingsFilterViewModel
 
 @{
@@ -59,11 +60,73 @@
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="type" id="typeTrade"
                                            value="Trade" @(Model.Type == "Trade" ? "checked" : "") />
+=======
+@model IEnumerable<ProjektZespolowyGr3.Models.ViewModels.BrowseListingsViewModel>
+@using ProjektZespolowyGr3.Models.DbModels
+
+@{
+    ViewData["Title"] = "Oferty";
+    var searchString  = ViewBag.SearchString as string ?? "";
+    var noResultsMsg  = ViewBag.NoResultsMessage as string;
+    var allTags       = ViewBag.AllTags as List<Tag> ?? new List<Tag>();
+    var selectedTags  = ViewBag.TagIds as List<int> ?? new List<int>();
+    var minPrice      = ViewBag.MinPrice as decimal?;
+    var maxPrice      = ViewBag.MaxPrice as decimal?;
+    var listingType   = ViewBag.ListingType as string ?? "";
+    var sortBy        = ViewBag.SortBy as string ?? "newest";
+    var maxDistanceKm = ViewBag.MaxDistanceKm as int?;
+    var userLat = ViewBag.UserLat as double?;
+    var userLng = ViewBag.UserLng as double?;
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">Oferty</h2>
+
+    <form method="get" id="filterForm">
+
+        @* ===== PASEK WYSZUKIWANIA ===== *@
+        <div class="input-group mb-4">
+            <input type="text" name="searchString" class="form-control"
+                   placeholder="Szukaj ofert po tytule lub opisie..."
+                   value="@searchString" />
+            <button class="btn btn-primary" type="submit">Szukaj</button>
+        </div>
+
+        <div class="row g-4">
+
+            @* ===== PANEL FILTRÓW ===== *@
+            <div class="col-lg-3">
+                <div class="card shadow-sm">
+                    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                        Filtry
+                        <a href="@Url.Action("Index", "Listings")" class="btn btn-link btn-sm p-0 text-secondary">Wyczyść</a>
+                    </div>
+                    <div class="card-body">
+
+                        @* Typ oferty *@
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-uppercase text-muted">Typ oferty</label>
+                            <div class="d-flex flex-column gap-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="listingType"
+                                           id="typeAll" value="" @(listingType == "" ? "checked" : "") />
+                                    <label class="form-check-label" for="typeAll">Wszystkie</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="listingType"
+                                           id="typeSale" value="sale" @(listingType == "sale" ? "checked" : "") />
+                                    <label class="form-check-label" for="typeSale">Sprzedaż</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="listingType"
+                                           id="typeTrade" value="trade" @(listingType == "trade" ? "checked" : "") />
+>>>>>>> origin/main
                                     <label class="form-check-label" for="typeTrade">Wymiana</label>
                                 </div>
                             </div>
                         </div>
 
+<<<<<<< HEAD
                         <!-- Price range -->
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Cena (zł)</label>
@@ -94,11 +157,44 @@
                                                    name="selectedTagIds" value="@tag.Id"
                                                    id="tag_@tag.Id"
                                                    @(Model.SelectedTagIds.Contains(tag.Id) ? "checked" : "") />
+=======
+                        <hr class="my-2" />
+
+                        @* Zakres cen *@
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-uppercase text-muted">Cena (zł)</label>
+                            <div class="d-flex gap-2 align-items-center">
+                                <input type="number" name="minPrice" class="form-control form-control-sm"
+                                       placeholder="Od" min="0" step="0.01"
+                                       value="@(minPrice.HasValue ? minPrice.Value.ToString("F2") : "")" />
+                                <span class="text-muted">–</span>
+                                <input type="number" name="maxPrice" class="form-control form-control-sm"
+                                       placeholder="Do" min="0" step="0.01"
+                                       value="@(maxPrice.HasValue ? maxPrice.Value.ToString("F2") : "")" />
+                            </div>
+                        </div>
+
+                        <hr class="my-2" />
+
+                        @* Tagi *@
+                        @if (allTags.Any())
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small text-uppercase text-muted">Kategorie</label>
+                                <div class="d-flex flex-column gap-1" style="max-height: 200px; overflow-y: auto;">
+                                    @foreach (var tag in allTags)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="tagIds" value="@tag.Id" id="tag_@tag.Id"
+                                                   @(selectedTags.Contains(tag.Id) ? "checked" : "") />
+>>>>>>> origin/main
                                             <label class="form-check-label" for="tag_@tag.Id">@tag.Name</label>
                                         </div>
                                     }
                                 </div>
                             </div>
+<<<<<<< HEAD
                         }
 
                         <!-- Sort -->
@@ -115,10 +211,50 @@
                         </div>
 
                         <button class="btn btn-primary w-100" type="submit">Zastosuj filtry</button>
+=======
+
+                            <hr class="my-2" />
+                        }
+
+                        <hr class="my-2" />
+
+                        @* Odległość *@
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small text-uppercase text-muted">
+                                Maksymalna odległość (km)
+                            </label>
+
+                            <input type="number"
+                                   name="maxDistanceKm"
+                                   class="form-control form-control-sm"
+                                   min="1"
+                                   step="1"
+                                   placeholder="np. 25"
+                                   value="@(maxDistanceKm.HasValue ? maxDistanceKm.Value.ToString() : "")" />
+
+                            @if (maxDistanceKm.HasValue && (!userLat.HasValue || !userLng.HasValue))
+                            {
+                                <div class="mt-1 text-sm text-danger">
+                                    Nie można określić lokalizacji.
+                                </div>
+                            }
+
+                        </div>
+
+                        @* ukryte GPS *@
+                        <input type="hidden" name="userLat" id="userLat"
+                               value="@(userLat.HasValue ? userLat.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")" />
+
+                        <input type="hidden" name="userLng" id="userLng"
+                               value="@(userLng.HasValue ? userLng.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")" />
+
+                        <button type="submit" class="btn btn-primary w-100">Zastosuj filtry</button>
+>>>>>>> origin/main
                     </div>
                 </div>
             </div>
 
+<<<<<<< HEAD
             <!-- ── Results ── -->
             <div class="col-lg-9">
 
@@ -316,7 +452,159 @@
                         }
                     </div>
                 }
+=======
+            @* ===== LISTA OFERT ===== *@
+            <div class="col-lg-9">
+
+                @* Pasek sortowania i wyniki *@
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <span class="text-muted small">
+                        Znaleziono: <strong>@Model.Count()</strong> ofert
+                    </span>
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="form-label mb-0 small text-muted">Sortuj:</label>
+                        <select name="sortBy" class="form-select form-select-sm" style="width: auto;"
+                                onchange="document.getElementById('filterForm').submit()">
+                            <option value="newest"     selected="@(sortBy == "newest"     ? "selected" : null)">Najnowsze</option>
+                            <option value="price_asc"  selected="@(sortBy == "price_asc"  ? "selected" : null)">Cena: rosnąco</option>
+                            <option value="price_desc" selected="@(sortBy == "price_desc" ? "selected" : null)">Cena: malejąco</option>
+                            <option value="views"      selected="@(sortBy == "views"      ? "selected" : null)">Najpopularniejsze</option>
+                            <option value="rating"     selected="@(sortBy == "rating"     ? "selected" : null)">Najlepiej oceniane</option>
+                        </select>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(noResultsMsg))
+                {
+                    <div class="alert alert-info">@noResultsMsg</div>
+                }
+
+                <div class="row g-3">
+                    @foreach (var item in Model)
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <div class="card h-100 shadow-sm">
+                                @if (!string.IsNullOrEmpty(item.PhotoUrl))
+                                {
+                                    <img src="@item.PhotoUrl" class="card-img-top"
+                                         alt="@item.Listing.Title"
+                                         style="height: 180px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="bg-light d-flex align-items-center justify-content-center"
+                                         style="height: 180px;">
+                                        <span class="text-muted small">Brak zdjęcia</span>
+                                    </div>
+                                }
+                                <div class="card-body d-flex flex-column">
+                                    <h6 class="card-title mb-1">
+                                        <a href="@Url.Action("Details", "Listings", new { id = item.ListingId })"
+                                           class="text-decoration-none text-dark stretched-link">
+                                            @item.Listing.Title
+                                        </a>
+                                    </h6>
+
+                                    @if (item.Listing.Tags.Any())
+                                    {
+                                        <div class="mb-2 d-flex flex-wrap gap-1">
+                                            @foreach (var t in item.Listing.Tags.Take(3))
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-25 text-secondary fw-normal">@t.Tag.Name</span>
+                                            }
+                                        </div>
+                                    }
+
+                                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                                        @if (item.Listing.Price.HasValue)
+                                        {
+                                            <strong class="text-primary">@item.Listing.Price.Value.ToString("C")</strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info text-dark">Wymiana</span>
+                                        }
+                                        <div class="text-end">
+                                            @if (item.ReviewCount > 0)
+                                            {
+                                                <small class="text-muted d-block">⭐ @item.AverageRating.ToString("0.0") (@item.ReviewCount)</small>
+                                            }
+                                            <small class="text-muted">👁 @item.Listing.ViewCount</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white py-2">
+                                    <div class="small text-muted">
+                                        <div>
+                                            <a asp-controller="UserProfile"
+                                               asp-action="Details"
+                                               asp-route-id="@item.SellerId"
+                                               class="text-decoration-none">
+                                                @item.Seller?.Username
+                                            </a>
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(item.Seller?.Address))
+                                        {
+                                            <div class="mt-1 text-truncate"
+                                                 style="max-width: 100%;"
+                                                 title="@item.Seller.Address">
+                                                @item.Seller.Address
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+>>>>>>> origin/main
             </div>
         </div>
     </form>
 </div>
+<<<<<<< HEAD
+=======
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("filterForm");
+            const distanceInput = document.querySelector('input[name="maxDistanceKm"]');
+            const userLatInput = document.getElementById("userLat");
+            const userLngInput = document.getElementById("userLng");
+
+            form.addEventListener("submit", function (e) {
+                const maxDistanceValue = distanceInput.value;
+
+                if (maxDistanceValue && (!userLatInput.value || !userLngInput.value)) {
+                    e.preventDefault();
+
+                    if (!navigator.geolocation) {
+                        userLatInput.value = "";
+                        userLngInput.value = "";
+
+                        form.submit();
+                        return;
+                    }
+
+                    navigator.geolocation.getCurrentPosition(
+                        function (position) {
+                            userLatInput.value = position.coords.latitude;
+                            userLngInput.value = position.coords.longitude;
+                            form.submit();
+                        },
+                        function (error) {
+                            console.warn(error);
+                            userLatInput.value = "";
+                            userLngInput.value = "";
+                            form.submit();
+                        }
+                    );
+                }
+            });
+        });
+    </script>
+}
+>>>>>>> origin/main
