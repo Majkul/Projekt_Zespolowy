@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.ViewModels;
 using System.Security.Claims;
+using ProjektZespolowyGr3.Models.System;
+using System.Diagnostics;
 
 namespace ProjektZespolowyGr3.Controllers
 {
@@ -11,10 +13,12 @@ namespace ProjektZespolowyGr3.Controllers
     public class MyProfileController : Controller
     {
         private readonly MyDBContext _context;
+        private readonly IGeocodingService _geocodingService;
 
-        public MyProfileController(MyDBContext context)
+        public MyProfileController(MyDBContext context, IGeocodingService geocodingService)
         {
             _context = context;
+            _geocodingService = geocodingService;
         }
 
         // GET: MyProfile/Edit
@@ -66,10 +70,27 @@ namespace ProjektZespolowyGr3.Controllers
                 return NotFound();
             }
 
-            user.FirstName = model.FirstName;
-            user.LastName = model.LastName;
-            user.Address = model.Address;
-            user.PhoneNumber = model.PhoneNumber;
+            if (string.IsNullOrEmpty(model.Address))
+            {
+                user.Longitude = null;
+                user.Latitude = null;
+            }
+            else if (model.Address != user.Address) // geocoding tylko jesli zmieniono
+            {
+                user.Address = model.Address;
+                var location = await _geocodingService.GetAddressLocation(model.Address);
+
+                if (location.HasValue)
+                {
+                    user.Longitude = location.Value.Longitude;
+                    user.Latitude = location.Value.Latitude;
+                }
+                else
+                {
+                    ModelState.AddModelError("Address", "Nie można znaleźć lokalizacji dla podanego adresu.");
+                    return View(model);
+                }
+            }
 
             // Email można zmienić tylko jeśli nie jest już zajęty przez innego użytkownika
             if (!string.IsNullOrEmpty(model.Email) && model.Email != user.Email)
@@ -82,6 +103,10 @@ namespace ProjektZespolowyGr3.Controllers
                 }
                 user.Email = model.Email;
             }
+
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.PhoneNumber = model.PhoneNumber;
 
             await _context.SaveChangesAsync();
 
