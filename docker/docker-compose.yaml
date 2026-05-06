@@ -1,18 +1,59 @@
 services:
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      PGHOST: pgdatabase
+      PGPORT: 5432
+      PGDATABASE: project
+      PGUSER: root
+      PGPASSWORD: root
+      ASPNETCORE_ENVIRONMENT: Production
+      # PayU (fill in for payment functionality)
+      # PayU__BaseUrl: https://secure.snd.payu.com
+      # PayU__ClientId: YOUR_CLIENT_ID
+      # PayU__ClientSecret: YOUR_CLIENT_SECRET
+      # PayU__MerchantPosId: YOUR_POS_ID
+      # PayU__NotifyUrl: https://YOUR_DOMAIN/Payment/Notify
+    depends_on:
+      pgdatabase:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/wwwroot/uploads
+    restart: unless-stopped
+
   pgdatabase:
     image: postgres:13
     environment:
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_DB=project
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: project
     volumes:
-      - "./postgres_data:/var/lib/postgresql/data:rw"
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d project"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
   pgadmin:
     image: dpage/pgadmin4
     environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
-      - PGADMIN_DEFAULT_PASSWORD=root
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
     ports:
       - "8080:80"
+    depends_on:
+      - pgdatabase
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  uploads_data:

@@ -1,0 +1,14 @@
+**/.git
+**/.gitignore
+**/bin
+**/obj
+**/out
+**/.vs
+**/.vscode
+**/node_modules
+**/wwwroot/uploads
+docker/postgres_data
+docker/mongo_data
+**/*.user
+**/*.suo
+**/README.md
