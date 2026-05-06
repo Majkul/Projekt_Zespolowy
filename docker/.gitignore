@@ -1,0 +1,4 @@
+.env
+nginx/certs/
+postgres_data/
+mongo_data/
