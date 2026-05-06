@@ -241,17 +241,31 @@ namespace ProjektZespolowyGr3.Controllers.User
 
                 using var doc = JsonDocument.Parse(body);
 
-                var payuOrderId = doc.RootElement
-                    .GetProperty("order")
-                    .GetProperty("orderId")
-                    .GetString();
+                var orderEl = doc.RootElement.GetProperty("order");
+                var payuOrderId = orderEl.GetProperty("orderId").GetString();
+                var payuStatus = orderEl.GetProperty("status").GetString();
 
-                var payuStatus = doc.RootElement
-                    .GetProperty("order")
-                    .GetProperty("status")
-                    .GetString();
+                string? cardToken = null;
+                string? cardMasked = null;
+                string? cardBrand = null;
+                int cardExpiryMonth = 0, cardExpiryYear = 0;
 
-                await _payuSync.HandleNotifyAsync(payuOrderId ?? "", payuStatus);
+                if (orderEl.TryGetProperty("payMethod", out var pm))
+                {
+                    if (pm.TryGetProperty("cardToken", out var ct)) cardToken = ct.GetString();
+                    if (pm.TryGetProperty("card", out var card))
+                    {
+                        if (card.TryGetProperty("cardNumberMasked", out var cn)) cardMasked = cn.GetString();
+                        if (card.TryGetProperty("brand", out var br)) cardBrand = br.GetString();
+                        if (card.TryGetProperty("expirationMonth", out var em) && int.TryParse(em.GetString(), out var emv))
+                            cardExpiryMonth = emv;
+                        if (card.TryGetProperty("expirationYear", out var ey) && int.TryParse(ey.GetString(), out var eyv))
+                            cardExpiryYear = eyv;
+                    }
+                }
+
+                await _payuSync.HandleNotifyAsync(payuOrderId ?? "", payuStatus,
+                    cardToken, cardMasked, cardBrand, cardExpiryMonth, cardExpiryYear);
             }
             catch (Exception ex)
             {

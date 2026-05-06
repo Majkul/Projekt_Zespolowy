@@ -37,6 +37,7 @@ builder.Services.AddDbContext<MyDBContext>(options =>
 
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPayuOrderSyncService, PayuOrderSyncService>();
+builder.Services.AddScoped<ICardFeeService, CardFeeService>();
 
 builder.Services.AddTransient<HelperService>();
 

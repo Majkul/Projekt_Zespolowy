@@ -17,10 +17,10 @@ namespace ProjektZespolowyGr3.Models
         public DbSet<ListingPhoto> ListingPhotos { get; set; }
         public DbSet<ListingTag> ListingTags { get; set; }
         public DbSet<ReviewPhoto> ReviewPhotos { get; set; }
-<<<<<<< HEAD
         public DbSet<UserProfile> UserProfiles { get; set; }
-=======
->>>>>>> origin/main
+        public DbSet<SellerCard> SellerCards { get; set; }
+        public DbSet<SellerPayout> SellerPayouts { get; set; }
+        public DbSet<CardTokenizationOrder> CardTokenizationOrders { get; set; }
         public DbSet<MessagePhoto> MessagePhotos { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketAttachment> TicketAttachments { get; set; }

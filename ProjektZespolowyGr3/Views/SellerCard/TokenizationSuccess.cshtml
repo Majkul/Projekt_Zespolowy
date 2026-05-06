@@ -1,0 +1,37 @@
+@{
+    ViewData["Title"] = "Dodawanie karty";
+    bool cardSaved = ViewBag.CardSaved == true;
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm text-center p-4">
+            @if (cardSaved)
+            {
+                <div class="mb-3">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size:3rem;"></i>
+                </div>
+                <h4 class="mb-2">Karta została dodana!</h4>
+                <p class="text-muted mb-4">
+                    Twoja karta jest teraz aktywna. Opłaty za wystawienie ogłoszeń
+                    i wypłaty po sprzedaży będą przetwarzane automatycznie.
+                </p>
+            }
+            else
+            {
+                <div class="mb-3">
+                    <i class="bi bi-hourglass-split text-warning" style="font-size:3rem;"></i>
+                </div>
+                <h4 class="mb-2">Przetwarzamy Twoją kartę…</h4>
+                <p class="text-muted mb-4">
+                    Płatność weryfikacyjna jest w trakcie przetwarzania. Karta pojawi się
+                    w Twoim profilu po potwierdzeniu przez PayU (może zająć do kilku minut).
+                    Odśwież stronę lub wróć za chwilę.
+                </p>
+            }
+            <a asp-action="Index" asp-controller="SellerCard" class="btn btn-primary">
+                Przejdź do karty płatniczej
+            </a>
+        </div>
+    </div>
+</div>

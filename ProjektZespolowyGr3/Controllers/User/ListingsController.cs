@@ -24,12 +24,9 @@ namespace ProjektZespolowyGr3.Controllers.User
         private readonly HelperService _helper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IGeocodingService _geocodingService;
+        private readonly ICardFeeService _cardFeeService;
 
-<<<<<<< HEAD
-        public ListingsController(MyDBContext context, IFileService fileService, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor)
-=======
-        public ListingsController(MyDBContext context, IFileService fileService, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor, IGeocodingService geocodingService)
->>>>>>> origin/main
+        public ListingsController(MyDBContext context, IFileService fileService, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor, IGeocodingService geocodingService, ICardFeeService cardFeeService)
         {
             _context = context;
             _fileService = fileService;
@@ -37,12 +34,12 @@ namespace ProjektZespolowyGr3.Controllers.User
             _helper = helper;
             _httpContextAccessor = httpContextAccessor;
             _geocodingService = geocodingService;
+            _cardFeeService = cardFeeService;
         }
 
         // GET: Listings
         public async Task<IActionResult> Index(
             string? searchString,
-<<<<<<< HEAD
             string? location,
             string? type,
             decimal? minPrice,
@@ -51,39 +48,6 @@ namespace ProjektZespolowyGr3.Controllers.User
             string? sortBy)
         {
             selectedTagIds ??= new List<int>();
-=======
-            List<int>? tagIds,
-            decimal? minPrice,
-            decimal? maxPrice,
-            string? listingType,
-            string? sortBy,
-            int? maxDistanceKm,
-            double? userLat,
-            double? userLng
-            )
-        {
-            ViewBag.AllTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
-            ViewBag.SearchString = searchString;
-            ViewBag.TagIds = tagIds ?? new List<int>();
-            ViewBag.MinPrice = minPrice;
-            ViewBag.MaxPrice = maxPrice;
-            ViewBag.ListingType = listingType ?? "";
-            ViewBag.SortBy = sortBy ?? "newest";
-            ViewBag.MaxDistanceKm = maxDistanceKm;
-            ViewBag.UserLat = userLat;
-            ViewBag.UserLng = userLng;
-
-            IQueryable<Listing> query = _context.Listings
-                .Include(l => l.Photos)
-                    .ThenInclude(lp => lp.Upload)
-                .Include(l => l.Reviews)
-                .Include(l => l.Seller)
-                    .ThenInclude(s => s.Listings)
-                        .ThenInclude(sl => sl.Reviews)
-                .Include(l => l.Tags)
-                    .ThenInclude(lt => lt.Tag)
-                .Where(l => l.IsArchived == false);
->>>>>>> origin/main
 
             IQueryable<Listing> query = _context.Listings
                 .Where(l => !l.IsArchived)
@@ -101,7 +65,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                     (l.Description != null && EF.Functions.ILike(l.Description, $"%{term}%")));
             }
 
-<<<<<<< HEAD
             // Location filter
             if (!string.IsNullOrWhiteSpace(location))
             {
@@ -118,7 +81,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                     query = query.Where(l => l.Type == ListingType.Trade);
             }
 
-            // Price range (only meaningful for Sale listings)
+            // Price range
             if (minPrice.HasValue)
                 query = query.Where(l => l.Price == null || l.Price >= minPrice.Value);
             if (maxPrice.HasValue)
@@ -139,53 +102,11 @@ namespace ProjektZespolowyGr3.Controllers.User
                 "oldest"      => query.OrderBy(l => l.CreatedAt),
                 "most_viewed" => query.OrderByDescending(l => l.ViewCount),
                 _             => query.OrderByDescending(l => l.CreatedAt),
-=======
-            if (tagIds?.Any() == true)
-                query = query.Where(l => l.Tags.Any(lt => tagIds.Contains(lt.TagId)));
-
-            if (minPrice.HasValue)
-                query = query.Where(l => l.Price >= minPrice.Value);
-
-            if (maxPrice.HasValue)
-                query = query.Where(l => l.Price <= maxPrice.Value);
-
-            if (listingType == "sale")
-                query = query.Where(l => l.Price.HasValue);
-            else if (listingType == "trade")
-                query = query.Where(l => !l.NotExchangeable);
-
-            query = sortBy switch
-            {
-                "price_asc"  => query.OrderBy(l => l.Price),
-                "price_desc" => query.OrderByDescending(l => l.Price),
-                "views"      => query.OrderByDescending(l => l.ViewCount),
-                _            => query.OrderByDescending(l => l.CreatedAt),
->>>>>>> origin/main
             };
 
             var listings = await query.ToListAsync();
 
-<<<<<<< HEAD
             var results = listings.Select(l => new BrowseListingsViewModel
-=======
-            if (maxDistanceKm.HasValue && userLat.HasValue && userLng.HasValue)
-            {
-                listings = listings
-                .Where(l =>
-                    l.Seller?.Latitude.HasValue == true &&
-                    l.Seller?.Longitude.HasValue == true &&
-                    (l.Seller?.Latitude.Value != 0 || l.Seller?.Longitude.Value != 0) &&
-                    _geocodingService.CalculateDistanceKm(
-                        userLat.Value,
-                        userLng.Value,
-                        l.Seller.Latitude.Value,
-                        l.Seller.Longitude.Value
-                    ) <= maxDistanceKm.Value)
-                .ToList();
-            }
-
-            var model = listings.Select(l => new BrowseListingsViewModel
->>>>>>> origin/main
             {
                 Listing = l,
                 ListingId = l.Id,
@@ -198,7 +119,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                 ReviewCount = l.Seller.Listings.SelectMany(sl => sl.Reviews).Count(),
             }).ToList();
 
-<<<<<<< HEAD
             var filterModel = new ListingsFilterViewModel
             {
                 SearchString = searchString,
@@ -212,13 +132,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                 FeaturedResults = results.Where(r => r.Listing.IsFeatured),
                 Results = results.Where(r => !r.Listing.IsFeatured),
             };
-=======
-            if (sortBy == "rating")
-                model = model.OrderByDescending(m => m.AverageRating).ToList();
-
-            if (!model.Any())
-                ViewBag.NoResultsMessage = "Nie znaleziono ofert spełniających kryteria.";
->>>>>>> origin/main
 
             return View(filterModel);
         }
@@ -334,7 +247,6 @@ namespace ProjektZespolowyGr3.Controllers.User
             };
             ListingStockHelper.SyncSoldFlag(listing);
 
-<<<<<<< HEAD
             foreach (var opt in model.ShippingOptions.Where(o => !string.IsNullOrWhiteSpace(o.Name)))
             {
                 listing.ShippingOptions.Add(new ListingShippingOption
@@ -344,10 +256,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 });
             }
 
-            if (model.SelectedTagIds != null && model.SelectedTagIds.Any())
-=======
             if (model.SelectedTagIds?.Any() == true)
->>>>>>> origin/main
             {
                 foreach (var tagId in model.SelectedTagIds)
                 {
@@ -385,6 +294,12 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             _context.Listings.Add(listing);
             await _context.SaveChangesAsync();
+
+            var (feeOk, feeError) = await _cardFeeService.TryChargeListingFeeAsync(currentUserId, listing.Title);
+            if (feeOk)
+                TempData["ListingFeeInfo"] = "Pobrano opłatę za wystawienie ogłoszenia (0,50 PLN).";
+            else if (!string.IsNullOrEmpty(feeError))
+                TempData["ListingFeeWarning"] = $"Ogłoszenie wystawione, ale nie pobrano opłaty: {feeError}";
 
             return RedirectToAction("Details", new { id = listing.Id });
         }

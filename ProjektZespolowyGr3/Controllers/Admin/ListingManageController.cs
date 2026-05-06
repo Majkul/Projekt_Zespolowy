@@ -317,7 +317,6 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
 
         [HttpPost]
-<<<<<<< HEAD
         public async Task<IActionResult> ToggleFeature(int id)
         {
             if (!User.IsInRole("Admin"))
@@ -335,9 +334,6 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
         [HttpPost]
         public async Task<IActionResult> ArchiveListing(int id)
-=======
-        public IActionResult RestoreListing(int id)
->>>>>>> origin/main
         {
             int userId = 0;
             var isAdmin = User.IsInRole("Admin");
@@ -345,7 +341,6 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             if (!isAdmin)
             {
                 var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-<<<<<<< HEAD
                 if (!string.IsNullOrEmpty(userIdClaim))
                     int.TryParse(userIdClaim, out userId);
             }
@@ -373,26 +368,6 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
-=======
-
-                if (!string.IsNullOrEmpty(userIdClaim))
-                {
-                    int.TryParse(userIdClaim, out userId);
-                }
-            }
-
-            var listing = _context.Listings.Find(id);
-            if (listing == null) return NotFound();
-
-            if (!isAdmin && listing.SellerId != userId)
-                return Forbid();
-
-            listing.IsArchived = false;
-            listing.UpdatedAt = DateTime.UtcNow;
-            _context.SaveChanges();
-
-            return RedirectToAction("Index", new { showArchived = true });
->>>>>>> origin/main
         }
 
         [HttpPost]
