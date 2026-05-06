@@ -26,6 +26,12 @@
     </div>
 
     <div class="mb-3">
+        <label asp-for="Location" class="form-label">Lokalizacja (miasto)</label>
+        <input asp-for="Location" class="form-control" placeholder="Np. Warszawa" />
+        <span asp-validation-for="Location" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
         <label asp-for="Description" class="form-label" id="label-Description">Description</label>
         <textarea asp-for="Description" class="form-control" rows="4" id="input-Description"></textarea>
     </div>
@@ -68,6 +74,35 @@
                 <label class="form-label" id="label-SelectedExchangeAcceptedTagIds">Akceptowane tagi przy wymianie</label>
                 <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-control" id="input-SelectedExchangeAcceptedTagIds"></select>
             </div>
+        </div>
+    </div>
+
+    <div class="card mb-3 border-success">
+        <div class="card-header bg-success bg-opacity-10">
+            🚚 Opcje dostawy <span class="text-muted small ms-2">Metody wysyłki oferowane kupującym</span>
+        </div>
+        <div class="card-body">
+            <div id="shipping-options-container">
+                @for (int i = 0; i < Model.ShippingOptions.Count; i++)
+                {
+                    <div class="row g-2 mb-2 shipping-option-row">
+                        <div class="col-7">
+                            <input name="ShippingOptions[@i].Name" value="@Model.ShippingOptions[i].Name" class="form-control" placeholder="Np. InPost Paczkomat" />
+                        </div>
+                        <div class="col-3">
+                            <div class="input-group">
+                                <input name="ShippingOptions[@i].Price" value="@Model.ShippingOptions[i].Price.ToString("F2")" type="number" step="0.01" min="0" class="form-control" />
+                                <span class="input-group-text">PLN</span>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <button type="button" class="btn btn-outline-danger w-100" onclick="removeShippingRow(this)">✕</button>
+                        </div>
+                    </div>
+                }
+            </div>
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="addShippingRow()">+ Dodaj metodę dostawy</button>
+            <div class="form-text text-muted mt-2">Wpisz 0 PLN dla bezpłatnej dostawy / odbioru osobistego.</div>
         </div>
     </div>
 
@@ -200,4 +235,40 @@
             }
         });
     });
+
+    let shippingCount = @Model.ShippingOptions.Count;
+    function addShippingRow() {
+        const container = document.getElementById('shipping-options-container');
+        const row = document.createElement('div');
+        row.className = 'row g-2 mb-2 shipping-option-row';
+        row.innerHTML = `
+            <div class="col-7">
+                <input name="ShippingOptions[${shippingCount}].Name" class="form-control" placeholder="Np. InPost Paczkomat, DPD, Odbiór osobisty…" />
+            </div>
+            <div class="col-3">
+                <div class="input-group">
+                    <input name="ShippingOptions[${shippingCount}].Price" type="number" step="0.01" min="0" value="0" class="form-control" />
+                    <span class="input-group-text">PLN</span>
+                </div>
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-outline-danger w-100" onclick="removeShippingRow(this)">✕</button>
+            </div>`;
+        container.appendChild(row);
+        shippingCount++;
+    }
+    function removeShippingRow(btn) {
+        btn.closest('.shipping-option-row').remove();
+        reindexShippingRows();
+    }
+    function reindexShippingRows() {
+        const rows = document.querySelectorAll('.shipping-option-row');
+        rows.forEach((row, i) => {
+            const nameInput = row.querySelector('input[name*=".Name"]');
+            const priceInput = row.querySelector('input[name*=".Price"]');
+            if (nameInput) nameInput.name = `ShippingOptions[${i}].Name`;
+            if (priceInput) priceInput.name = `ShippingOptions[${i}].Price`;
+        });
+        shippingCount = rows.length;
+    }
 </script>

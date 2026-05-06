@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -62,7 +63,7 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             return View(review);
         }
-
+        [Authorize]
         // GET: Reviews/Create
         public IActionResult Create()
         {
@@ -70,7 +71,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             ViewData["ReviewerId"] = new SelectList(_context.Users, "Id", "Id");
             return View();
         }
-
+        [Authorize]
         // GET: Reviews/Create?listingId=5
         [HttpGet]
         public IActionResult Create(int listingId)
@@ -94,7 +95,7 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             return View(model);
         }
-
+        [Authorize]
         // POST: Reviews/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -173,7 +174,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             ViewData["ReviewerId"] = new SelectList(_context.Users, "Id", "Id", review.ReviewerId);
             return View(review);
         }
-
+        [Authorize]
         // POST: Reviews/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -210,7 +211,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             ViewData["ReviewerId"] = new SelectList(_context.Users, "Id", "Id", review.ReviewerId);
             return View(review);
         }
-
+        [Authorize]
         // GET: Reviews/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {

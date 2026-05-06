@@ -21,7 +21,10 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         private readonly AuthService _authService;
         private readonly HelperService _helperService;
         private readonly IFileService _fileService;
+<<<<<<< HEAD
+=======
         private readonly IGeocodingService _geocodingService;
+>>>>>>> origin/main
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
         private readonly ListingsController _controller;
 
@@ -36,9 +39,14 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _authService = new AuthService(_context);
             _helperService = new HelperService(_context);
             _fileService = new Mock<IFileService>().Object;
+<<<<<<< HEAD
+            _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+            _controller = new ListingsController(_context, _fileService, _authService, _helperService, _httpContextAccessorMock.Object);
+=======
             _geocodingService = new Mock<IGeocodingService>().Object;
             _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
             _controller = new ListingsController(_context, _fileService, _authService, _helperService, _httpContextAccessorMock.Object, _geocodingService);
+>>>>>>> origin/main
         }
 
         [Fact]

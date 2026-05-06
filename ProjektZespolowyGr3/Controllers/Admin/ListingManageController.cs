@@ -148,6 +148,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags)
                 .Include(l => l.ExchangeAcceptedTags)
+                .Include(l => l.ShippingOptions)
                 .FirstOrDefault(l => l.Id == id);
 
             if (listing == null)
@@ -160,6 +161,8 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             {
                 Title = listing.Title,
                 Description = listing.Description,
+                Location = listing.Location,
+                Type = listing.Type,
                 Price = listing.Price,
                 SelectedTagIds = listing.Tags.Select(t => t.TagId).ToList(),
                 Photos = listing.Photos,
@@ -169,6 +172,11 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 StockQuantity = listing.StockQuantity,
                 IsFeatured = listing.IsFeatured,
                 SelectedExchangeAcceptedTagIds = listing.ExchangeAcceptedTags.Select(e => e.TagId).ToList(),
+                ShippingOptions = listing.ShippingOptions.Select(o => new ShippingOptionInput
+                {
+                    Name = o.Name,
+                    Price = o.Price
+                }).ToList(),
                 AvailableTags = _context.Tags.Select(t => new SelectListItem
                 {
                     Value = t.Id.ToString(),
@@ -202,6 +210,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags)
                 .Include(l => l.ExchangeAcceptedTags)
+                .Include(l => l.ShippingOptions)
                 .FirstOrDefault(l => l.Id == id);
 
             if (listing == null)
@@ -222,6 +231,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
             listing.Title = vm.Title;
             listing.Description = vm.Description;
+            listing.Location = string.IsNullOrWhiteSpace(vm.Location) ? null : vm.Location.Trim();
             listing.Price = vm.Price;
             listing.NotExchangeable = vm.NotExchangeable;
             listing.MinExchangeValue = vm.MinExchangeValue;
@@ -251,6 +261,21 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                     listing.ExchangeAcceptedTags.Add(new ListingExchangeAcceptedTag
                     {
                         TagId = tagId,
+                        ListingId = listing.Id
+                    });
+                }
+            }
+
+            _context.ListingShippingOptions.RemoveRange(
+                _context.ListingShippingOptions.Where(o => o.ListingId == listing.Id));
+            if (vm.ShippingOptions != null)
+            {
+                foreach (var opt in vm.ShippingOptions.Where(o => !string.IsNullOrWhiteSpace(o.Name)))
+                {
+                    listing.ShippingOptions.Add(new ListingShippingOption
+                    {
+                        Name = opt.Name.Trim(),
+                        Price = Math.Max(0, opt.Price),
                         ListingId = listing.Id
                     });
                 }
@@ -292,7 +317,23 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
 
         [HttpPost]
-        public IActionResult RestoreListing(int id)
+        public async Task<IActionResult> ToggleFeature(int id)
+        {
+            if (!User.IsInRole("Admin"))
+                return Forbid();
+
+            var listing = await _context.Listings.FindAsync(id);
+            if (listing == null) return NotFound();
+
+            listing.IsFeatured = !listing.IsFeatured;
+            listing.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ArchiveListing(int id)
         {
             int userId = 0;
             var isAdmin = User.IsInRole("Admin");
@@ -300,24 +341,33 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             if (!isAdmin)
             {
                 var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
                 if (!string.IsNullOrEmpty(userIdClaim))
-                {
                     int.TryParse(userIdClaim, out userId);
-                }
             }
 
-            var listing = _context.Listings.Find(id);
+            var listing = await _context.Listings.FindAsync(id);
             if (listing == null) return NotFound();
+            if (!isAdmin && listing.SellerId != userId) return Forbid();
 
-            if (!isAdmin && listing.SellerId != userId)
-                return Forbid();
-
-            listing.IsArchived = false;
+            listing.IsArchived = !listing.IsArchived;
+            listing.ArchivedAt = listing.IsArchived ? DateTime.UtcNow : null;
             listing.UpdatedAt = DateTime.UtcNow;
-            _context.SaveChanges();
 
-            return RedirectToAction("Index", new { showArchived = true });
+            var relatedTickets = await _context.Tickets
+                .Where(t => t.ReportedListingId == id)
+                .ToListAsync();
+            foreach (var ticket in relatedTickets)
+                ticket.IsArchived = listing.IsArchived;
+
+            var relatedMessages = await _context.Messages
+                .Where(m => m.ListingId == id)
+                .ToListAsync();
+            foreach (var message in relatedMessages)
+                message.IsArchived = listing.IsArchived;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
         }
 
         [HttpPost]

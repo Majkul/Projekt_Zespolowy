@@ -1,291 +1,322 @@
-@model IEnumerable<ProjektZespolowyGr3.Models.ViewModels.BrowseListingsViewModel>
-@using ProjektZespolowyGr3.Models.DbModels
+@model ProjektZespolowyGr3.Models.ViewModels.ListingsFilterViewModel
 
 @{
     ViewData["Title"] = "Oferty";
-    var searchString  = ViewBag.SearchString as string ?? "";
-    var noResultsMsg  = ViewBag.NoResultsMessage as string;
-    var allTags       = ViewBag.AllTags as List<Tag> ?? new List<Tag>();
-    var selectedTags  = ViewBag.TagIds as List<int> ?? new List<int>();
-    var minPrice      = ViewBag.MinPrice as decimal?;
-    var maxPrice      = ViewBag.MaxPrice as decimal?;
-    var listingType   = ViewBag.ListingType as string ?? "";
-    var sortBy        = ViewBag.SortBy as string ?? "newest";
-    var maxDistanceKm = ViewBag.MaxDistanceKm as int?;
-    var userLat = ViewBag.UserLat as double?;
-    var userLng = ViewBag.UserLng as double?;
 }
 
 <div class="container mt-4">
-    <h2 class="mb-3">Oferty</h2>
+    <h2 class="mb-4">Oferty</h2>
 
     <form method="get" id="filterForm">
-
-        @* ===== PASEK WYSZUKIWANIA ===== *@
-        <div class="input-group mb-4">
-            <input type="text" name="searchString" class="form-control"
-                   placeholder="Szukaj ofert po tytule lub opisie..."
-                   value="@searchString" />
-            <button class="btn btn-primary" type="submit">Szukaj</button>
-        </div>
-
         <div class="row g-4">
 
-            @* ===== PANEL FILTRÓW ===== *@
+            <!-- ── Sidebar ── -->
             <div class="col-lg-3">
                 <div class="card shadow-sm">
-                    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-                        Filtry
-                        <a href="@Url.Action("Index", "Listings")" class="btn btn-link btn-sm p-0 text-secondary">Wyczyść</a>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <strong>Filtry</strong>
+                        @if (Model.HasActiveFilters)
+                        {
+                            <a href="@Url.Action("Index", "Listings")" class="btn btn-sm btn-outline-secondary">Wyczyść</a>
+                        }
                     </div>
                     <div class="card-body">
 
-                        @* Typ oferty *@
+                        <!-- Search -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small text-uppercase text-muted">Typ oferty</label>
+                            <label class="form-label fw-semibold">Szukaj</label>
+                            <input type="text"
+                                   name="searchString"
+                                   class="form-control"
+                                   placeholder="Tytuł lub opis..."
+                                   value="@(Model.SearchString ?? string.Empty)" />
+                        </div>
+
+                        <!-- Location -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Lokalizacja</label>
+                            <input type="text"
+                                   name="location"
+                                   class="form-control"
+                                   placeholder="Miasto, np. Warszawa"
+                                   value="@(Model.Location ?? string.Empty)" />
+                        </div>
+
+                        <!-- Type -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Typ ogłoszenia</label>
                             <div class="d-flex flex-column gap-1">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="listingType"
-                                           id="typeAll" value="" @(listingType == "" ? "checked" : "") />
+                                    <input class="form-check-input" type="radio" name="type" id="typeAll"
+                                           value="" @(string.IsNullOrEmpty(Model.Type) ? "checked" : "") />
                                     <label class="form-check-label" for="typeAll">Wszystkie</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="listingType"
-                                           id="typeSale" value="sale" @(listingType == "sale" ? "checked" : "") />
+                                    <input class="form-check-input" type="radio" name="type" id="typeSale"
+                                           value="Sale" @(Model.Type == "Sale" ? "checked" : "") />
                                     <label class="form-check-label" for="typeSale">Sprzedaż</label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="listingType"
-                                           id="typeTrade" value="trade" @(listingType == "trade" ? "checked" : "") />
+                                    <input class="form-check-input" type="radio" name="type" id="typeTrade"
+                                           value="Trade" @(Model.Type == "Trade" ? "checked" : "") />
                                     <label class="form-check-label" for="typeTrade">Wymiana</label>
                                 </div>
                             </div>
                         </div>
 
-                        <hr class="my-2" />
-
-                        @* Zakres cen *@
+                        <!-- Price range -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small text-uppercase text-muted">Cena (zł)</label>
-                            <div class="d-flex gap-2 align-items-center">
-                                <input type="number" name="minPrice" class="form-control form-control-sm"
-                                       placeholder="Od" min="0" step="0.01"
-                                       value="@(minPrice.HasValue ? minPrice.Value.ToString("F2") : "")" />
-                                <span class="text-muted">–</span>
-                                <input type="number" name="maxPrice" class="form-control form-control-sm"
-                                       placeholder="Do" min="0" step="0.01"
-                                       value="@(maxPrice.HasValue ? maxPrice.Value.ToString("F2") : "")" />
+                            <label class="form-label fw-semibold">Cena (zł)</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" name="minPrice" class="form-control form-control-sm"
+                                           placeholder="Od" min="0" step="0.01"
+                                           value="@(Model.MinPrice?.ToString() ?? "")" />
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" name="maxPrice" class="form-control form-control-sm"
+                                           placeholder="Do" min="0" step="0.01"
+                                           value="@(Model.MaxPrice?.ToString() ?? "")" />
+                                </div>
                             </div>
                         </div>
 
-                        <hr class="my-2" />
-
-                        @* Tagi *@
-                        @if (allTags.Any())
+                        <!-- Tags -->
+                        @if (Model.AvailableTags.Any())
                         {
                             <div class="mb-3">
-                                <label class="form-label fw-semibold small text-uppercase text-muted">Kategorie</label>
+                                <label class="form-label fw-semibold">Kategorie</label>
                                 <div class="d-flex flex-column gap-1" style="max-height: 200px; overflow-y: auto;">
-                                    @foreach (var tag in allTags)
+                                    @foreach (var tag in Model.AvailableTags)
                                     {
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox"
-                                                   name="tagIds" value="@tag.Id" id="tag_@tag.Id"
-                                                   @(selectedTags.Contains(tag.Id) ? "checked" : "") />
+                                                   name="selectedTagIds" value="@tag.Id"
+                                                   id="tag_@tag.Id"
+                                                   @(Model.SelectedTagIds.Contains(tag.Id) ? "checked" : "") />
                                             <label class="form-check-label" for="tag_@tag.Id">@tag.Name</label>
                                         </div>
                                     }
                                 </div>
                             </div>
-
-                            <hr class="my-2" />
                         }
 
-                        <hr class="my-2" />
-
-                        @* Odległość *@
+                        <!-- Sort -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small text-uppercase text-muted">
-                                Maksymalna odległość (km)
-                            </label>
-
-                            <input type="number"
-                                   name="maxDistanceKm"
-                                   class="form-control form-control-sm"
-                                   min="1"
-                                   step="1"
-                                   placeholder="np. 25"
-                                   value="@(maxDistanceKm.HasValue ? maxDistanceKm.Value.ToString() : "")" />
-
-                            @if (maxDistanceKm.HasValue && (!userLat.HasValue || !userLng.HasValue))
-                            {
-                                <div class="mt-1 text-sm text-danger">
-                                    Nie można określić lokalizacji.
-                                </div>
-                            }
-
+                            <label class="form-label fw-semibold">Sortuj według</label>
+                            <select name="sortBy" id="sortBySelect" class="form-select form-select-sm">
+                                <option value="">Najnowsze</option>
+                                <option value="oldest">Najstarsze</option>
+                                <option value="price_asc">Cena rosnąco</option>
+                                <option value="price_desc">Cena malejąco</option>
+                                <option value="most_viewed">Najpopularniejsze</option>
+                            </select>
+                            <script>document.getElementById('sortBySelect').value = '@(Model.SortBy ?? "")';</script>
                         </div>
 
-                        @* ukryte GPS *@
-                        <input type="hidden" name="userLat" id="userLat"
-                               value="@(userLat.HasValue ? userLat.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")" />
-
-                        <input type="hidden" name="userLng" id="userLng"
-                               value="@(userLng.HasValue ? userLng.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")" />
-
-                        <button type="submit" class="btn btn-primary w-100">Zastosuj filtry</button>
+                        <button class="btn btn-primary w-100" type="submit">Zastosuj filtry</button>
                     </div>
                 </div>
             </div>
 
-            @* ===== LISTA OFERT ===== *@
+            <!-- ── Results ── -->
             <div class="col-lg-9">
 
-                @* Pasek sortowania i wyniki *@
-                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                    <span class="text-muted small">
-                        Znaleziono: <strong>@Model.Count()</strong> ofert
-                    </span>
-                    <div class="d-flex align-items-center gap-2">
-                        <label class="form-label mb-0 small text-muted">Sortuj:</label>
-                        <select name="sortBy" class="form-select form-select-sm" style="width: auto;"
-                                onchange="document.getElementById('filterForm').submit()">
-                            <option value="newest"     selected="@(sortBy == "newest"     ? "selected" : null)">Najnowsze</option>
-                            <option value="price_asc"  selected="@(sortBy == "price_asc"  ? "selected" : null)">Cena: rosnąco</option>
-                            <option value="price_desc" selected="@(sortBy == "price_desc" ? "selected" : null)">Cena: malejąco</option>
-                            <option value="views"      selected="@(sortBy == "views"      ? "selected" : null)">Najpopularniejsze</option>
-                            <option value="rating"     selected="@(sortBy == "rating"     ? "selected" : null)">Najlepiej oceniane</option>
-                        </select>
-                    </div>
-                </div>
-
-                @if (!string.IsNullOrEmpty(noResultsMsg))
+                @if (Model.HasActiveFilters)
                 {
-                    <div class="alert alert-info">@noResultsMsg</div>
+                    <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+                        <span class="text-muted small">Aktywne filtry:</span>
+                        @if (!string.IsNullOrWhiteSpace(Model.SearchString))
+                        {
+                            <span class="badge bg-secondary">Szukaj: @Model.SearchString</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Location))
+                        {
+                            <span class="badge bg-secondary">📍 @Model.Location</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Type))
+                        {
+                            <span class="badge bg-secondary">@(Model.Type == "Sale" ? "Sprzedaż" : "Wymiana")</span>
+                        }
+                        @if (Model.MinPrice.HasValue)
+                        {
+                            <span class="badge bg-secondary">Od @Model.MinPrice zł</span>
+                        }
+                        @if (Model.MaxPrice.HasValue)
+                        {
+                            <span class="badge bg-secondary">Do @Model.MaxPrice zł</span>
+                        }
+                        @foreach (var tagId in Model.SelectedTagIds)
+                        {
+                            var tag = Model.AvailableTags.FirstOrDefault(t => t.Id == tagId);
+                            if (tag != null)
+                            {
+                                <span class="badge bg-secondary">@tag.Name</span>
+                            }
+                        }
+                    </div>
                 }
 
-                <div class="row g-3">
-                    @foreach (var item in Model)
-                    {
-                        <div class="col-md-6 col-xl-4">
-                            <div class="card h-100 shadow-sm">
-                                @if (!string.IsNullOrEmpty(item.PhotoUrl))
-                                {
-                                    <img src="@item.PhotoUrl" class="card-img-top"
-                                         alt="@item.Listing.Title"
-                                         style="height: 180px; object-fit: cover;">
-                                }
-                                else
-                                {
-                                    <div class="bg-light d-flex align-items-center justify-content-center"
-                                         style="height: 180px;">
-                                        <span class="text-muted small">Brak zdjęcia</span>
-                                    </div>
-                                }
-                                <div class="card-body d-flex flex-column">
-                                    <h6 class="card-title mb-1">
-                                        <a href="@Url.Action("Details", "Listings", new { id = item.ListingId })"
-                                           class="text-decoration-none text-dark stretched-link">
-                                            @item.Listing.Title
-                                        </a>
-                                    </h6>
-
-                                    @if (item.Listing.Tags.Any())
-                                    {
-                                        <div class="mb-2 d-flex flex-wrap gap-1">
-                                            @foreach (var t in item.Listing.Tags.Take(3))
-                                            {
-                                                <span class="badge bg-secondary bg-opacity-25 text-secondary fw-normal">@t.Tag.Name</span>
-                                            }
-                                        </div>
-                                    }
-
-                                    <div class="mt-auto d-flex justify-content-between align-items-center">
-                                        @if (item.Listing.Price.HasValue)
-                                        {
-                                            <strong class="text-primary">@item.Listing.Price.Value.ToString("C")</strong>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-info text-dark">Wymiana</span>
-                                        }
-                                        <div class="text-end">
-                                            @if (item.ReviewCount > 0)
-                                            {
-                                                <small class="text-muted d-block">⭐ @item.AverageRating.ToString("0.0") (@item.ReviewCount)</small>
-                                            }
-                                            <small class="text-muted">👁 @item.Listing.ViewCount</small>
+                @if (Model.FeaturedResults.Any())
+                {
+                    <div class="mb-4">
+                        <h5 class="text-warning fw-bold mb-3">
+                            <span class="me-1">★</span> Wyróżnione oferty
+                        </h5>
+                        <div class="row">
+                            @foreach (var item in Model.FeaturedResults)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100 shadow border border-warning border-2">
+                                        <div class="row g-0">
+                                            <div class="col-4">
+                                                @if (!string.IsNullOrEmpty(item.PhotoUrl))
+                                                {
+                                                    <img src="@item.PhotoUrl" class="img-fluid rounded-start h-100" alt="@item.Listing.Title" style="object-fit: cover;" />
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-warning bg-opacity-25 rounded-start d-flex align-items-center justify-content-center h-100">
+                                                        <span class="text-warning fs-4">★</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div class="col-8">
+                                                <div class="card-body d-flex flex-column py-2 px-3">
+                                                    <div class="d-flex align-items-center gap-1 mb-1">
+                                                        <span class="badge bg-warning text-dark" style="font-size: 0.7rem;">★ Wyróżnione</span>
+                                                    </div>
+                                                    <h6 class="card-title mb-1">
+                                                        <a href="@Url.Action("Details", "Listings", new { id = item.ListingId })" class="text-decoration-none text-dark stretched-link">
+                                                            @item.Listing.Title
+                                                        </a>
+                                                    </h6>
+                                                    @if (!string.IsNullOrEmpty(item.Listing.Description))
+                                                    {
+                                                        <p class="card-text text-muted small mb-1" style="font-size: 0.8rem;">
+                                                            @(item.Listing.Description.Length > 80 ? item.Listing.Description.Substring(0, 80) + "…" : item.Listing.Description)
+                                                        </p>
+                                                    }
+                                                    <div class="mt-auto d-flex justify-content-between align-items-center">
+                                                        @if (item.Listing.Price.HasValue)
+                                                        {
+                                                            <strong class="text-primary">@item.Listing.Price.Value.ToString("C")</strong>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-info">Wymiana</span>
+                                                        }
+                                                        <small class="text-muted" style="font-size: 0.75rem;">👁 @item.Listing.ViewCount</small>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="card-footer bg-white py-2">
-                                    <div class="small text-muted">
-                                        <div>
-                                            <a asp-controller="UserProfile"
-                                               asp-action="Details"
-                                               asp-route-id="@item.SellerId"
-                                               class="text-decoration-none">
-                                                @item.Seller?.Username
-                                            </a>
-                                        </div>
+                            }
+                        </div>
+                        <hr class="border-warning" />
+                    </div>
+                }
 
-                                        @if (!string.IsNullOrWhiteSpace(item.Seller?.Address))
-                                        {
-                                            <div class="mt-1 text-truncate"
-                                                 style="max-width: 100%;"
-                                                 title="@item.Seller.Address">
-                                                @item.Seller.Address
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small">Znaleziono: <strong>@(Model.Results.Count() + Model.FeaturedResults.Count())</strong> ofert</span>
+                </div>
+
+                @if (!Model.Results.Any() && !Model.FeaturedResults.Any())
+                {
+                    <div class="alert alert-info">
+                        Nie znaleziono ofert pasujących do wybranych kryteriów.
+                        @if (Model.HasActiveFilters)
+                        {
+                            <a href="@Url.Action("Index", "Listings")" class="alert-link">Wyczyść filtry</a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        @foreach (var item in Model.Results)
+                        {
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100 shadow-sm">
+                                    <div class="row g-0">
+                                        <div class="col-4">
+                                            @if (!string.IsNullOrEmpty(item.PhotoUrl))
+                                            {
+                                                <img src="@item.PhotoUrl"
+                                                     class="img-fluid rounded-start h-100"
+                                                     alt="@item.Listing.Title"
+                                                     style="object-fit: cover;" />
+                                            }
+                                            else
+                                            {
+                                                <div class="bg-secondary rounded-start d-flex align-items-center justify-content-center h-100">
+                                                    <span class="text-white small">Brak<br/>zdjęcia</span>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="col-8">
+                                            <div class="card-body d-flex flex-column py-2 px-3">
+                                                <h6 class="card-title mb-1">
+                                                    <a href="@Url.Action("Details", "Listings", new { id = item.ListingId })"
+                                                       class="text-decoration-none text-dark stretched-link">
+                                                        @item.Listing.Title
+                                                    </a>
+                                                </h6>
+                                                @if (!string.IsNullOrEmpty(item.Listing.Description))
+                                                {
+                                                    <p class="card-text text-muted small mb-1" style="font-size: 0.8rem;">
+                                                        @(item.Listing.Description.Length > 80 ? item.Listing.Description.Substring(0, 80) + "…" : item.Listing.Description)
+                                                    </p>
+                                                }
+                                                @{
+                                                    var tags = item.Listing.Tags?.Select(t => t.Tag?.Name).Where(n => n != null).Take(3).ToList();
+                                                }
+                                                @if (tags != null && tags.Any())
+                                                {
+                                                    <div class="mb-1">
+                                                        @foreach (var tagName in tags)
+                                                        {
+                                                            <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">@tagName</span>
+                                                        }
+                                                    </div>
+                                                }
+                                                <div class="mt-auto d-flex justify-content-between align-items-center">
+                                                    @if (item.Listing.Price.HasValue)
+                                                    {
+                                                        <strong class="text-primary">@item.Listing.Price.Value.ToString("C")</strong>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-info">Wymiana</span>
+                                                    }
+                                                    @if (item.ReviewCount > 0)
+                                                    {
+                                                        <small class="text-muted">⭐ @item.AverageRating.ToString("0.0")</small>
+                                                    }
+                                                </div>
+                                                <div class="mt-1">
+                                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                                        👁 @item.Listing.ViewCount &nbsp;|&nbsp;
+                                                        <a asp-controller="UserProfile" asp-action="Details"
+                                                           asp-route-id="@item.SellerId"
+                                                           class="text-decoration-none text-muted">@item.Seller?.Username</a>
+                                                        @if (!string.IsNullOrEmpty(item.Listing.Location))
+                                                        {
+                                                            <span>&nbsp;|&nbsp;📍 @item.Listing.Location</span>
+                                                        }
+                                                    </small>
+                                                </div>
                                             </div>
-                                        }
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    }
-                </div>
-
+                        }
+                    </div>
+                }
             </div>
         </div>
     </form>
 </div>
-
-@section Scripts {
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const form = document.getElementById("filterForm");
-            const distanceInput = document.querySelector('input[name="maxDistanceKm"]');
-            const userLatInput = document.getElementById("userLat");
-            const userLngInput = document.getElementById("userLng");
-
-            form.addEventListener("submit", function (e) {
-                const maxDistanceValue = distanceInput.value;
-
-                if (maxDistanceValue && (!userLatInput.value || !userLngInput.value)) {
-                    e.preventDefault();
-
-                    if (!navigator.geolocation) {
-                        userLatInput.value = "";
-                        userLngInput.value = "";
-
-                        form.submit();
-                        return;
-                    }
-
-                    navigator.geolocation.getCurrentPosition(
-                        function (position) {
-                            userLatInput.value = position.coords.latitude;
-                            userLngInput.value = position.coords.longitude;
-                            form.submit();
-                        },
-                        function (error) {
-                            console.warn(error);
-                            userLatInput.value = "";
-                            userLngInput.value = "";
-                            form.submit();
-                        }
-                    );
-                }
-            });
-        });
-    </script>
-}

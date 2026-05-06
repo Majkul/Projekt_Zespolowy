@@ -61,6 +61,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                     s += EstimateListingValue(listing) * Math.Max(1, it.Quantity);
                 if (it.CashAmount.HasValue)
                     s += it.CashAmount.Value;
+                if (it.CustomOfferEstimatedValue.HasValue && !it.ListingId.HasValue && !it.CashAmount.HasValue)
+                    s += it.CustomOfferEstimatedValue.Value;
             }
             return s;
         }
@@ -95,6 +97,29 @@ namespace ProjektZespolowyGr3.Controllers.User
                     result[listingId] = qty;
             }
 
+            return result;
+        }
+
+        private static List<(string Title, decimal Value)> ParseCustomItemsFromForm(IFormCollection form, string titlePrefix, string valuePrefix)
+        {
+            var result = new List<(string Title, decimal Value)>();
+            var head = titlePrefix + "[";
+            var indexSet = new SortedSet<int>();
+            foreach (var kv in form)
+            {
+                if (!kv.Key.StartsWith(head, StringComparison.OrdinalIgnoreCase)) continue;
+                var end = kv.Key.IndexOf(']', head.Length);
+                if (end < 0) continue;
+                if (int.TryParse(kv.Key.AsSpan(head.Length, end - head.Length), out var idx))
+                    indexSet.Add(idx);
+            }
+            foreach (var idx in indexSet)
+            {
+                var title = form[$"{titlePrefix}[{idx}]"].ToString().Trim();
+                if (string.IsNullOrWhiteSpace(title)) continue;
+                decimal.TryParse(form[$"{valuePrefix}[{idx}]"].ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var value);
+                result.Add((title, Math.Max(0, value)));
+            }
             return result;
         }
 
@@ -201,6 +226,14 @@ namespace ProjektZespolowyGr3.Controllers.User
                     .ToDictionary(g => g.Key, g => Math.Max(1, g.Sum(x => x.Quantity)));
                 vm.InitiatorCash = edit.Items.Where(i => i.Side == TradeProposalSide.Initiator).Sum(i => i.CashAmount ?? 0);
                 vm.ReceiverCash = edit.Items.Where(i => i.Side == TradeProposalSide.Receiver).Sum(i => i.CashAmount ?? 0);
+                vm.InitiatorCustomItems = edit.Items
+                    .Where(i => i.Side == TradeProposalSide.Initiator && i.CustomOfferTitle != null)
+                    .Select(i => new CustomItemInput { Title = i.CustomOfferTitle!, EstimatedValue = i.CustomOfferEstimatedValue ?? 0 })
+                    .ToList();
+                vm.ReceiverCustomItems = edit.Items
+                    .Where(i => i.Side == TradeProposalSide.Receiver && i.CustomOfferTitle != null)
+                    .Select(i => new CustomItemInput { Title = i.CustomOfferTitle!, EstimatedValue = i.CustomOfferEstimatedValue ?? 0 })
+                    .ToList();
             }
             else if (parent != null)
             {
@@ -263,6 +296,8 @@ namespace ProjektZespolowyGr3.Controllers.User
             receiverListingIds ??= new List<int>();
             var initiatorQuantities = ParseListingQuantitiesFromForm(Request.Form, "initiatorQuantities");
             var receiverQuantities = ParseListingQuantitiesFromForm(Request.Form, "receiverQuantities");
+            var initiatorCustomItems = ParseCustomItemsFromForm(Request.Form, "initiatorCustomTitles", "initiatorCustomValues");
+            var receiverCustomItems = ParseCustomItemsFromForm(Request.Form, "receiverCustomTitles", "receiverCustomValues");
 
             if (editTradeProposalId.HasValue)
             {
@@ -285,7 +320,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 var editInitiatorId = existing.InitiatorUserId;
                 var editReceiverId = existing.ReceiverUserId;
                 var editResult = await ValidateAndBuildSides(
-                    subject, editInitiatorId, editReceiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash);
+                    subject, editInitiatorId, editReceiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash,
+                    initiatorCustomItems, receiverCustomItems);
                 if (editResult.Error != null)
                 {
                     TempData["TradeError"] = editResult.Error;
@@ -368,7 +404,8 @@ namespace ProjektZespolowyGr3.Controllers.User
             }
 
             var sidesResult = await ValidateAndBuildSides(
-                subjectNew, initiatorId, receiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash);
+                subjectNew, initiatorId, receiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash,
+                initiatorCustomItems, receiverCustomItems);
             if (sidesResult.Error != null)
             {
                 TempData["TradeError"] = sidesResult.Error;
@@ -435,6 +472,8 @@ namespace ProjektZespolowyGr3.Controllers.User
             public List<Listing>? ReceiverListings { get; set; }
             public Dictionary<int, int> InitiatorQtyByListingId { get; set; } = new();
             public Dictionary<int, int> ReceiverQtyByListingId { get; set; } = new();
+            public List<(string Title, decimal Value)> InitiatorCustomItems { get; set; } = new();
+            public List<(string Title, decimal Value)> ReceiverCustomItems { get; set; } = new();
         }
 
         private async Task<TradeSidesResult> ValidateAndBuildSides(
@@ -446,7 +485,9 @@ namespace ProjektZespolowyGr3.Controllers.User
             Dictionary<int, int>? initiatorQuantities,
             Dictionary<int, int>? receiverQuantities,
             decimal initiatorCash,
-            decimal receiverCash)
+            decimal receiverCash,
+            List<(string Title, decimal Value)>? initiatorCustomItems = null,
+            List<(string Title, decimal Value)>? receiverCustomItems = null)
         {
             if (subject.SellerId == initiatorId && !initiatorListingIds.Contains(subject.Id))
                 return new TradeSidesResult { Error = "Musisz uwzględnić ogłoszenie, w którego kontekście wysyłasz wymianę (po Twojej stronie)." };
@@ -524,7 +565,9 @@ namespace ProjektZespolowyGr3.Controllers.User
                 InitiatorListings = initiatorListings,
                 ReceiverListings = receiverListings,
                 InitiatorQtyByListingId = initiatorQtyByListingId,
-                ReceiverQtyByListingId = receiverQtyByListingId
+                ReceiverQtyByListingId = receiverQtyByListingId,
+                InitiatorCustomItems = initiatorCustomItems ?? new(),
+                ReceiverCustomItems = receiverCustomItems ?? new()
             };
         }
 
@@ -550,6 +593,11 @@ namespace ProjektZespolowyGr3.Controllers.User
                 proposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Initiator, CashAmount = initiatorCash, Quantity = 1 });
             if (receiverCash > 0)
                 proposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Receiver, CashAmount = receiverCash, Quantity = 1 });
+
+            foreach (var (title, value) in sides.InitiatorCustomItems)
+                proposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Initiator, CustomOfferTitle = title, CustomOfferEstimatedValue = value > 0 ? value : null, Quantity = 1 });
+            foreach (var (title, value) in sides.ReceiverCustomItems)
+                proposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Receiver, CustomOfferTitle = title, CustomOfferEstimatedValue = value > 0 ? value : null, Quantity = 1 });
         }
 
         [HttpPost]
@@ -576,13 +624,13 @@ namespace ProjektZespolowyGr3.Controllers.User
                 if (!listings.TryGetValue(lid, out var list))
                 {
                     TempData["TradeError"] = "Jedno z ogłoszeń w propozycji już nie istnieje.";
-                    return RedirectToAction("Conversation", "Messages", new { userId = proposal.InitiatorUserId, listingId = proposal.SubjectListingId });
+                    return RedirectToAction("Details", new { id });
                 }
 
                 if (!ListingStockHelper.CanSell(list, need) || list.IsArchived || list.NotExchangeable)
                 {
                     TempData["TradeError"] = "Nie można zaakceptować: niewystarczająca liczba sztuk lub ogłoszenie jest niedostępne.";
-                    return RedirectToAction("Conversation", "Messages", new { userId = proposal.InitiatorUserId, listingId = proposal.SubjectListingId });
+                    return RedirectToAction("Details", new { id });
                 }
             }
 
@@ -591,8 +639,17 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             proposal.Status = TradeProposalStatus.Accepted;
             proposal.UpdatedAt = DateTime.UtcNow;
+            proposal.LastModifiedAt = DateTime.UtcNow;
+            _context.TradeProposalHistoryEntries.Add(new TradeProposalHistoryEntry
+            {
+                TradeProposalId = proposal.Id,
+                UserId = userId,
+                Summary = "Propozycja zaakceptowana.",
+                ChangedAt = DateTime.UtcNow
+            });
             await _context.SaveChangesAsync();
-            return RedirectToAction("Conversation", "Messages", new { userId = proposal.InitiatorUserId, listingId = proposal.SubjectListingId });
+            TempData["TradeSuccess"] = "Propozycja wymiany została zaakceptowana!";
+            return RedirectToAction("Details", new { id });
         }
 
         [HttpPost]
@@ -608,8 +665,17 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             proposal.Status = TradeProposalStatus.Rejected;
             proposal.UpdatedAt = DateTime.UtcNow;
+            proposal.LastModifiedAt = DateTime.UtcNow;
+            _context.TradeProposalHistoryEntries.Add(new TradeProposalHistoryEntry
+            {
+                TradeProposalId = proposal.Id,
+                UserId = userId,
+                Summary = "Propozycja odrzucona.",
+                ChangedAt = DateTime.UtcNow
+            });
             await _context.SaveChangesAsync();
-            return RedirectToAction("Conversation", "Messages", new { userId = proposal.InitiatorUserId, listingId = proposal.SubjectListingId });
+            TempData["TradeInfo"] = "Propozycja wymiany została odrzucona.";
+            return RedirectToAction("Details", new { id });
         }
 
         [HttpPost]
@@ -625,8 +691,144 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             proposal.Status = TradeProposalStatus.Cancelled;
             proposal.UpdatedAt = DateTime.UtcNow;
+            proposal.LastModifiedAt = DateTime.UtcNow;
+            _context.TradeProposalHistoryEntries.Add(new TradeProposalHistoryEntry
+            {
+                TradeProposalId = proposal.Id,
+                UserId = userId,
+                Summary = "Propozycja anulowana przez składającego.",
+                ChangedAt = DateTime.UtcNow
+            });
             await _context.SaveChangesAsync();
-            return RedirectToAction("Conversation", "Messages", new { userId = proposal.ReceiverUserId, listingId = proposal.SubjectListingId });
+            TempData["TradeInfo"] = "Propozycja wymiany została anulowana.";
+            return RedirectToAction("Details", new { id });
+        }
+
+        /// <summary>
+        /// Szybka kontroferta — zachowuje te same przedmioty, ale zmienia kwoty dopłat gotówkowych.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> QuickCounterOffer(int id, decimal initiatorCash, decimal receiverCash, string? message)
+        {
+            var userId = GetCurrentUserId();
+
+            var parent = await _context.TradeProposals
+                .Include(p => p.Items).ThenInclude(i => i.Listing!)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (parent == null)
+                return NotFound();
+            if (parent.Status != TradeProposalStatus.Pending)
+            {
+                TempData["TradeError"] = "Nie można złożyć kontroferty — propozycja nie jest już aktywna.";
+                return RedirectToAction("Details", new { id });
+            }
+            if (parent.ReceiverUserId != userId && parent.InitiatorUserId != userId)
+                return Forbid();
+
+            // Only the receiver can make a quick counter-offer on a pending proposal
+            if (parent.ReceiverUserId != userId)
+            {
+                TempData["TradeError"] = "Kontrofertę może złożyć tylko osoba, do której skierowano propozycję.";
+                return RedirectToAction("Details", new { id });
+            }
+
+            initiatorCash = Math.Max(0, initiatorCash);
+            receiverCash = Math.Max(0, receiverCash);
+
+            var now = DateTime.UtcNow;
+
+            // In a counter-offer the roles swap: the current receiver becomes the new initiator
+            var newProposal = new TradeProposal
+            {
+                InitiatorUserId = parent.ReceiverUserId,
+                ReceiverUserId = parent.InitiatorUserId,
+                SubjectListingId = parent.SubjectListingId,
+                Status = TradeProposalStatus.Pending,
+                ParentTradeProposalId = parent.Id,
+                RootTradeProposalId = parent.RootTradeProposalId ?? parent.Id,
+                CreatedAt = now,
+                UpdatedAt = now,
+                LastModifiedAt = now
+            };
+
+            // Copy listing items, swap sides to match role swap, skip old cash items
+            foreach (var item in parent.Items.Where(i => i.ListingId.HasValue || i.CustomOfferTitle != null))
+            {
+                var swappedSide = item.Side == TradeProposalSide.Initiator
+                    ? TradeProposalSide.Receiver
+                    : TradeProposalSide.Initiator;
+
+                newProposal.Items.Add(new TradeProposalItem
+                {
+                    ListingId = item.ListingId,
+                    CustomOfferTitle = item.CustomOfferTitle,
+                    CustomOfferEstimatedValue = item.CustomOfferEstimatedValue,
+                    Side = swappedSide,
+                    Quantity = item.Quantity
+                });
+            }
+
+            // Add new cash items (using swapped sides: old initiator is now receiver)
+            if (initiatorCash > 0)
+                newProposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Receiver, CashAmount = initiatorCash });
+            if (receiverCash > 0)
+                newProposal.Items.Add(new TradeProposalItem { Side = TradeProposalSide.Initiator, CashAmount = receiverCash });
+
+            _context.TradeProposals.Add(newProposal);
+
+            // Mark parent as superseded
+            parent.Status = TradeProposalStatus.Superseded;
+            parent.UpdatedAt = now;
+            parent.LastModifiedAt = now;
+
+            _context.TradeProposalHistoryEntries.Add(new TradeProposalHistoryEntry
+            {
+                TradeProposalId = parent.Id,
+                UserId = userId,
+                Summary = "Zastąpiona szybką kontrofertą.",
+                ChangedAt = now
+            });
+
+            await _context.SaveChangesAsync();
+
+            // Fix root id if this is the first in chain
+            if (newProposal.RootTradeProposalId == newProposal.Id)
+            {
+                newProposal.RootTradeProposalId = newProposal.Id;
+                await _context.SaveChangesAsync();
+            }
+
+            // Send message notification
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                _context.Messages.Add(new Message
+                {
+                    SenderId = userId,
+                    ReceiverId = parent.InitiatorUserId,
+                    ListingId = parent.SubjectListingId,
+                    Content = message.Trim(),
+                    TradeProposalId = newProposal.Id,
+                    SentAt = now
+                });
+            }
+
+            _context.Messages.Add(new Message
+            {
+                SenderId = userId,
+                ReceiverId = parent.InitiatorUserId,
+                ListingId = parent.SubjectListingId,
+                Content = "🔄 Kontroferta wymiany",
+                TradeProposalId = newProposal.Id,
+                SentAt = now
+            });
+
+            await _context.SaveChangesAsync();
+            await _notifications.NotifyTradeProposalAsync(parent.InitiatorUserId, newProposal.Id);
+
+            TempData["TradeSuccess"] = "Kontroferta została wysłana!";
+            return RedirectToAction("Details", new { id = newProposal.Id });
         }
 
         [HttpGet]
@@ -679,6 +881,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .Include(p => p.SubjectListing)
                 .Include(p => p.Items).ThenInclude(i => i.Listing)!.ThenInclude(l => l!.Photos).ThenInclude(ph => ph.Upload)
                 .Include(p => p.Items).ThenInclude(i => i.Listing)!.ThenInclude(l => l!.Tags).ThenInclude(lt => lt.Tag)
+                .Include(p => p.Items).ThenInclude(i => i.Listing)!.ThenInclude(l => l!.ShippingOptions)
                 .Include(p => p.ParentTradeProposal!).ThenInclude(pt => pt!.Initiator)
                 .Include(p => p.ParentTradeProposal!).ThenInclude(pt => pt!.Receiver)
                 .Include(p => p.ParentTradeProposal!).ThenInclude(pt => pt!.Items).ThenInclude(i => i.Listing!).ThenInclude(l => l!.Photos).ThenInclude(ph => ph.Upload)
@@ -706,6 +909,12 @@ namespace ProjektZespolowyGr3.Controllers.User
                 ViewBag.ParentInitiatorSum = SumSide(par.Items, TradeProposalSide.Initiator, parentMap);
                 ViewBag.ParentReceiverSum = SumSide(par.Items, TradeProposalSide.Receiver, parentMap);
             }
+
+            // Load existing TradeOrders for this proposal
+            var tradeOrders = await _context.TradeOrders
+                .Where(o => o.TradeProposalId == id)
+                .ToListAsync();
+            ViewBag.TradeOrders = tradeOrders;
 
             var rootId = await ResolveTradeThreadRootIdAsync(proposal.Id);
             var thread = await _context.TradeProposals

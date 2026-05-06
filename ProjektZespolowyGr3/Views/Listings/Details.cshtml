@@ -12,9 +12,27 @@
 }
 
 <div class="container mt-4">
+    @if (TempData["ListingFeeInfo"] != null)
+    {
+        <div class="alert alert-success py-2 small"><i class="bi bi-check-circle me-1"></i>@TempData["ListingFeeInfo"]</div>
+    }
+    @if (TempData["ListingFeeWarning"] != null)
+    {
+        <div class="alert alert-warning py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>@TempData["ListingFeeWarning"] — <a asp-controller="SellerCard" asp-action="Index">Zarządzaj kartą</a></div>
+    }
     @if (TempData["TradeError"] != null)
     {
         <div class="alert alert-warning">@TempData["TradeError"]</div>
+    }
+    @if (Model.IsArchived)
+    {
+        <div class="alert alert-secondary d-flex align-items-center mb-3" role="alert">
+            <strong>Ogłoszenie zarchiwizowane</strong>
+            @if (Model.ArchivedAt.HasValue)
+            {
+                <span class="ms-2 text-muted small">(@Model.ArchivedAt.Value.ToString("dd.MM.yyyy HH:mm"))</span>
+            }
+        </div>
     }
     <div class="row">
         <div class="col-md-8">
@@ -105,7 +123,7 @@
                     <h5 class="mb-0">Opinie</h5>
                 </div>
                 <div class="card-body">
-                    @if (!isUserSeller)
+                    @if (User.Identity.IsAuthenticated && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value != Model.SellerId.ToString())
                     {
                         <a asp-controller="Reviews" asp-action="Create" asp-route-listingId="@Model.Id" class="btn btn-primary btn-sm mb-3">Dodaj opinię</a>
                     }
@@ -168,6 +186,14 @@
 
                     <hr />
 
+                    @if (!string.IsNullOrEmpty(Model.Location))
+                    {
+                        <div class="mb-3">
+                            <strong>📍 Lokalizacja:</strong>
+                            <span>@Model.Location</span>
+                        </div>
+                    }
+
                     <div class="mb-3">
                         @if (Model.Price.HasValue)
                         {
@@ -179,6 +205,16 @@
                     <div class="mb-3">
                         <strong>Dostępna ilość:</strong>
                         <span class="@(Model.StockQuantity > 0 ? "" : "text-danger")">@Model.StockQuantity szt.</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Wyświetlenia:</strong>
+                        <span class="text-muted">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-eye me-1" viewBox="0 0 16 16">
+                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                            </svg>@Model.ViewCount
+                        </span>
                     </div>
 
                     <div class="mb-3">
@@ -229,6 +265,7 @@
                             Ogłoszenie niedostępne
                         </button>
                     }
+
                     else if (Model.IsSold || Model.StockQuantity <= 0)
                     {
                         <div class="alert alert-danger mb-2">
@@ -238,6 +275,12 @@
                     else if (isUserSeller)
                     {
                         <a asp-controller="ListingManage" asp-action="EditListing" asp-route-id="@Model.Id" class="btn btn-primary w-100 btn-lg">Edit</a>
+                        <hr/>
+                        <form asp-controller="ListingManage" asp-action="ArchiveListing" asp-route-id="@Model.Id" method="post" class="mb-2">
+                            <button type="submit" class="btn @(Model.IsArchived ? "btn-outline-success" : "btn-outline-secondary") w-100">
+                                @(Model.IsArchived ? "Przywróć ogłoszenie" : "Archiwizuj ogłoszenie")
+                            </button>
+                        </form>
                         <hr />
                         <form asp-controller="ListingManage" asp-action="DeleteListing" asp-route-id="item.Listing.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this listing?');">
                             <button type="submit" class="btn btn-danger w-100 btn-lg">Delete</button>
@@ -245,16 +288,87 @@
                     }
                     else if (!Model.IsSold && Model.StockQuantity > 0 && isSaleOffer)
                     {
-                        <form asp-controller="Payment" asp-action="Buy" method="post" class="mb-2">
+                        @if (TempData["BuyError"] != null)
+                        {
+                            <div class="alert alert-warning py-2 mb-2">@TempData["BuyError"]</div>
+                        }
+                        <form asp-controller="Payment" asp-action="Buy" method="post" class="mb-2" id="buy-form">
                             <input type="hidden" name="listingId" value="@Model.Id" />
                             <div class="mb-2">
                                 <label for="buy-quantity" class="form-label small mb-0">Ilość</label>
                                 <input id="buy-quantity" name="quantity" type="number" class="form-control" value="1" min="1" max="@Model.StockQuantity" required />
                             </div>
+
+                            @if (Model.ShippingOptions != null && Model.ShippingOptions.Any())
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold mb-1">🚚 Dostawa</label>
+                                    @foreach (var opt in Model.ShippingOptions)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input shipping-radio"
+                                                   type="radio"
+                                                   name="shippingOptionId"
+                                                   id="ship-@opt.Id"
+                                                   value="@opt.Id"
+                                                   data-price="@opt.Price.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                                                   required />
+                                            <label class="form-check-label" for="ship-@opt.Id">
+                                                @opt.Name
+                                                @if (opt.Price == 0)
+                                                {
+                                                    <span class="badge bg-success ms-1">Gratis</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">— @opt.Price.ToString("C")</span>
+                                                }
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="alert alert-light border py-2 mb-2" id="price-summary">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted small">Przedmiot</span>
+                                        <span id="item-total" class="small">@((Model.Price ?? 0).ToString("C"))</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted small">Dostawa</span>
+                                        <span id="ship-total" class="small">—</span>
+                                    </div>
+                                    <hr class="my-1" />
+                                    <div class="d-flex justify-content-between fw-bold">
+                                        <span>Razem</span>
+                                        <span id="grand-total">—</span>
+                                    </div>
+                                </div>
+                            }
+
                             <button type="submit" class="btn btn-primary w-100 btn-lg">
                                 Kup teraz
                             </button>
                         </form>
+
+                        @if (Model.ShippingOptions != null && Model.ShippingOptions.Any())
+                        {
+                            <script>
+                                const basePrice = @((Model.Price ?? 0).ToString("F2", System.Globalization.CultureInfo.InvariantCulture));
+                                const formatPLN = v => v.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' });
+                                document.querySelectorAll('.shipping-radio').forEach(r => {
+                                    r.addEventListener('change', updateTotal);
+                                });
+                                document.getElementById('buy-quantity').addEventListener('input', updateTotal);
+                                function updateTotal() {
+                                    const qty = parseInt(document.getElementById('buy-quantity').value) || 1;
+                                    const sel = document.querySelector('.shipping-radio:checked');
+                                    const ship = sel ? parseFloat(sel.dataset.price) : 0;
+                                    document.getElementById('item-total').textContent = formatPLN(basePrice * qty);
+                                    document.getElementById('ship-total').textContent = sel ? (ship === 0 ? 'Gratis' : formatPLN(ship)) : '—';
+                                    document.getElementById('grand-total').textContent = sel ? formatPLN(basePrice * qty + ship) : '—';
+                                }
+                            </script>
+                        }
                     }
 
                     @if (!isUserSeller)

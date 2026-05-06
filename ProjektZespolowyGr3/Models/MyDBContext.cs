@@ -17,6 +17,10 @@ namespace ProjektZespolowyGr3.Models
         public DbSet<ListingPhoto> ListingPhotos { get; set; }
         public DbSet<ListingTag> ListingTags { get; set; }
         public DbSet<ReviewPhoto> ReviewPhotos { get; set; }
+        public DbSet<UserProfile> UserProfiles { get; set; }
+        public DbSet<SellerCard> SellerCards { get; set; }
+        public DbSet<SellerPayout> SellerPayouts { get; set; }
+        public DbSet<CardTokenizationOrder> CardTokenizationOrders { get; set; }
         public DbSet<MessagePhoto> MessagePhotos { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketAttachment> TicketAttachments { get; set; }
@@ -27,6 +31,8 @@ namespace ProjektZespolowyGr3.Models
         public DbSet<TradeProposalHistoryEntry> TradeProposalHistoryEntries { get; set; }
         public DbSet<ListingExchangeAcceptedTag> ListingExchangeAcceptedTags { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<ListingShippingOption> ListingShippingOptions { get; set; }
+        public DbSet<TradeOrder> TradeOrders { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -144,6 +150,18 @@ namespace ProjektZespolowyGr3.Models
                 .WithMany()
                 .HasForeignKey(o => o.ListingId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ListingShippingOption>()
+                .HasOne(s => s.Listing)
+                .WithMany(l => l.ShippingOptions)
+                .HasForeignKey(s => s.ListingId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TradeOrder>()
+                .HasOne(t => t.TradeProposal)
+                .WithMany()
+                .HasForeignKey(t => t.TradeProposalId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.User)
