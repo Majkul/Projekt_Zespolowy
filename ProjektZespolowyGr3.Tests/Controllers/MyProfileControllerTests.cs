@@ -127,6 +127,10 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 Email = "newemail@test.com"
             };
 
+            Mock.Get(_geocodingService)
+                .Setup(m => m.GetAddressLocation("New Address"))
+                .ReturnsAsync((50.0, 50.0));
+
             // Act
             var result = await _controller.Edit(model);
 
@@ -137,6 +141,8 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             updatedUser.LastName.Should().Be("Name");
             updatedUser.Address.Should().Be("New Address");
             updatedUser.PhoneNumber.Should().Be("987654321");
+            updatedUser.Longitude.Should().Be(50.0);
+            updatedUser.Latitude.Should().Be(50.0);
         }
 
         [Fact]
