@@ -9,6 +9,7 @@ using Moq;
 using ProjektZespolowyGr3.Controllers;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
+using ProjektZespolowyGr3.Models.System;
 using ProjektZespolowyGr3.Models.ViewModels;
 
 namespace ProjektZespolowyGr3.Tests.Controllers
@@ -17,6 +18,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
     {
         private readonly MyDBContext _context;
         private readonly MyProfileController _controller;
+        private readonly IGeocodingService _geocodingService;
 
         public MyProfileControllerTests()
         {
@@ -24,7 +26,8 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _context = new MyDBContext(options);
-            _controller = new MyProfileController(_context);
+            _geocodingService = new Mock<IGeocodingService>().Object;
+            _controller = new MyProfileController(_context, _geocodingService);
         }
 
         private void SetupAuthenticatedUser(int userId)
