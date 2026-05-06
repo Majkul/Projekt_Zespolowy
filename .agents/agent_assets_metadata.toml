@@ -6,3 +6,9 @@ id = "lUi7CpT0ebLL8mhPvBMPT"
 uri = "file://docs/ApplicationCode.md"
 type = "text"
 title = "Dokumentacja kodu aplikacji"
+
+[[outputs]]
+id = "Ilc_i8LQhNISsBvYYPuG-"
+uri = "file://docs/Diagrams.md"
+type = "text"
+title = "Diagramy — HandlujZTym"
