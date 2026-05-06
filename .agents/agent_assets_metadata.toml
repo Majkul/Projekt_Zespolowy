@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "lUi7CpT0ebLL8mhPvBMPT"
+uri = "file://docs/ApplicationCode.md"
+type = "text"
+title = "Dokumentacja kodu aplikacji"
