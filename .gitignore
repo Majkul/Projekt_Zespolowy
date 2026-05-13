@@ -365,6 +365,7 @@ ProjektZespolowyGr3/bin/
 ProjektZespolowyGr3/obj/
 ProjektZespolowyGr3/appsettings.json
 docker/.env
+docker/.env.dev
 docker/postgres_data/
 docker/mongo_data/
 docker/nginx/certs/

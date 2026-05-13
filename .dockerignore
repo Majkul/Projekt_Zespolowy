@@ -15,6 +15,7 @@
 docker/postgres_data
 docker/nginx/certs
 docker/.env
+docker/.env.dev
 
 docs/
 **/README.md

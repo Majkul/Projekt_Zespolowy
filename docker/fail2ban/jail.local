@@ -1,0 +1,42 @@
+[DEFAULT]
+# Ban duration: 1 hour
+bantime  = 3600
+# Time window in which failures are counted
+findtime = 600
+# Number of failures before ban
+maxretry = 5
+# Use iptables to block
+banaction = iptables-multiport
+
+# ── SSH ──────────────────────────────────────────────────────────
+[sshd]
+enabled  = true
+port     = ssh
+filter   = sshd
+logpath  = /var/log/auth.log
+maxretry = 3
+bantime  = 86400
+
+# ── Nginx: HTTP auth rate-limit (429 responses) ──────────────────
+[nginx-req-limit]
+enabled  = true
+filter   = nginx-req-limit
+logpath  = /var/log/nginx/error.log
+maxretry = 10
+findtime = 60
+bantime  = 600
+
+# ── Nginx: too many 4xx (scanner/bot traffic) ────────────────────
+[nginx-http-auth]
+enabled  = true
+filter   = nginx-http-auth
+logpath  = /var/log/nginx/error.log
+maxretry = 6
+
+# ── Nginx: botsearch (probing for known CMS paths) ───────────────
+[nginx-botsearch]
+enabled  = true
+filter   = nginx-botsearch
+logpath  = /var/log/nginx/access.log
+maxretry = 2
+bantime  = 86400
