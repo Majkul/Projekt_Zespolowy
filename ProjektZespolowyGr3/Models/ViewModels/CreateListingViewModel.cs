@@ -34,7 +34,12 @@ namespace ProjektZespolowyGr3.Models.ViewModels
 
         public bool IsFeatured { get; set; }
         /// <summary>Nie uwzględniaj tego ogłoszenia w propozycjach wymiany.</summary>
+<<<<<<< HEAD
         public bool NotExchangeable { get; set; } = false;
+=======
+        public bool NotExchangeable { get; set; } = true;
+        public bool IsPrivate { get; set; } = false;
+>>>>>>> origin/sprint-8
 
         public decimal? MinExchangeValue { get; set; }
 

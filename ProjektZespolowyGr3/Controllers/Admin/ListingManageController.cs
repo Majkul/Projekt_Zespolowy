@@ -167,6 +167,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 SelectedTagIds = listing.Tags.Select(t => t.TagId).ToList(),
                 Photos = listing.Photos,
                 NotExchangeable = listing.NotExchangeable,
+                IsPrivate = listing.IsPrivate,
                 MinExchangeValue = listing.MinExchangeValue,
                 ExchangeDescription = listing.ExchangeDescription,
                 StockQuantity = listing.StockQuantity,
@@ -234,6 +235,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             listing.Location = string.IsNullOrWhiteSpace(vm.Location) ? null : vm.Location.Trim();
             listing.Price = vm.Price;
             listing.NotExchangeable = vm.NotExchangeable;
+            listing.IsPrivate = vm.IsPrivate;
             listing.MinExchangeValue = vm.MinExchangeValue;
             listing.ExchangeDescription = string.IsNullOrWhiteSpace(vm.ExchangeDescription) ? null : vm.ExchangeDescription.Trim();
             listing.StockQuantity = vm.StockQuantity;

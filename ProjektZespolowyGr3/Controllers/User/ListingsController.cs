@@ -53,8 +53,17 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .Where(l => !l.IsArchived)
                 .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
                 .Include(l => l.Reviews)
+<<<<<<< HEAD
                 .Include(l => l.Tags).ThenInclude(lt => lt.Tag)
                 .Include(l => l.Seller).ThenInclude(s => s.Listings).ThenInclude(sl => sl.Reviews);
+=======
+                .Include(l => l.Seller)
+                    .ThenInclude(s => s.Listings)
+                        .ThenInclude(sl => sl.Reviews)
+                .Include(l => l.Tags)
+                    .ThenInclude(lt => lt.Tag)
+                .Where(l => l.IsArchived == false && l.IsPrivate == false && l.StockQuantity > 0);
+>>>>>>> origin/sprint-8
 
             // Text search
             if (!string.IsNullOrWhiteSpace(searchString))
@@ -164,6 +173,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 return NotFound();
             }
+<<<<<<< HEAD
             // Increment view count for everyone except the listing's own seller
             var viewerIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             bool isSeller = viewerIdClaim != null && viewerIdClaim == listing.SellerId.ToString();
@@ -174,13 +184,33 @@ namespace ProjektZespolowyGr3.Controllers.User
                     .ExecuteUpdateAsync(s => s.SetProperty(l => l.ViewCount, l => l.ViewCount + 1));
                 listing.ViewCount++;
             }
+=======
+
+            if (listing.IsPrivate)
+            {
+                var viewerIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(viewerIdClaim, out var viewerId) || viewerId != listing.SellerId)
+                {
+                    // jesli jest czlonkiem lancuszka wymian to moze i tak
+                    bool isAllowedByTrade = await _context.TradeProposalItems
+                        .AnyAsync(item => item.ListingId == listing.Id &&
+                                         (item.TradeProposal.InitiatorUserId == viewerId || item.TradeProposal.ReceiverUserId == viewerId));
+
+                    if (!isAllowedByTrade)
+                        return NotFound();
+                }
+            }
+
+            listing.ViewCount++;
+            await _context.SaveChangesAsync();
+>>>>>>> origin/sprint-8
             return View(listing);
         }
 
         // GET: Listings/Create
         [Authorize]
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create(int? forTradeListingId)
         {
             // TODO: usunac
             _helper.MakeSomeTags();
@@ -195,6 +225,26 @@ namespace ProjektZespolowyGr3.Controllers.User
                     })
                     .ToList()
             };
+
+            if (forTradeListingId.HasValue)
+            {
+                var tradeListing = await _context.Listings
+                    .Include(l => l.ExchangeAcceptedTags).ThenInclude(e => e.Tag)
+                    .FirstOrDefaultAsync(l => l.Id == forTradeListingId.Value);
+
+                if (tradeListing != null)
+                {
+                    ViewBag.ForTradeListingId = tradeListing.Id;
+                    ViewBag.ForTradeListingTitle = tradeListing.Title;
+                    ViewBag.ForTradeAcceptedTagIds = tradeListing.ExchangeAcceptedTags.Select(e => e.TagId).ToList();
+                    ViewBag.ForTradeAcceptedTagNames = tradeListing.ExchangeAcceptedTags.Select(e => e.Tag.Name).ToList();
+
+                    model.SelectedTagIds = tradeListing.ExchangeAcceptedTags.Select(e => e.TagId).ToList();
+                    model.NotExchangeable = false;
+                    model.IsPrivate = true;
+                }
+            }
+
             return View(model);
         }
 
@@ -204,12 +254,33 @@ namespace ProjektZespolowyGr3.Controllers.User
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateListingViewModel model)
+        public async Task<IActionResult> Create(CreateListingViewModel model, int? forTradeListingId)
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var currentUserId) || currentUserId <= 0)
             {
                 return Challenge();
+            }
+
+            List<int> requiredTagIds = new();
+            if (forTradeListingId.HasValue)
+            {
+                var tradeListing = await _context.Listings
+                    .Include(l => l.ExchangeAcceptedTags)
+                    .FirstOrDefaultAsync(l => l.Id == forTradeListingId.Value);
+
+                if (tradeListing != null)
+                {
+                    model.IsPrivate = true;
+                    model.NotExchangeable = false;
+                    model.IsFeatured = false;
+                    requiredTagIds = tradeListing.ExchangeAcceptedTags.Select(e => e.TagId).ToList();
+
+                    if (requiredTagIds.Count > 0 && (model.SelectedTagIds == null || !model.SelectedTagIds.Any(id => requiredTagIds.Contains(id))))
+                    {
+                        ModelState.AddModelError("SelectedTagIds", "Co najmniej jeden tag musi pasować do akceptowanych tagów ogłoszenia, do którego tworzysz ofertę.");
+                    }
+                }
             }
 
             // cena potzebna jesli "nie do wymiany"
@@ -227,6 +298,12 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (!ModelState.IsValid)
             {
                 _helper.PopulateAvailableTags(model);
+                if (forTradeListingId.HasValue)
+                {
+                    ViewBag.ForTradeListingId = forTradeListingId.Value;
+                    if (requiredTagIds.Count > 0)
+                        ViewBag.ForTradeAcceptedTagIds = requiredTagIds;
+                }
                 return View(model);
             }
 
@@ -241,8 +318,14 @@ namespace ProjektZespolowyGr3.Controllers.User
                 SellerId = currentUserId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
+<<<<<<< HEAD
                 NotExchangeable = model.Type == ListingType.Trade ? false : model.NotExchangeable,
                 MinExchangeValue = model.Type == ListingType.Trade ? null : model.MinExchangeValue,
+=======
+                NotExchangeable = forTradeListingId.HasValue ? false : model.NotExchangeable,
+                IsPrivate = forTradeListingId.HasValue ? true : model.IsPrivate,
+                MinExchangeValue = model.MinExchangeValue,
+>>>>>>> origin/sprint-8
                 ExchangeDescription = string.IsNullOrWhiteSpace(model.ExchangeDescription) ? null : model.ExchangeDescription.Trim()
             };
             ListingStockHelper.SyncSoldFlag(listing);
@@ -295,11 +378,16 @@ namespace ProjektZespolowyGr3.Controllers.User
             _context.Listings.Add(listing);
             await _context.SaveChangesAsync();
 
+<<<<<<< HEAD
             var (feeOk, feeError) = await _cardFeeService.TryChargeListingFeeAsync(currentUserId, listing.Title);
             if (feeOk)
                 TempData["ListingFeeInfo"] = "Pobrano opłatę za wystawienie ogłoszenia (0,50 PLN).";
             else if (!string.IsNullOrEmpty(feeError))
                 TempData["ListingFeeWarning"] = $"Ogłoszenie wystawione, ale nie pobrano opłaty: {feeError}";
+=======
+            if (forTradeListingId.HasValue)
+                return RedirectToAction("Compose", "TradeProposals", new { listingId = forTradeListingId.Value });
+>>>>>>> origin/sprint-8
 
             return RedirectToAction("Details", new { id = listing.Id });
         }

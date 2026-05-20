@@ -36,6 +36,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         public List<ShippingOptionInput> ShippingOptions { get; set; } = new();
 
         public bool NotExchangeable { get; set; }
+        public bool IsPrivate { get; set; }
         public bool IsFeatured { get; set; }
 
         public decimal? MinExchangeValue { get; set; }
