@@ -25,6 +25,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         private readonly Mock<IEmailService> _emailServiceMock;
         private readonly AuthService _authService;
         private readonly HomeController _controller;
+        private readonly IGeocodingService _geocodingService;
 
         public HomeControllerTests()
         {
@@ -35,7 +36,8 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _loggerMock = new Mock<ILogger<HomeController>>();
             _emailServiceMock = new Mock<IEmailService>();
             _authService = new AuthService(_context);
-            _controller = new HomeController(_loggerMock.Object, _context, _authService, _emailServiceMock.Object);
+            _geocodingService = new Mock<IGeocodingService>().Object;
+            _controller = new HomeController(_loggerMock.Object, _context, _authService, _emailServiceMock.Object, _geocodingService);
         }
 
         [Fact]

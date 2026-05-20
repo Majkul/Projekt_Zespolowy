@@ -19,13 +19,15 @@ public class HomeController : Controller
     private readonly IEmailService _emailService;
     private readonly MyDBContext _context;
     private readonly AuthService _authService;
+    private readonly IGeocodingService _geocodingService;
 
-    public HomeController(ILogger<HomeController> logger, MyDBContext context, AuthService authService, IEmailService emailService)
+    public HomeController(ILogger<HomeController> logger, MyDBContext context, AuthService authService, IEmailService emailService, IGeocodingService geocodingService)
     {
         _logger = logger;
         _context = context;
         _authService = authService;
         _emailService = emailService;
+        _geocodingService = geocodingService;
     }
 
     public async Task<IActionResult> Index()
@@ -267,6 +269,27 @@ public class HomeController : Controller
         if (user == null)
         {
             return NotFound();
+        }
+
+        if (string.IsNullOrEmpty(model.Address))
+        {
+            user.Longitude = null;
+            user.Latitude = null;
+        }
+        else
+        {
+            var location = await _geocodingService.GetAddressLocation(model.Address);
+
+            if (location.HasValue)
+            {
+                user.Longitude = location.Value.Longitude;
+                user.Latitude = location.Value.Latitude;
+            }
+            else
+            {
+                ModelState.AddModelError("Address", "Nie można znaleźć lokalizacji dla podanego adresu.");
+                return View(model);
+            }
         }
 
         user.FirstName = model.FirstName;
