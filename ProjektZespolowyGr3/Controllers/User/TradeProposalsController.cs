@@ -343,12 +343,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 var editInitiatorId = existing.InitiatorUserId;
                 var editReceiverId = existing.ReceiverUserId;
                 var editResult = await ValidateAndBuildSides(
-<<<<<<< HEAD
-                    subject, editInitiatorId, editReceiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash,
-                    initiatorCustomItems, receiverCustomItems);
-=======
                     subject, editInitiatorId, editReceiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash, userId, existing.RootTradeProposalId);
->>>>>>> origin/sprint-8
                 if (editResult.Error != null)
                 {
                     TempData["TradeError"] = editResult.Error;
@@ -431,12 +426,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             }
 
             var sidesResult = await ValidateAndBuildSides(
-<<<<<<< HEAD
-                subjectNew, initiatorId, receiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash,
-                initiatorCustomItems, receiverCustomItems);
-=======
                 subjectNew, initiatorId, receiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash, userId, parent?.RootTradeProposalId);
->>>>>>> origin/sprint-8
             if (sidesResult.Error != null)
             {
                 TempData["TradeError"] = sidesResult.Error;
@@ -517,13 +507,8 @@ namespace ProjektZespolowyGr3.Controllers.User
             Dictionary<int, int>? receiverQuantities,
             decimal initiatorCash,
             decimal receiverCash,
-<<<<<<< HEAD
-            List<(string Title, decimal Value)>? initiatorCustomItems = null,
-            List<(string Title, decimal Value)>? receiverCustomItems = null)
-=======
             int currentUserId,
             int? rootTradeProposalId)
->>>>>>> origin/sprint-8
         {
             if (subject.SellerId == initiatorId && !initiatorListingIds.Contains(subject.Id))
                 return new TradeSidesResult { Error = "Musisz uwzględnić ogłoszenie, w którego kontekście wysyłasz wymianę (po Twojej stronie)." };
@@ -628,8 +613,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 ReceiverListings = receiverListings,
                 InitiatorQtyByListingId = initiatorQtyByListingId,
                 ReceiverQtyByListingId = receiverQtyByListingId,
-                InitiatorCustomItems = initiatorCustomItems ?? new(),
-                ReceiverCustomItems = receiverCustomItems ?? new()
+                InitiatorCustomItems = new(),
+                ReceiverCustomItems = new()
             };
         }
 

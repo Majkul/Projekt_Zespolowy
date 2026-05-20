@@ -42,14 +42,9 @@ public class HomeController : Controller
             .ToListAsync();
 
         var latestListings = await _context.Listings
-<<<<<<< HEAD
-            .Where(l => !l.IsFeatured && !l.IsSold && !l.IsArchived)
-            .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
-=======
             .Where(l => !l.IsSold && !l.IsArchived && !l.IsPrivate && l.StockQuantity > 0)
             .Include(l => l.Photos)
                 .ThenInclude(lp => lp.Upload)
->>>>>>> origin/sprint-8
             .Include(l => l.Seller)
             .OrderByDescending(l => l.CreatedAt)
             .Take(8)
