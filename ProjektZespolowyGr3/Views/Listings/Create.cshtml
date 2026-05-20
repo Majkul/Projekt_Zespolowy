@@ -7,10 +7,40 @@
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
+
+            @{
+                var forTradeListingId = ViewBag.ForTradeListingId as int?;
+                var forTradeTitle = ViewBag.ForTradeListingTitle as string;
+                var forTradeAcceptedTagIds = ViewBag.ForTradeAcceptedTagIds as List<int> ?? new List<int>();
+                var forTradeAcceptedTagNames = ViewBag.ForTradeAcceptedTagNames as List<string> ?? new List<string>();
+                bool isForTrade = forTradeListingId.HasValue;
+            }
+
+            @if (isForTrade)
+            {
+                <div class="alert alert-info d-flex align-items-start gap-2 mb-3">
+                    <span class="fs-5">🔒</span>
+                    <div>
+                        <strong>Ogłoszenie prywatne pod wymianę</strong><br />
+                        Tworzysz ofertę w kontekście ogłoszenia <strong>@forTradeTitle</strong>.
+                        Będzie widoczne tylko w Twojej puli wymiany.
+                        @if (forTradeAcceptedTagNames.Any())
+                        {
+                            <span>Wymagany co najmniej jeden z tagów: <strong>@string.Join(", ", forTradeAcceptedTagNames)</strong>.</span>
+                        }
+                    </div>
+                </div>
+            }
+
             <h2 class="mb-4">Dodaj nowe ogłoszenie</h2>
             <hr />
 
             <form asp-action="Create" enctype="multipart/form-data">
+                @if (isForTrade)
+                {
+                    <input type="hidden" name="forTradeListingId" value="@forTradeListingId" />
+                }
+
                 @if (!ViewData.ModelState.IsValid)
                 {
                     <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
@@ -30,37 +60,49 @@
 
                 <div class="mb-3">
                     <label for="SelectedTagIds" class="form-label fw-bold">Kategorie</label>
-                    <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-select">
+                    <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tag-select">
                     </select>
                     <small class="form-text text-muted">Przytrzymaj Ctrl (Cmd na Mac) aby wybrać wiele kategorii</small>
                     <span asp-validation-for="SelectedTagIds" class="text-danger"></span>
                 </div>
 
-                <div class="form-check mb-3">
-                    <input asp-for="NotExchangeable" class="form-check-input" id="not-exchangable-select" />
-                    <label asp-for="NotExchangeable" class="form-check-label">Nie do wymiany - nie pokazuj tego ogłoszenia w propozycjach wymiany</label>
-                </div>
+                @if (isForTrade)
+                {
+                    <input type="hidden" name="NotExchangeable" value="false" />
+                    <input type="hidden" name="IsPrivate" value="true" />
+                    <input type="hidden" name="IsFeatured" value="false" />
+                }
+                else
+                {
+                    <div class="form-check mb-3">
+                        <input asp-for="NotExchangeable" class="form-check-input" id="not-exchangable-select" />
+                        <label asp-for="NotExchangeable" class="form-check-label">Nie do wymiany</label>
+                    </div>
+                }
 
-                <div class="card mb-3 border-info" id="trade-group">
-                    <div class="card-header bg-info bg-opacity-10">Wymiana</div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label asp-for="MinExchangeValue" class="form-label">Minimalna wartość oferty kupującego (PLN)</label>
-                            <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" class="form-control" />
-                            <small class="text-muted">Pusta wartość = brak progu. Dotyczy sumy szacowanej po stronie kupującego.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label asp-for="ExchangeDescription" class="form-label">Czego szukasz w zamian (wymiana)</label>
-                            <textarea asp-for="ExchangeDescription" class="form-control" rows="3" placeholder="Np. interesują mnie tylko książki fantasy…"></textarea>
-                        </div>
-                        <div class="mb-0">
-                            <label for="SelectedExchangeAcceptedTagIds" class="form-label">Akceptowane tagi przy wymianie</label>
-                            <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-select">
-                            </select>
-                            <small class="text-muted">Jeśli nic nie wybierzesz — dowolne kategorie. Inaczej: każda oferta kupującego musi mieć co najmniej jeden z wybranych tagów.</small>
+                @if (!isForTrade)
+                {
+                    <div class="card mb-3 border-info" id="trade-group">
+                        <div class="card-header bg-info bg-opacity-10">Wymiana</div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label asp-for="MinExchangeValue" class="form-label">Minimalna wartość oferty kupującego (PLN)</label>
+                                <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" class="form-control" />
+                                <small class="text-muted">Pusta wartość = brak progu.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="ExchangeDescription" class="form-label">Czego szukasz w zamian</label>
+                                <textarea asp-for="ExchangeDescription" class="form-control" rows="3" placeholder="Np. interesują mnie tylko książki fantasy…"></textarea>
+                            </div>
+                            <div class="mb-0">
+                                <label for="SelectedExchangeAcceptedTagIds" class="form-label">Akceptowane tagi przy wymianie</label>
+                                <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-select">
+                                </select>
+                                <small class="text-muted">Jeśli nic nie wybierzesz - dowolne kategorie.</small>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
 
                 <div class="mb-3" id="price-group">
                     <label asp-for="Price" class="form-label fw-bold" id="price-label">Cena (PLN)</label>
@@ -82,10 +124,18 @@
                     <span asp-validation-for="PhotoFiles" class="text-danger"></span>
                 </div>
 
-                <div class="form-check mb-3">
-                    <label asp-for="IsFeatured" class="form-check-label">Wyróżnij na profilu</label>
-                    <input asp-for="IsFeatured" class="form-check-input" />
-                </div>
+                @if (!isForTrade)
+                {
+                    <div class="form-check mb-3">
+                        <label asp-for="IsFeatured" class="form-check-label">Wyróżnij na profilu</label>
+                        <input asp-for="IsFeatured" class="form-check-input" />
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="IsPrivate" class="form-check-input" />
+                        <label asp-for="IsPrivate" class="form-check-label">Ogłoszenie prywatne</label>
+                    </div>
+                }
 
                 <div class="d-flex justify-content-between mt-4">
                     <a asp-action="Index" class="btn btn-outline-secondary">Anuluj</a>
@@ -102,28 +152,37 @@
     }
 
     <script>
+        @if (!isForTrade)
+        {
+            <text>
         const notExchangeableSelect = document.getElementById('not-exchangable-select');
         const priceLabel = document.getElementById('price-label');
-
-        const priceLabelText = "Cena (PLN)";
-
-        function toggleIsPriceRequired() {
-            priceLabel.textContent = priceLabelText + (notExchangeableSelect.checked ? " *" : "");
-        }
-        notExchangeableSelect.addEventListener('change', toggleIsPriceRequired);
-
         const tradeGroup = document.getElementById('trade-group');
 
-        function toggleTradeGroup() {
-            if (notExchangeableSelect.checked) {
-                tradeGroup.style.display = 'none';
-            } else {
-                tradeGroup.style.display = 'block';
-            }
+        function toggleIsPriceRequired() {
+            priceLabel.textContent = "Cena (PLN)" + (notExchangeableSelect.checked ? " *" : "");
         }
+        function toggleTradeGroup() {
+            tradeGroup.style.display = notExchangeableSelect.checked ? 'none' : 'block';
+        }
+        notExchangeableSelect.addEventListener('change', toggleIsPriceRequired);
         notExchangeableSelect.addEventListener('change', toggleTradeGroup);
-
         toggleIsPriceRequired();
         toggleTradeGroup();
+            </text>
+        }
+
+        @if (isForTrade && forTradeAcceptedTagIds.Any())
+        {
+            <text>
+            var requiredTagIds = @Html.Raw("[" + string.Join(",", forTradeAcceptedTagIds) + "]");
+            document.querySelectorAll('#tag-select option').forEach(function(opt) {
+                if (requiredTagIds.includes(parseInt(opt.value))) {
+                    opt.style.fontWeight = 'bold';
+                    opt.textContent = opt.textContent + ' *';
+                }
+            });
+            </text>
+        }
     </script>
 }

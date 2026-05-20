@@ -34,7 +34,7 @@ public class HomeController : Controller
     {
         // Pobierz kilka najnowszych aktywnych ofert do wyświetlenia na stronie głównej
         var latestListings = await _context.Listings
-            .Where(l => !l.IsSold && !l.IsArchived)
+            .Where(l => !l.IsSold && !l.IsArchived && !l.IsPrivate && l.StockQuantity > 0)
             .Include(l => l.Photos)
                 .ThenInclude(lp => lp.Upload)
             .Include(l => l.Seller)

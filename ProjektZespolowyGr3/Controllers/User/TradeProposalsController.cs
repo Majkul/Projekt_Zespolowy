@@ -165,8 +165,18 @@ namespace ProjektZespolowyGr3.Controllers.User
                 receiverId = subject.SellerId;
             }
 
-            var initiatorPool = await QueryPool(initiatorId);
-            var receiverPool = await QueryPool(receiverId);
+            int? rootTradeProposalId = null;
+            if (parent != null)
+            {
+                rootTradeProposalId = parent.RootTradeProposalId ?? parent.Id;
+            }
+            else if (edit != null)
+            {
+                rootTradeProposalId = edit.RootTradeProposalId ?? edit.Id;
+            }
+
+            var initiatorPool = await QueryPool(initiatorId, userId, rootTradeProposalId);
+            var receiverPool = await QueryPool(receiverId, userId, rootTradeProposalId);
 
             var initiatorUser = await _context.Users.FindAsync(initiatorId);
             var receiverUser = await _context.Users.FindAsync(receiverId);
@@ -224,14 +234,27 @@ namespace ProjektZespolowyGr3.Controllers.User
             return View(vm);
         }
 
-        private async Task<List<Listing>> QueryPool(int sellerId)
+        private async Task<List<Listing>> QueryPool(int sellerId, int currentUserId, int? rootTradeProposalId = null)
         {
-            return await _context.Listings
+            var query = _context.Listings
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags).ThenInclude(t => t.Tag)
-                .Where(l => l.SellerId == sellerId && !l.IsArchived && !l.NotExchangeable && l.StockQuantity > 0 && !l.IsSold)
-                .OrderByDescending(l => l.UpdatedAt)
-                .ToListAsync();
+                .Where(l => l.SellerId == sellerId && !l.IsArchived && !l.NotExchangeable && l.StockQuantity > 0 && !l.IsSold);
+
+            if (sellerId != currentUserId)
+            {
+                if (rootTradeProposalId.HasValue)
+                {
+                    query = query.Where(l => !l.IsPrivate || _context.TradeProposalItems                                                // prywatne tylko jesli byly juz w lancuszku wymian
+                        .Any(item => item.ListingId == l.Id && item.TradeProposal.RootTradeProposalId == rootTradeProposalId.Value)); 
+                }
+                else
+                {
+                    query = query.Where(l => !l.IsPrivate);
+                }
+            }
+
+            return await query.OrderByDescending(l => l.UpdatedAt).ToListAsync();
         }
 
         private async Task<TradeProposal?> LoadProposalFull(int id)
@@ -285,7 +308,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 var editInitiatorId = existing.InitiatorUserId;
                 var editReceiverId = existing.ReceiverUserId;
                 var editResult = await ValidateAndBuildSides(
-                    subject, editInitiatorId, editReceiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash);
+                    subject, editInitiatorId, editReceiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash, userId, existing.RootTradeProposalId);
                 if (editResult.Error != null)
                 {
                     TempData["TradeError"] = editResult.Error;
@@ -368,7 +391,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             }
 
             var sidesResult = await ValidateAndBuildSides(
-                subjectNew, initiatorId, receiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash);
+                subjectNew, initiatorId, receiverId, initiatorListingIds, receiverListingIds, initiatorQuantities, receiverQuantities, initiatorCash, receiverCash, userId, parent?.RootTradeProposalId);
             if (sidesResult.Error != null)
             {
                 TempData["TradeError"] = sidesResult.Error;
@@ -446,7 +469,9 @@ namespace ProjektZespolowyGr3.Controllers.User
             Dictionary<int, int>? initiatorQuantities,
             Dictionary<int, int>? receiverQuantities,
             decimal initiatorCash,
-            decimal receiverCash)
+            decimal receiverCash,
+            int currentUserId,
+            int? rootTradeProposalId)
         {
             if (subject.SellerId == initiatorId && !initiatorListingIds.Contains(subject.Id))
                 return new TradeSidesResult { Error = "Musisz uwzględnić ogłoszenie, w którego kontekście wysyłasz wymianę (po Twojej stronie)." };
@@ -454,18 +479,44 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (subject.SellerId == receiverId && !receiverListingIds.Contains(subject.Id))
                 return new TradeSidesResult { Error = "Musisz uwzględnić ogłoszenie, w którego kontekście wysyłasz wymianę (po stronie rozmówcy)." };
 
-            var initiatorListings = await _context.Listings
+            var initiatorListingsQuery = _context.Listings
                 .Include(l => l.Tags).ThenInclude(t => t.Tag)
-                .Where(l => initiatorListingIds.Contains(l.Id) && l.SellerId == initiatorId && !l.IsArchived && !l.NotExchangeable && l.StockQuantity > 0 && !l.IsSold)
-                .ToListAsync();
+                .Where(l => initiatorListingIds.Contains(l.Id) && l.SellerId == initiatorId && !l.IsArchived && !l.NotExchangeable && l.StockQuantity > 0 && !l.IsSold);
+
+            if (initiatorId != currentUserId)
+            {
+                if (rootTradeProposalId.HasValue)
+                {
+                    initiatorListingsQuery = initiatorListingsQuery.Where(l => !l.IsPrivate || _context.TradeProposalItems
+                        .Any(item => item.ListingId == l.Id && item.TradeProposal.RootTradeProposalId == rootTradeProposalId.Value));
+                }
+                else
+                {
+                    initiatorListingsQuery = initiatorListingsQuery.Where(l => !l.IsPrivate);
+                }
+            }
+            var initiatorListings = await initiatorListingsQuery.ToListAsync();
+
+            var receiverListingsQuery = _context.Listings
+                .Include(l => l.Tags).ThenInclude(t => t.Tag)
+                .Where(l => receiverListingIds.Contains(l.Id) && l.SellerId == receiverId && !l.IsArchived && !l.NotExchangeable && l.StockQuantity > 0 && !l.IsSold);
+
+            if (receiverId != currentUserId)
+            {
+                if (rootTradeProposalId.HasValue)
+                {
+                    receiverListingsQuery = receiverListingsQuery.Where(l => !l.IsPrivate || _context.TradeProposalItems
+                        .Any(item => item.ListingId == l.Id && item.TradeProposal.RootTradeProposalId == rootTradeProposalId.Value));
+                }
+                else
+                {
+                    receiverListingsQuery = receiverListingsQuery.Where(l => !l.IsPrivate);
+                }
+            }
+            var receiverListings = await receiverListingsQuery.ToListAsync();
 
             if (initiatorListings.Count != initiatorListingIds.Distinct().Count())
                 return new TradeSidesResult { Error = "Nieprawidłowa lista ogłoszeń po Twojej stronie (inicjator)." };
-
-            var receiverListings = await _context.Listings
-                .Include(l => l.Tags).ThenInclude(t => t.Tag)
-                .Where(l => receiverListingIds.Contains(l.Id) && l.SellerId == receiverId && !l.IsArchived && !l.NotExchangeable && l.StockQuantity > 0 && !l.IsSold)
-                .ToListAsync();
 
             if (receiverListings.Count != receiverListingIds.Distinct().Count())
                 return new TradeSidesResult { Error = "Nieprawidłowa lista ogłoszeń po stronie rozmówcy." };
