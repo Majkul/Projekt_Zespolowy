@@ -27,6 +27,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         public IEnumerable<SelectListItem> AvailableTags { get; set; } = new List<SelectListItem>();
 
         public bool NotExchangeable { get; set; }
+        public bool IsPrivate { get; set; }
         public bool IsFeatured { get; set; }
 
         public decimal? MinExchangeValue { get; set; }

@@ -22,6 +22,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
         /// <summary>Jeśli true, ogłoszenie nie może być dodane do propozycji wymiany.</summary>
         public bool NotExchangeable { get; set; } = true;
+        public bool IsPrivate { get; set; } = false;
 
         /// <summary>Minimalna suma szacowanej wartości po stronie oferującego (kupującego), aby wymiana była dozwolona.</summary>
         public decimal? MinExchangeValue { get; set; }

@@ -7,39 +7,30 @@
 }
 
 <div class="container mt-4 mb-5">
-    <h2 class="mb-3">@(Model.ParentTradeProposalId.HasValue ? "Kontroferta" : "Propozycja wymiany")</h2>
-    <p class="text-muted mb-2">Kontekst ogłoszenia: <strong>@subject.Title</strong></p>
+    <h2 class="mb-1">@(Model.ParentTradeProposalId.HasValue ? "Kontroferta" : "Propozycja wymiany")</h2>
+    <p class="text-muted mb-3">Ogłoszenie: <strong>@subject.Title</strong></p>
 
     @if (!subject.NotExchangeable && (subject.MinExchangeValue.HasValue || (subject.ExchangeAcceptedTags != null && subject.ExchangeAcceptedTags.Any()) || !string.IsNullOrWhiteSpace(subject.ExchangeDescription)))
     {
         <div class="card mb-3 border-warning">
-            <div class="card-header bg-warning bg-opacity-25 small fw-semibold">Zasady wymiany ustawione przez sprzedającego dla tego ogłoszenia</div>
+            <div class="card-header bg-warning bg-opacity-25 small fw-semibold">Warunki wymiany sprzedającego</div>
             <div class="card-body small">
                 @if (subject.MinExchangeValue.HasValue)
                 {
                     var buyerLogin = Model.BuyerOffersFromInitiatorColumn ? Model.InitiatorUsername : Model.ReceiverUsername;
-                    var buyerCol = Model.BuyerOffersFromInitiatorColumn ? "niebieskiej, lewej (składający ofertę)" : "szarej, prawej (otrzymujący ofertę)";
-                    <p class="mb-2"><strong>Minimalna wartość oferty kupującego:</strong> @subject.MinExchangeValue.Value.ToString("C") — suma cen <strong>zaznaczonych</strong> ogłoszeń × sztuki <strong>oraz dopłaty gotówką</strong> wyłącznie u <strong>@buyerLogin</strong> w <strong>@buyerCol</strong> kolumnie.</p>
-                    <p class="mb-2 text-danger"><strong>Uwaga:</strong> ogłoszenia zaznaczone u sprzedającego (druga kolumna) <em>nie wliczają się</em> do tego progu — to przedmioty, które ewentualnie oddaje sprzedawca, a nie „wkład” kupującego.</p>
-                    <p class="mb-0">Jeśli nie masz nic do wymiany po swojej stronie, wpisz brakującą kwotę jako <strong>dopłatę gotówką</strong> w kolumnie kupującego.</p>
+                    <p class="mb-2"><strong>Minimalna wartość po stronie kupującego (@buyerLogin):</strong> @subject.MinExchangeValue.Value.ToString("C")</p>
                 }
                 @if (subject.ExchangeAcceptedTags != null && subject.ExchangeAcceptedTags.Any())
                 {
-                    <p class="mb-2"><strong>Akceptowane tagi:</strong> każde Twoje ogłoszenie wchodzące w skład oferty kupującego musi mieć co najmniej jeden z tych tagów: @string.Join(", ", subject.ExchangeAcceptedTags.Select(e => e.Tag.Name)).</p>
+                    <p class="mb-2"><strong>Akceptowane tagi:</strong> @string.Join(", ", subject.ExchangeAcceptedTags.Select(e => e.Tag.Name))</p>
                 }
                 @if (!string.IsNullOrWhiteSpace(subject.ExchangeDescription))
                 {
-                    <p class="mb-0"><strong>Czego szuka sprzedający w zamian:</strong> @subject.ExchangeDescription</p>
+                    <p class="mb-0"><strong>Czego szuka sprzedający:</strong> @subject.ExchangeDescription</p>
                 }
             </div>
         </div>
     }
-
-    <div class="alert alert-info py-2 small mb-3">
-        <strong>Uczestnicy tej propozycji:</strong><br />
-        <span class="text-primary">Składający Ofertę</span> — <strong>@Model.InitiatorUsername</strong> (lewa kolumna: składa propozycję, wybiera swoje ogłoszenia i dopłatę).<br />
-        <span class="text-secondary">Otrzymujący Ofertę</span> — <strong>@Model.ReceiverUsername</strong> (prawa kolumna: jego ogłoszenia i dopłata po jego stronie).
-    </div>
 
     @if (Model.ParentProposal != null)
     {
@@ -65,12 +56,11 @@
 
         <div class="col-md-6">
             <div class="card h-100 border-primary">
-                <div class="card-header bg-primary text-white">
-                    Składający Ofertę — <strong>@Model.InitiatorUsername</strong>
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span>Składający — <strong>@Model.InitiatorUsername</strong></span>
+                    <span class="fw-normal small">Wartość: <span id="sum-initiator">—</span></span>
                 </div>
                 <div class="card-body">
-                    <p class="small text-muted">Wybierz swoje ogłoszenia (bez „nie do wymiany”), podaj liczbę sztuk i ewentualną dopłatę.</p>
-                    <p class="small mb-2"><strong>Szacowana wartość strony:</strong> <span id="sum-initiator" class="text-primary">—</span></p>
                     @foreach (var l in Model.InitiatorPool)
                     {
                         var priceStr = (l.Price ?? 0).ToString(CultureInfo.InvariantCulture);
@@ -79,7 +69,7 @@
                             <input class="form-check-input flex-shrink-0" type="checkbox" name="initiatorListingIds" value="@l.Id" id="i_@l.Id"
                                    data-listing-price="@priceStr"
                                    checked="@(Model.SelectedInitiatorListingIds.Contains(l.Id))" />
-                            <label class="form-check-label flex-grow-1 mb-0" for="i_@l.Id">@l.Title (@(l.Price?.ToString("C") ?? "bez ceny")) · dostępne: @l.StockQuantity</label>
+                            <label class="form-check-label flex-grow-1 mb-0" for="i_@l.Id">@l.Title (@(l.Price?.ToString("C") ?? "bez ceny"))@(l.StockQuantity > 1 ? $" · {l.StockQuantity} szt." : "")</label>
                             @{
                                 var img = l.Photos?.FirstOrDefault(p => p.IsFeatured)?.Upload?.Url ?? l.Photos?.FirstOrDefault()?.Upload?.Url;
                             }
@@ -87,16 +77,29 @@
                             {
                                 <img src="@img" alt="" class="rounded flex-shrink-0" style="width:40px;height:40px;object-fit:cover;" />
                             }
-                            <div class="d-flex align-items-center gap-1 ms-auto">
-                                <label class="small text-muted mb-0" for="iq_@l.Id">Szt.</label>
-                                <input type="number" name="initiatorQuantities[@l.Id]" id="iq_@l.Id" class="form-control form-control-sm trade-qty" min="1" max="@l.StockQuantity" value="@qtyVal" style="width:4.5rem;" />
-                            </div>
+                            @if (l.StockQuantity > 1)
+                            {
+                                <div class="d-flex align-items-center gap-1 ms-auto">
+                                    <label class="small text-muted mb-0" for="iq_@l.Id">Szt.</label>
+                                    <input type="number" name="initiatorQuantities[@l.Id]" id="iq_@l.Id" class="form-control form-control-sm trade-qty" min="1" max="@l.StockQuantity" value="@qtyVal" style="width:4.5rem;" />
+                                </div>
+                            }
+                            else
+                            {
+                                <input type="hidden" name="initiatorQuantities[@l.Id]" value="1" />
+                            }
                         </div>
                     }
                     @if (!Model.InitiatorPool.Any())
                     {
-                        <p class="text-muted small">Brak dostępnych ogłoszeń (sprawdź, czy nie są oznaczone jako „nie do wymiany”).</p>
+                        <p class="text-muted small">Brak ogłoszeń dostępnych do wymiany.</p>
                     }
+                    <div class="mt-2 mb-1">
+                        <a href="@Url.Action("Create", "Listings", new { forTradeListingId = Model.SubjectListingId })"
+                           class="btn btn-sm btn-outline-primary">
+                            + Utwórz nowe ogłoszenie pod tę wymianę
+                        </a>
+                    </div>
                     <hr />
                     <label class="form-label" for="initiatorCash">Dopłata gotówką (PLN)</label>
                     <input type="number" name="initiatorCash" id="initiatorCash" class="form-control" step="0.01" min="0" value="@Model.InitiatorCash.ToString(CultureInfo.InvariantCulture)" />
@@ -106,12 +109,11 @@
 
         <div class="col-md-6">
             <div class="card h-100 border-secondary">
-                <div class="card-header">
-                    Otrzymujący Ofertę — <strong>@Model.ReceiverUsername</strong>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Otrzymujący — <strong>@Model.ReceiverUsername</strong></span>
+                    <span class="fw-normal small text-muted">Wartość: <span id="sum-receiver">—</span></span>
                 </div>
                 <div class="card-body">
-                    <p class="small text-muted">Wybierz ogłoszenia drugiej strony (w tym kontekstowe), <strong>liczbę sztuk</strong> (np. 4 z tego samego ogłoszenia, jeśli jest na stanie) i ewentualną dopłatę.</p>
-                    <p class="small mb-2"><strong>Szacowana wartość strony:</strong> <span id="sum-receiver" class="text-secondary">—</span></p>
                     @foreach (var l in Model.ReceiverPool)
                     {
                         var priceStr = (l.Price ?? 0).ToString(CultureInfo.InvariantCulture);
@@ -120,7 +122,7 @@
                             <input class="form-check-input flex-shrink-0" type="checkbox" name="receiverListingIds" value="@l.Id" id="r_@l.Id"
                                    data-listing-price="@priceStr"
                                    checked="@(Model.SelectedReceiverListingIds.Contains(l.Id))" />
-                            <label class="form-check-label flex-grow-1 mb-0" for="r_@l.Id">@l.Title (@(l.Price?.ToString("C") ?? "bez ceny")) · dostępne: @l.StockQuantity</label>
+                            <label class="form-check-label flex-grow-1 mb-0" for="r_@l.Id">@l.Title (@(l.Price?.ToString("C") ?? "bez ceny"))@(l.StockQuantity > 1 ? $" · {l.StockQuantity} szt." : "")</label>
                             @{
                                 var img = l.Photos?.FirstOrDefault(p => p.IsFeatured)?.Upload?.Url ?? l.Photos?.FirstOrDefault()?.Upload?.Url;
                             }
@@ -128,10 +130,17 @@
                             {
                                 <img src="@img" alt="" class="rounded flex-shrink-0" style="width:40px;height:40px;object-fit:cover;" />
                             }
-                            <div class="d-flex align-items-center gap-1 ms-auto">
-                                <label class="small text-muted mb-0" for="rq_@l.Id">Szt.</label>
-                                <input type="number" name="receiverQuantities[@l.Id]" id="rq_@l.Id" class="form-control form-control-sm trade-qty" min="1" max="@l.StockQuantity" value="@qtyVal" style="width:4.5rem;" title="Ile sztuk z tego ogłoszenia wchodzi w propozycję (max = stan magazynowy)" />
-                            </div>
+                            @if (l.StockQuantity > 1)
+                            {
+                                <div class="d-flex align-items-center gap-1 ms-auto">
+                                    <label class="small text-muted mb-0" for="rq_@l.Id">Szt.</label>
+                                    <input type="number" name="receiverQuantities[@l.Id]" id="rq_@l.Id" class="form-control form-control-sm trade-qty" min="1" max="@l.StockQuantity" value="@qtyVal" style="width:4.5rem;" />
+                                </div>
+                            }
+                            else
+                            {
+                                <input type="hidden" name="receiverQuantities[@l.Id]" value="1" />
+                            }
                         </div>
                     }
                     <hr />
@@ -179,9 +188,11 @@
                 s += num(cashEl);
                 return s;
             }
+            function fmt(n) {
+                return n.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' });
+            }
             function sumSide(checkboxName, cashEl, outEl) {
-                var s = sumSideRaw(checkboxName, cashEl);
-                outEl.textContent = s.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' });
+                outEl.textContent = fmt(sumSideRaw(checkboxName, cashEl));
             }
             function refresh() {
                 sumSide('initiatorListingIds', document.getElementById('initiatorCash'), document.getElementById('sum-initiator'));
@@ -191,18 +202,12 @@
                     var bi = sumSideRaw('initiatorListingIds', document.getElementById('initiatorCash'));
                     var br = sumSideRaw('receiverListingIds', document.getElementById('receiverCash'));
                     var buyerSum = buyerFromInitiatorColumn ? bi : br;
-                    var col = buyerFromInitiatorColumn ? 'niebieskiej (lewej)' : 'szarej (prawej)';
                     if (buyerSum < minBuyerThreshold) {
                         hint.className = 'alert alert-warning small py-2 mb-0';
-                        hint.innerHTML = 'Próg sprzedającego: co najmniej <strong>' +
-                            minBuyerThreshold.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' }) +
-                            '</strong> łącznej wartości <strong>po stronie kupującego</strong> (' + col +
-                            ' kolumna: ogłoszenia × szt. + dopłata). Teraz: <strong>' +
-                            buyerSum.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' }) +
-                            '</strong>. Drugą kolumnę (sprzedawca) serwer <em>nie</em> liczy do tego progu.';
+                        hint.innerHTML = 'Twoja strona: <strong>' + fmt(buyerSum) + '</strong> — wymagane minimum: <strong>' + fmt(minBuyerThreshold) + '</strong>';
                     } else {
                         hint.className = 'alert alert-success small py-2 mb-0';
-                        hint.textContent = 'Strona kupującego (' + col + ') spełnia wymagany próg minimalnej wartości.';
+                        hint.textContent = 'Twoja strona spełnia wymagane minimum (' + fmt(buyerSum) + ').';
                     }
                 }
             }

@@ -68,7 +68,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                         .ThenInclude(sl => sl.Reviews)
                 .Include(l => l.Tags)
                     .ThenInclude(lt => lt.Tag)
-                .Where(l => l.IsArchived == false);
+                .Where(l => l.IsArchived == false && l.IsPrivate == false && l.StockQuantity > 0);
 
             if (!string.IsNullOrWhiteSpace(searchString))
             {
@@ -167,6 +167,22 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 return NotFound();
             }
+
+            if (listing.IsPrivate)
+            {
+                var viewerIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!int.TryParse(viewerIdClaim, out var viewerId) || viewerId != listing.SellerId)
+                {
+                    // jesli jest czlonkiem lancuszka wymian to moze i tak
+                    bool isAllowedByTrade = await _context.TradeProposalItems
+                        .AnyAsync(item => item.ListingId == listing.Id &&
+                                         (item.TradeProposal.InitiatorUserId == viewerId || item.TradeProposal.ReceiverUserId == viewerId));
+
+                    if (!isAllowedByTrade)
+                        return NotFound();
+                }
+            }
+
             listing.ViewCount++;
             await _context.SaveChangesAsync();
             return View(listing);
@@ -175,7 +191,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         // GET: Listings/Create
         [Authorize]
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create(int? forTradeListingId)
         {
             // TODO: usunac
             _helper.MakeSomeTags();
@@ -190,6 +206,26 @@ namespace ProjektZespolowyGr3.Controllers.User
                     })
                     .ToList()
             };
+
+            if (forTradeListingId.HasValue)
+            {
+                var tradeListing = await _context.Listings
+                    .Include(l => l.ExchangeAcceptedTags).ThenInclude(e => e.Tag)
+                    .FirstOrDefaultAsync(l => l.Id == forTradeListingId.Value);
+
+                if (tradeListing != null)
+                {
+                    ViewBag.ForTradeListingId = tradeListing.Id;
+                    ViewBag.ForTradeListingTitle = tradeListing.Title;
+                    ViewBag.ForTradeAcceptedTagIds = tradeListing.ExchangeAcceptedTags.Select(e => e.TagId).ToList();
+                    ViewBag.ForTradeAcceptedTagNames = tradeListing.ExchangeAcceptedTags.Select(e => e.Tag.Name).ToList();
+
+                    model.SelectedTagIds = tradeListing.ExchangeAcceptedTags.Select(e => e.TagId).ToList();
+                    model.NotExchangeable = false;
+                    model.IsPrivate = true;
+                }
+            }
+
             return View(model);
         }
 
@@ -199,12 +235,33 @@ namespace ProjektZespolowyGr3.Controllers.User
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateListingViewModel model)
+        public async Task<IActionResult> Create(CreateListingViewModel model, int? forTradeListingId)
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var currentUserId) || currentUserId <= 0)
             {
                 return Challenge();
+            }
+
+            List<int> requiredTagIds = new();
+            if (forTradeListingId.HasValue)
+            {
+                var tradeListing = await _context.Listings
+                    .Include(l => l.ExchangeAcceptedTags)
+                    .FirstOrDefaultAsync(l => l.Id == forTradeListingId.Value);
+
+                if (tradeListing != null)
+                {
+                    model.IsPrivate = true;
+                    model.NotExchangeable = false;
+                    model.IsFeatured = false;
+                    requiredTagIds = tradeListing.ExchangeAcceptedTags.Select(e => e.TagId).ToList();
+
+                    if (requiredTagIds.Count > 0 && (model.SelectedTagIds == null || !model.SelectedTagIds.Any(id => requiredTagIds.Contains(id))))
+                    {
+                        ModelState.AddModelError("SelectedTagIds", "Co najmniej jeden tag musi pasować do akceptowanych tagów ogłoszenia, do którego tworzysz ofertę.");
+                    }
+                }
             }
 
             // cena potzebna jesli "nie do wymiany"
@@ -222,6 +279,12 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (!ModelState.IsValid)
             {
                 _helper.PopulateAvailableTags(model);
+                if (forTradeListingId.HasValue)
+                {
+                    ViewBag.ForTradeListingId = forTradeListingId.Value;
+                    if (requiredTagIds.Count > 0)
+                        ViewBag.ForTradeAcceptedTagIds = requiredTagIds;
+                }
                 return View(model);
             }
 
@@ -234,7 +297,8 @@ namespace ProjektZespolowyGr3.Controllers.User
                 SellerId = currentUserId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                NotExchangeable = model.NotExchangeable,
+                NotExchangeable = forTradeListingId.HasValue ? false : model.NotExchangeable,
+                IsPrivate = forTradeListingId.HasValue ? true : model.IsPrivate,
                 MinExchangeValue = model.MinExchangeValue,
                 ExchangeDescription = string.IsNullOrWhiteSpace(model.ExchangeDescription) ? null : model.ExchangeDescription.Trim()
             };
@@ -278,6 +342,9 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             _context.Listings.Add(listing);
             await _context.SaveChangesAsync();
+
+            if (forTradeListingId.HasValue)
+                return RedirectToAction("Compose", "TradeProposals", new { listingId = forTradeListingId.Value });
 
             return RedirectToAction("Details", new { id = listing.Id });
         }
