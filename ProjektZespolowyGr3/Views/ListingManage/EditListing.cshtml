@@ -243,7 +243,6 @@
         });
     });
 
-<<<<<<< HEAD
     let shippingCount = @Model.ShippingOptions.Count;
     function addShippingRow() {
         const container = document.getElementById('shipping-options-container');
@@ -278,7 +277,7 @@
             if (priceInput) priceInput.name = `ShippingOptions[${i}].Price`;
         });
         shippingCount = rows.length;
-=======
+    }
     function getInputId(field) {
         switch (field) {
             case 'SelectedTagIds':
@@ -288,6 +287,5 @@
             default:
                 return 'input-' + field;
         }
->>>>>>> origin/UI_improvements
     }
 </script>

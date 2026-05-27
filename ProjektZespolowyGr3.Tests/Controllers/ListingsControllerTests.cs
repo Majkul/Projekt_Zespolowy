@@ -17,10 +17,8 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         private readonly AuthService _authService;
         private readonly HelperService _helperService;
         private readonly IFileService _fileService;
-<<<<<<< HEAD
-=======
         private readonly IGeocodingService _geocodingService;
->>>>>>> origin/main
+        private readonly ICardFeeService _cardFeeService;
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
         private readonly ListingsController _controller;
 
@@ -33,21 +31,14 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _authService = new AuthService(_context);
             _helperService = new HelperService(_context);
             _fileService = new Mock<IFileService>().Object;
-<<<<<<< HEAD
-            _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            _controller = new ListingsController(_context, _fileService, _authService, _helperService, _httpContextAccessorMock.Object);
-=======
             _geocodingService = new Mock<IGeocodingService>().Object;
+            _cardFeeService = new Mock<ICardFeeService>().Object;
             _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            _controller = new ListingsController(_context, _fileService, _authService, _helperService, _httpContextAccessorMock.Object, _geocodingService);
-<<<<<<< HEAD
->>>>>>> origin/main
-=======
+            _controller = new ListingsController(_context, _fileService, _authService, _helperService, _httpContextAccessorMock.Object, _geocodingService, _cardFeeService);
             _controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
             };
->>>>>>> origin/UI_improvements
         }
 
         [Fact]

@@ -46,7 +46,10 @@ namespace ProjektZespolowyGr3.Controllers.User
             decimal? minPrice,
             decimal? maxPrice,
             List<int>? selectedTagIds,
-            string? sortBy)
+            string? sortBy,
+            int? maxDistanceKm,
+            double? userLat,
+            double? userLng)
         {
             selectedTagIds ??= new List<int>();
 
@@ -111,9 +114,6 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             var listings = await query.ToListAsync();
 
-<<<<<<< HEAD
-            var results = listings.Select(l => new BrowseListingsViewModel
-=======
             if (maxDistanceKm.HasValue && userLat.HasValue && userLng.HasValue)
             {
                 listings = listings
@@ -130,7 +130,6 @@ namespace ProjektZespolowyGr3.Controllers.User
             }
 
             var model = listings.Select(l => new BrowseListingsViewModel
->>>>>>> origin/UI_improvements
             {
                 Listing = l,
                 ListingId = l.Id,
@@ -143,30 +142,23 @@ namespace ProjektZespolowyGr3.Controllers.User
                 ReviewCount = l.Seller.Listings.SelectMany(sl => sl.Reviews).Count(),
             }).ToList();
 
-            var filterModel = new ListingsFilterViewModel
-            {
-                SearchString = searchString,
-                Location = location,
-                Type = type,
-                MinPrice = minPrice,
-                MaxPrice = maxPrice,
-                SelectedTagIds = selectedTagIds,
-                SortBy = sortBy,
-                AvailableTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync(),
-                FeaturedResults = results.Where(r => r.Listing.IsFeatured),
-                Results = results.Where(r => !r.Listing.IsFeatured),
-            };
+            ViewBag.SearchString = searchString ?? "";
+            ViewBag.AllTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
+            ViewBag.TagIds = selectedTagIds;
+            ViewBag.MinPrice = minPrice;
+            ViewBag.MaxPrice = maxPrice;
+            ViewBag.ListingType = type ?? "";
+            ViewBag.SortBy = sortBy ?? "newest";
+            ViewBag.MaxDistanceKm = maxDistanceKm;
+            ViewBag.UserLat = userLat;
+            ViewBag.UserLng = userLng;
 
-<<<<<<< HEAD
-            return View(filterModel);
-=======
             if (!model.Any())
                 ViewBag.NoResultsMessage = "Nie znaleziono ofert spełniających kryteria.";
 
             ViewData["HideNavSearch"] = true;
 
             return View(model);
->>>>>>> origin/UI_improvements
         }
 
         // GET: Listings/slug-5
