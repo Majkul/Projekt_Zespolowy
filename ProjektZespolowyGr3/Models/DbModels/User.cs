@@ -1,8 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProjektZespolowyGr3.Models.DbModels
 {
     public class User
     {
         public int Id { get; set; }
+
+        [Required]
+        [MaxLength(32)]
+        [RegularExpression(@"^[A-Za-z0-9_]+$")]
         public string Username { get; set; } = string.Empty;
         public string? FirstName { get; set; }
         public string? LastName { get; set; }

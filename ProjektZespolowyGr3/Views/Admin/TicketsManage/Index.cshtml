@@ -76,7 +76,7 @@
                     <td>@(ticket.Assignee?.Username ?? "Nieprzypisany")</td>
                     <td>@ticket.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
                     <td>
-                        <a asp-action="Details" asp-route-id="@ticket.Id" class="btn btn-sm btn-primary">Szczegóły</a>
+                        <a asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(ticket.Subject)" asp-route-id="@ticket.Id" class="btn btn-sm btn-primary">Szczegóły</a>
                     </td>
                 </tr>
             }

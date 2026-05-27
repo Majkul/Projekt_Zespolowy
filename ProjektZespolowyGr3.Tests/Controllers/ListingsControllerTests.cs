@@ -3,21 +3,17 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using Moq;
-using Microsoft.AspNetCore.Hosting;
 using ProjektZespolowyGr3.Controllers.User;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.System;
 using ProjektZespolowyGr3.Models.DbModels;
-using ProjektZespolowyGr3.Models.ViewModels;
 
 namespace ProjektZespolowyGr3.Tests.Controllers
 {
     public class ListingsControllerTests : IDisposable
     {
         private readonly MyDBContext _context;
-        private readonly Mock<IWebHostEnvironment> _envMock;
         private readonly AuthService _authService;
         private readonly HelperService _helperService;
         private readonly IFileService _fileService;
@@ -31,14 +27,16 @@ namespace ProjektZespolowyGr3.Tests.Controllers
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
             _context = new MyDBContext(options);
-            _envMock = new Mock<IWebHostEnvironment>();
-            _envMock.Setup(e => e.WebRootPath).Returns("/wwwroot");
             _authService = new AuthService(_context);
             _helperService = new HelperService(_context);
             _fileService = new Mock<IFileService>().Object;
             _geocodingService = new Mock<IGeocodingService>().Object;
             _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
             _controller = new ListingsController(_context, _fileService, _authService, _helperService, _httpContextAccessorMock.Object, _geocodingService);
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
         }
 
         [Fact]
@@ -66,6 +64,16 @@ namespace ProjektZespolowyGr3.Tests.Controllers
 
             // Assert
             result.Should().BeOfType<ViewResult>();
+        }
+
+        [Fact]
+        public async Task Index_ShouldRequestNavbarSearchHidden()
+        {
+            // Act
+            await _controller.Index(null, null, null, null, null, null, null, null, null);
+
+            // Assert
+            _controller.ViewData["HideNavSearch"].Should().Be(true);
         }
 
         [Fact(Skip = "ILike nie działa z InMemory database; wymaga prawdziwej bazy PostgreSQL.")]
@@ -125,7 +133,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _context.SaveChanges();
 
             // Act
-            var result = await _controller.Details(listing.Id);
+            var result = await _controller.Details("test-listing", listing.Id);
 
             // Assert
             result.Should().BeOfType<ViewResult>();
@@ -135,10 +143,44 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         public async Task Details_ShouldReturnNotFound_WhenListingDoesNotExist()
         {
             // Act
-            var result = await _controller.Details(999);
+            var result = await _controller.Details("missing-listing", 999);
 
             // Assert
-            result.Should().BeOfType<NotFoundResult>();
+            var viewResult = result.Should().BeOfType<ViewResult>().Subject;
+            viewResult.ViewName.Should().Be("NotFound");
+            _controller.Response.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+        }
+
+        [Fact]
+        public async Task DetailsById_ShouldRedirectPermanentlyToSlugRoute_WhenListingExists()
+        {
+            // Arrange
+            var seller = new User { Username = "seller", Email = "seller@test.com", CreatedAt = DateTime.UtcNow };
+            _context.Users.Add(seller);
+            _context.SaveChanges();
+
+            var listing = new Listing
+            {
+                Title = "Stary rower Trek",
+                Description = "Description",
+                SellerId = seller.Id,
+                Price = 100,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.Listings.Add(listing);
+            _context.SaveChanges();
+
+            // Act
+            var result = await _controller.DetailsById(listing.Id);
+
+            // Assert
+            result.Should().BeOfType<RedirectToActionResult>();
+            var redirectResult = (RedirectToActionResult)result;
+            redirectResult.Permanent.Should().BeTrue();
+            redirectResult.ActionName.Should().Be("Details");
+            redirectResult.RouteValues!["slug"].Should().Be("stary-rower-trek");
+            redirectResult.RouteValues["id"].Should().Be(listing.Id);
         }
 
         public void Dispose()

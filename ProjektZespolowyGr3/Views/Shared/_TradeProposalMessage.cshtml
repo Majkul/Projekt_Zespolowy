@@ -65,7 +65,7 @@
         <div class="row g-2">
             <div class="col-md-6">
                 <div class="fw-semibold small">Otrzymujący Ofertę — @tp.Receiver.Username</div>
-                <div class="small mb-2">Σ @receiverSum.ToString("C")</div>
+                <div class="small mb-2">Σ @receiverSum.FormatPricePLN()</div>
                 @{ ViewBag.Compact = true; }
                 @foreach (var it in tp.Items.Where(i => i.Side == TradeProposalSide.Receiver).OrderBy(i => i.Id))
                 {
@@ -78,14 +78,14 @@
                     if (it.CashAmount.HasValue)
                     {
                         <div class="border rounded p-2 mb-2 bg-white small">
-                            Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                            Dopłata gotówką: <strong>@it.CashAmount.FormatPricePLN()</strong>
                         </div>
                     }
                 }
             </div>
             <div class="col-md-6">
                 <div class="fw-semibold small">Składający Ofertę — @tp.Initiator.Username</div>
-                <div class="small mb-2">Σ @initiatorSum.ToString("C")</div>
+                <div class="small mb-2">Σ @initiatorSum.FormatPricePLN()</div>
                 @{ ViewBag.Compact = true; }
                 @foreach (var it in tp.Items.Where(i => i.Side == TradeProposalSide.Initiator).OrderBy(i => i.Id))
                 {
@@ -98,7 +98,7 @@
                     if (it.CashAmount.HasValue)
                     {
                         <div class="border rounded p-2 mb-2 bg-white small">
-                            Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                            Dopłata gotówką: <strong>@it.CashAmount.FormatPricePLN()</strong>
                         </div>
                     }
                 }

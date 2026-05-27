@@ -9,6 +9,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         [Range(1, 5)]
         public int Rating { get; set; } = 5;
         public int ListingId { get; set; }
+        public string ListingTitle { get; set; } = string.Empty;
 
         [StringLength(1000)]
         public string? Description { get; set; }

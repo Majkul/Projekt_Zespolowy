@@ -115,7 +115,7 @@ namespace ProjektZespolowyGr3.Controllers
         }
 
         // GET: MyProfile/Details
-        public IActionResult Details()
+        public async Task<IActionResult> Details()
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
@@ -123,7 +123,16 @@ namespace ProjektZespolowyGr3.Controllers
                 return Unauthorized();
             }
 
-            return RedirectToAction("Details", "UserProfile", new { id = userId });
+            var user = await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return RedirectToAction("Details", "UserProfile", new { username = user.Username });
         }
     }
 }

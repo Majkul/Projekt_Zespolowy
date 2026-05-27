@@ -362,6 +362,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 ProjektZespolowyGr3/bin/
+ProjektZespolowyGr3/bin-temp-verify/
 ProjektZespolowyGr3/obj/
 ProjektZespolowyGr3/appsettings.json
 docker/

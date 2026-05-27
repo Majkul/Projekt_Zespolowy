@@ -11,6 +11,7 @@ using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.ViewModels;
 using ProjektZespolowyGr3.Controllers;
+using ProjektZespolowyGr3.Helpers;
 using ProjektZespolowyGr3.Models.System;
 using System.Security.Claims;
 
@@ -106,14 +107,13 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 listings = listings
                 .Where(l =>
-                    l.Seller?.Latitude.HasValue == true &&
-                    l.Seller?.Longitude.HasValue == true &&
-                    (l.Seller?.Latitude.Value != 0 || l.Seller?.Longitude.Value != 0) &&
+                    l.Seller is { Latitude: double sellerLat, Longitude: double sellerLng } &&
+                    (sellerLat != 0 || sellerLng != 0) &&
                     _geocodingService.CalculateDistanceKm(
                         userLat.Value,
                         userLng.Value,
-                        l.Seller.Latitude.Value,
-                        l.Seller.Longitude.Value
+                        sellerLat,
+                        sellerLng
                     ) <= maxDistanceKm.Value)
                 .ToList();
             }
@@ -137,17 +137,15 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (!model.Any())
                 ViewBag.NoResultsMessage = "Nie znaleziono ofert spełniających kryteria.";
 
+            ViewData["HideNavSearch"] = true;
+
             return View(model);
         }
 
-        // GET: Listings/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: Listings/slug-5
+        [Route("Listings/{slug}-{id:int}")]
+        public async Task<IActionResult> Details(string slug, int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var listing = await _context.Listings
                 .Include(l => l.Seller)
                 .Include(l => l.Photos)
@@ -165,7 +163,17 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             if (listing == null)
             {
-                return NotFound();
+                var deletedListing = await _context.Listings
+                    .IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(m => m.Id == id && m.IsDeleted);
+
+                if (deletedListing != null)
+                {
+                    return View("Deleted");
+                }
+
+                return ListingNotFound();
             }
 
             if (listing.IsPrivate)
@@ -179,13 +187,40 @@ namespace ProjektZespolowyGr3.Controllers.User
                                          (item.TradeProposal.InitiatorUserId == viewerId || item.TradeProposal.ReceiverUserId == viewerId));
 
                     if (!isAllowedByTrade)
-                        return NotFound();
+                        return ListingNotFound();
                 }
             }
 
             listing.ViewCount++;
             await _context.SaveChangesAsync();
             return View(listing);
+        }
+
+        // GET: Listings/Details/5
+        [Route("Listings/Details/{id:int}")]
+        public async Task<IActionResult> DetailsById(int id)
+        {
+            var listing = await _context.Listings
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.Id == id);
+
+            if (listing == null)
+            {
+                return ListingNotFound();
+            }
+
+            return RedirectToActionPermanent(nameof(Details), new
+            {
+                slug = SlugHelper.GenerateSlug(listing.Title),
+                id = listing.Id
+            });
+        }
+
+        private IActionResult ListingNotFound()
+        {
+            Response.StatusCode = StatusCodes.Status404NotFound;
+            return View("NotFound");
         }
 
         // GET: Listings/Create
@@ -346,7 +381,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (forTradeListingId.HasValue)
                 return RedirectToAction("Compose", "TradeProposals", new { listingId = forTradeListingId.Value });
 
-            return RedirectToAction("Details", new { id = listing.Id });
+            return RedirectToAction("Details", new { slug = SlugHelper.GenerateSlug(listing.Title), id = listing.Id });
         }
 
         // GET: Listings/Edit/5
@@ -429,7 +464,8 @@ namespace ProjektZespolowyGr3.Controllers.User
             var listing = await _context.Listings.FindAsync(id);
             if (listing != null)
             {
-                listing.IsArchived = true;
+                listing.IsDeleted = true;
+                listing.DeletedAt = DateTime.UtcNow;
                 listing.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }

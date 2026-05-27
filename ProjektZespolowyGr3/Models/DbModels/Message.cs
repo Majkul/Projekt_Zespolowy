@@ -37,5 +37,8 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
         public bool IsRead { get; set; } = false;
         public bool IsArchived { get; set; } = false;
+
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
     }
 }

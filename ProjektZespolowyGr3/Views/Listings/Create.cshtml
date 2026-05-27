@@ -59,10 +59,9 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="SelectedTagIds" class="form-label fw-bold">Kategorie</label>
-                    <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tag-select">
+                    <label for="tagSelectCreate" class="form-label fw-bold">Kategorie</label>
+                    <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tagSelectCreate">
                     </select>
-                    <small class="form-text text-muted">Przytrzymaj Ctrl (Cmd na Mac) aby wybrać wiele kategorii</small>
                     <span asp-validation-for="SelectedTagIds" class="text-danger"></span>
                 </div>
 
@@ -95,8 +94,8 @@
                                 <textarea asp-for="ExchangeDescription" class="form-control" rows="3" placeholder="Np. interesują mnie tylko książki fantasy…"></textarea>
                             </div>
                             <div class="mb-0">
-                                <label for="SelectedExchangeAcceptedTagIds" class="form-label">Akceptowane tagi przy wymianie</label>
-                                <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-select">
+                                <label for="tagSelectCreateExchange" class="form-label">Akceptowane tagi przy wymianie</label>
+                                <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tagSelectCreateExchange">
                                 </select>
                                 <small class="text-muted">Jeśli nic nie wybierzesz - dowolne kategorie.</small>
                             </div>
@@ -119,7 +118,9 @@
 
                 <div class="mb-3">
                     <label asp-for="PhotoFiles" class="form-label fw-bold">Zdjęcia (maksymalnie 5)</label>
-                    <input asp-for="PhotoFiles" type="file" multiple accept="image/*" class="form-control" />
+                    <div class="image-upload-container">
+                        <input asp-for="PhotoFiles" type="file" multiple accept=".jpg,.jpeg,.png" class="form-control image-upload-input" />
+                    </div>
                     <small class="form-text text-muted">Pierwsze zdjęcie będzie zdjęciem głównym. Możesz przesłać maksymalnie 5 zdjęć.</small>
                     <span asp-validation-for="PhotoFiles" class="text-danger"></span>
                 </div>
@@ -176,7 +177,7 @@
         {
             <text>
             var requiredTagIds = @Html.Raw("[" + string.Join(",", forTradeAcceptedTagIds) + "]");
-            document.querySelectorAll('#tag-select option').forEach(function(opt) {
+            document.querySelectorAll('#tagSelectCreate option').forEach(function(opt) {
                 if (requiredTagIds.includes(parseInt(opt.value))) {
                     opt.style.fontWeight = 'bold';
                     opt.textContent = opt.textContent + ' *';

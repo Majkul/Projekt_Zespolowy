@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ProjektZespolowyGr3.Helpers;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.System;
@@ -70,10 +71,17 @@ namespace ProjektZespolowyGr3.Controllers.User
                 case NotificationKind.ListingPurchased:
                     if (n.OrderId == null)
                         return RedirectToAction(nameof(Index));
-                    var o = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(x => x.Id == n.OrderId);
+                    var o = await _context.Orders
+                        .AsNoTracking()
+                        .Include(x => x.Listing)
+                        .FirstOrDefaultAsync(x => x.Id == n.OrderId);
                     if (o == null)
                         return RedirectToAction(nameof(Index));
-                    return RedirectToAction("Details", "Listings", new { id = o.ListingId });
+                    return RedirectToAction("Details", "Listings", new
+                    {
+                        slug = SlugHelper.GenerateSlug(o.Listing?.Title ?? "oferta"),
+                        id = o.ListingId
+                    });
 
                 case NotificationKind.TradeProposalReceived:
                     if (n.TradeProposalId == null)

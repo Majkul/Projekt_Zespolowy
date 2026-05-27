@@ -43,10 +43,9 @@
     </div>
 
     <div class="mb-3">
-        <label class="form-label" id="label-SelectedTagIds">Tags</label>
-        <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-control" id="input-SelectedTagIds">
+        <label class="form-label" id="label-SelectedTagIds" for="tagSelectEdit">Tags</label>
+        <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tagSelectEdit">
         </select>
-        <small class="text-muted">Hold CTRL to select multiple</small>
     </div>
 
     <div class="card mb-3 border-info">
@@ -65,8 +64,8 @@
                 <textarea asp-for="ExchangeDescription" class="form-control" rows="3" id="input-ExchangeDescription"></textarea>
             </div>
             <div class="mb-0">
-                <label class="form-label" id="label-SelectedExchangeAcceptedTagIds">Akceptowane tagi przy wymianie</label>
-                <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-control" id="input-SelectedExchangeAcceptedTagIds"></select>
+                <label class="form-label" id="label-SelectedExchangeAcceptedTagIds" for="tagSelectEditExchange">Akceptowane tagi przy wymianie</label>
+                <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tagSelectEditExchange"></select>
             </div>
         </div>
     </div>
@@ -95,7 +94,9 @@
 
     <div class="mb-3 mt-4">
         <label class="form-label">Add new photos</label>
-        <input asp-for="PhotoFiles" type="file" class="form-control" multiple />
+        <div class="image-upload-container">
+            <input asp-for="PhotoFiles" type="file" class="form-control image-upload-input" multiple accept=".jpg,.jpeg,.png" />
+        </div>
         <small class="text-muted">Max 5 photos, only .jpg/.jpeg/.png</small>
     </div>
 
@@ -116,7 +117,7 @@
 </form>
 
 <script>
-    const notExchangeableSelect = document.getElementById('input-NotExchangable');
+    const notExchangeableSelect = document.getElementById('input-NotExchangeable');
     const priceLabel = document.getElementById('label-Price');
 
     const priceLabelText = "Cena (PLN)";
@@ -130,11 +131,11 @@
     const initialValues = {
         Title: '@(Model.Title ?? "")',
         Description: '@(Model.Description ?? "")',
-        Price: '@Model.Price',
+        Price: '@(Model.Price.HasValue ? Model.Price.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")',
         SelectedTagIds: '@string.Join(",", (Model.SelectedTagIds ?? new List<int>()).OrderBy(id => id))',
         StockQuantity: '@Model.StockQuantity',
-        NotExchangable: '@Model.NotExchangeable.ToString().ToLower()',
-        MinExchangeValue: '@Model.MinExchangeValue',
+        NotExchangeable: '@Model.NotExchangeable.ToString().ToLower()',
+        MinExchangeValue: '@(Model.MinExchangeValue.HasValue ? Model.MinExchangeValue.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")',
         ExchangeDescription: '@(Model.ExchangeDescription ?? "")',
         SelectedExchangeAcceptedTagIds: '@string.Join(",", (Model.SelectedExchangeAcceptedTagIds ?? new List<int>()).OrderBy(id => id))',
         IsFeatured: '@Model.IsFeatured.ToString().ToLower()',
@@ -152,7 +153,7 @@
         const fields = initialValues ? Object.keys(initialValues) : [];
 
         fields.forEach(function (field) {
-            const input = document.getElementById('input-' + field);
+            const input = document.getElementById(getInputId(field));
             if (input) {
                 if (input.type === "checkbox") {
                     input.addEventListener('change', function () {
@@ -175,7 +176,7 @@
         form.addEventListener('submit', function (e) {
             let changedFields = [];
             fields.forEach(function (field) {
-                const input = document.getElementById('input-' + field);
+                const input = document.getElementById(getInputId(field));
                 let value;
                 if (input) {
                     if (input.type === "checkbox") {
@@ -206,4 +207,15 @@
             }
         });
     });
+
+    function getInputId(field) {
+        switch (field) {
+            case 'SelectedTagIds':
+                return 'tagSelectEdit';
+            case 'SelectedExchangeAcceptedTagIds':
+                return 'tagSelectEditExchange';
+            default:
+                return 'input-' + field;
+        }
+    }
 </script>

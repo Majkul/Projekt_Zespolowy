@@ -18,7 +18,7 @@
                 @if (subject.MinExchangeValue.HasValue)
                 {
                     var buyerLogin = Model.BuyerOffersFromInitiatorColumn ? Model.InitiatorUsername : Model.ReceiverUsername;
-                    <p class="mb-2"><strong>Minimalna wartość po stronie kupującego (@buyerLogin):</strong> @subject.MinExchangeValue.Value.ToString("C")</p>
+                    <p class="mb-2"><strong>Minimalna wartość po stronie kupującego (@buyerLogin):</strong> @subject.MinExchangeValue.FormatPricePLN()</p>
                 }
                 @if (subject.ExchangeAcceptedTags != null && subject.ExchangeAcceptedTags.Any())
                 {
@@ -69,7 +69,7 @@
                             <input class="form-check-input flex-shrink-0" type="checkbox" name="initiatorListingIds" value="@l.Id" id="i_@l.Id"
                                    data-listing-price="@priceStr"
                                    checked="@(Model.SelectedInitiatorListingIds.Contains(l.Id))" />
-                            <label class="form-check-label flex-grow-1 mb-0" for="i_@l.Id">@l.Title (@(l.Price?.ToString("C") ?? "bez ceny"))@(l.StockQuantity > 1 ? $" · {l.StockQuantity} szt." : "")</label>
+                            <label class="form-check-label flex-grow-1 mb-0" for="i_@l.Id">@l.Title (@l.Price.FormatPricePLN())@(l.StockQuantity > 1 ? $" · {l.StockQuantity} szt." : "")</label>
                             @{
                                 var img = l.Photos?.FirstOrDefault(p => p.IsFeatured)?.Upload?.Url ?? l.Photos?.FirstOrDefault()?.Upload?.Url;
                             }
@@ -122,7 +122,7 @@
                             <input class="form-check-input flex-shrink-0" type="checkbox" name="receiverListingIds" value="@l.Id" id="r_@l.Id"
                                    data-listing-price="@priceStr"
                                    checked="@(Model.SelectedReceiverListingIds.Contains(l.Id))" />
-                            <label class="form-check-label flex-grow-1 mb-0" for="r_@l.Id">@l.Title (@(l.Price?.ToString("C") ?? "bez ceny"))@(l.StockQuantity > 1 ? $" · {l.StockQuantity} szt." : "")</label>
+                            <label class="form-check-label flex-grow-1 mb-0" for="r_@l.Id">@l.Title (@l.Price.FormatPricePLN())@(l.StockQuantity > 1 ? $" · {l.StockQuantity} szt." : "")</label>
                             @{
                                 var img = l.Photos?.FirstOrDefault(p => p.IsFeatured)?.Upload?.Url ?? l.Photos?.FirstOrDefault()?.Upload?.Url;
                             }
@@ -159,7 +159,7 @@
 
         <div class="col-12">
             <button type="submit" class="btn btn-primary btn-lg">@(Model.EditTradeProposalId.HasValue ? "Zapisz zmiany" : Model.ParentTradeProposalId.HasValue ? "Wyślij kontrofertę" : "Wyślij propozycję")</button>
-            <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.SubjectListingId" class="btn btn-outline-secondary">Anuluj</a>
+            <a asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(Model.SubjectListing.Title)" asp-route-id="@Model.SubjectListingId" class="btn btn-outline-secondary">Anuluj</a>
         </div>
     </form>
 </div>
@@ -189,7 +189,7 @@
                 return s;
             }
             function fmt(n) {
-                return n.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' });
+                return n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u00a0/g, ' ') + ' PLN';
             }
             function sumSide(checkboxName, cashEl, outEl) {
                 outEl.textContent = fmt(sumSideRaw(checkboxName, cashEl));

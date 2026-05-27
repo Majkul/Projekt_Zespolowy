@@ -59,7 +59,18 @@
                         <ul>
                             @foreach (var attachment in Model.Attachments)
                             {
-                                <li><a href="@attachment.Upload.Url" target="_blank">@attachment.Upload.FileName</a></li>
+                                <li>
+                                    @if (attachment.IsDeleted)
+                                    {
+                                        <span class="text-muted">
+                                            <i class="bi bi-paperclip"></i> Usunięty załącznik
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <a href="@attachment.Upload.Url" target="_blank">@attachment.Upload.FileName</a>
+                                    }
+                                </li>
                             }
                         </ul>
                     </div>
@@ -72,7 +83,7 @@
                 <div class="card-header">Informacje</div>
                 <div class="card-body">
                     <p><strong>Użytkownik:</strong>
-                        <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.ReportedUserId">
+                        <a asp-controller="UserProfile" asp-action="Details" asp-route-username="@Model.User.Username">
                             @Model.User.Username
                         </a>
                     </p>
@@ -81,11 +92,11 @@
                     <p><strong>Ostatnia aktywność:</strong> @Model.LastActivity.ToString("dd.MM.yyyy HH:mm")</p>
                     @if (Model.ReportedUser != null)
                     {
-                        <p><strong>Zgłoszony użytkownik:</strong> <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.ReportedUserId">@Model.ReportedUser.Username</a></p>
+                        <p><strong>Zgłoszony użytkownik:</strong> <a asp-controller="UserProfile" asp-action="Details" asp-route-username="@Model.ReportedUser.Username">@Model.ReportedUser.Username</a></p>
                     }
                     @if (Model.ReportedListing != null)
                     {
-                        <p><strong>Zgłoszona oferta:</strong> <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.ReportedListingId">@Model.ReportedListing.Title</a></p>
+                        <p><strong>Zgłoszona oferta:</strong> <a asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(Model.ReportedListing.Title)" asp-route-id="@Model.ReportedListing.Id">@Model.ReportedListing.Title</a></p>
                     }
 
                     <hr />

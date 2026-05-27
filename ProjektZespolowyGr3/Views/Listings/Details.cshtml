@@ -82,7 +82,7 @@
                     <div class="card-body">
                         @if (Model.MinExchangeValue.HasValue)
                         {
-                            <p class="mb-2"><strong>Minimalna wartość oferty kupującego:</strong> @Model.MinExchangeValue.Value.ToString("C")</p>
+                            <p class="mb-2"><strong>Minimalna wartość oferty kupującego:</strong> @Model.MinExchangeValue.FormatPricePLN()</p>
                         }
                         @if (Model.ExchangeAcceptedTags != null && Model.ExchangeAcceptedTags.Any())
                         {
@@ -124,7 +124,7 @@
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div>
                                         <h6 class="mb-0">
-                                            <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@review.ReviewerId" class="text-decoration-none">
+                                            <a asp-controller="UserProfile" asp-action="Details" asp-route-username="@review.Reviewer.Username" class="text-decoration-none">
                                                 @review.Reviewer.Username
                                             </a>
                                         </h6>
@@ -178,7 +178,7 @@
                         @if (Model.Price.HasValue)
                         {
                             <strong>Cena:</strong>
-                            <span class="@(Model.IsArchived ? "text-muted fs-4" : "text-primary fs-4")">@Model.Price.Value.ToString("C")</span>
+                            <span class="@(Model.IsArchived ? "text-muted fs-4" : "text-primary fs-4")">@Model.Price.FormatPricePLN()</span>
                         }
                     </div>
 
@@ -189,7 +189,7 @@
 
                     <div class="mb-3">
                         <strong>Sprzedawca:</strong><br />
-                        <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.SellerId" class="text-decoration-none">
+                        <a asp-controller="UserProfile" asp-action="Details" asp-route-username="@Model.Seller.Username" class="text-decoration-none">
                             @Model.Seller.Username
                         </a>
                         @if (!Model.IsArchived && !isUserSeller)
@@ -281,6 +281,7 @@
             var listing = {
                 id: '@Model.Id',
                 title: '@Model.Title',
+                slug: '@SlugHelper.GenerateSlug(Model.Title)',
                 image: '@(Model.Photos?.FirstOrDefault()?.Upload?.Url ?? "")'
             };
 

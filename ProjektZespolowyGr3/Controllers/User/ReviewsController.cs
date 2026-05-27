@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using ProjektZespolowyGr3.Helpers;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.System;
@@ -89,7 +90,8 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             var model = new CreateReviewViewModel
             {
-                ListingId = listingId
+                ListingId = listingId,
+                ListingTitle = listing.Title
             };
 
             return View(model);
@@ -107,12 +109,17 @@ namespace ProjektZespolowyGr3.Controllers.User
             foreach (var (field, message) in _fileService.ValidateImages(model.PhotoFiles, maxCount: 5))
                 ModelState.AddModelError(field, message);
 
+            var listing = _context.Listings.FirstOrDefault(l => l.Id == model.ListingId);
+            if (listing != null)
+            {
+                model.ListingTitle = listing.Title;
+            }
+
             if (!ModelState.IsValid)
                 return View(model);
 
             var userId = GetCurrentUserId();
 
-            var listing = _context.Listings.FirstOrDefault(l => l.Id == model.ListingId);
             if (listing == null)
             {
                 ModelState.AddModelError("", "Ogłoszenie nie zostało znalezione.");
@@ -153,7 +160,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             _context.Reviews.Add(review);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Details", "Listings", new { id = listing.Id });
+            return RedirectToAction("Details", "Listings", new { slug = SlugHelper.GenerateSlug(listing.Title), id = listing.Id });
         }
 
         // GET: Reviews/Edit/5

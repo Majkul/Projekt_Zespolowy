@@ -32,6 +32,15 @@ namespace ProjektZespolowyGr3.Models
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<User>()
+                .Property(u => u.Username)
+                .IsRequired()
+                .HasMaxLength(32);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+
             modelBuilder.Entity<ListingTag>()
                 .HasKey(lt => new { lt.ListingId, lt.TagId });
 
@@ -168,6 +177,20 @@ namespace ProjektZespolowyGr3.Models
                 .WithMany()
                 .HasForeignKey(n => n.TradeProposalId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Listing>().HasQueryFilter(l => !l.IsDeleted);
+            modelBuilder.Entity<ListingExchangeAcceptedTag>().HasQueryFilter(x => !x.Listing.IsDeleted);
+            modelBuilder.Entity<ListingPhoto>().HasQueryFilter(p => !p.Listing.IsDeleted);
+            modelBuilder.Entity<ListingTag>().HasQueryFilter(t => !t.Listing.IsDeleted);
+            modelBuilder.Entity<Message>().HasQueryFilter(m => !m.IsDeleted);
+            modelBuilder.Entity<MessagePhoto>().HasQueryFilter(p => !p.IsDeleted);
+            modelBuilder.Entity<Order>().HasQueryFilter(o => !o.Listing!.IsDeleted);
+            modelBuilder.Entity<Review>().HasQueryFilter(r => !r.Listing.IsDeleted);
+            modelBuilder.Entity<ReviewPhoto>().HasQueryFilter(p => !p.Review.Listing.IsDeleted);
+            modelBuilder.Entity<TradeProposal>().HasQueryFilter(t => !t.SubjectListing.IsDeleted);
+            modelBuilder.Entity<TradeProposalHistoryEntry>().HasQueryFilter(h => !h.TradeProposal.SubjectListing.IsDeleted);
+            modelBuilder.Entity<TradeProposalItem>().HasQueryFilter(i => !i.TradeProposal.SubjectListing.IsDeleted);
+            modelBuilder.Entity<TicketAttachment>().HasQueryFilter(a => !a.IsDeleted);
         }
     }
 }

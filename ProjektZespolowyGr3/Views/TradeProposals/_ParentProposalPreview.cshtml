@@ -37,7 +37,7 @@
             <div class="col-md-6">
                 <div class="border rounded p-3 h-100 bg-light border-secondary">
                     <div class="fw-semibold mb-1">Otrzymujący Ofertę — <span class="text-secondary">@p.Receiver.Username</span></div>
-                    <div class="small text-muted mb-2">Szacowana wartość: <strong>@receiverSum.ToString("C")</strong></div>
+                    <div class="small text-muted mb-2">Szacowana wartość: <strong>@receiverSum.FormatPricePLN()</strong></div>
                     @foreach (var it in p.Items.Where(i => i.Side == TradeProposalSide.Receiver).OrderBy(i => i.Id))
                     {
                         if (it.Listing != null)
@@ -49,7 +49,7 @@
                         if (it.CashAmount.HasValue)
                         {
                             <div class="border rounded p-2 mb-2 bg-white small">
-                                Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                                Dopłata gotówką: <strong>@it.CashAmount.FormatPricePLN()</strong>
                             </div>
                         }
                     }
@@ -58,7 +58,7 @@
             <div class="col-md-6">
                 <div class="border rounded p-3 h-100 bg-light border-primary">
                     <div class="fw-semibold mb-1">Składający Ofertę — <span class="text-primary">@p.Initiator.Username</span></div>
-                    <div class="small text-muted mb-2">Szacowana wartość: <strong>@initiatorSum.ToString("C")</strong></div>
+                    <div class="small text-muted mb-2">Szacowana wartość: <strong>@initiatorSum.FormatPricePLN()</strong></div>
                     @foreach (var it in p.Items.Where(i => i.Side == TradeProposalSide.Initiator).OrderBy(i => i.Id))
                     {
                         if (it.Listing != null)
@@ -70,7 +70,7 @@
                         if (it.CashAmount.HasValue)
                         {
                             <div class="border rounded p-2 mb-2 bg-white small">
-                                Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                                Dopłata gotówką: <strong>@it.CashAmount.FormatPricePLN()</strong>
                             </div>
                         }
                     }

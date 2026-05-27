@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ProjektZespolowyGr3.Helpers;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.System;
@@ -115,7 +116,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (subject.NotExchangeable || subject.IsArchived || !ListingStockHelper.IsAvailableForTrade(subject))
             {
                 TempData["TradeError"] = "To ogłoszenie nie jest dostępne do wymiany.";
-                return RedirectToAction("Details", "Listings", new { id = listingId });
+                return RedirectToAction("Details", "Listings", new { slug = SlugHelper.GenerateSlug(subject.Title), id = listingId });
             }
 
             TradeProposal? edit = null;
@@ -159,7 +160,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 if (subject.SellerId == userId)
                 {
                     TempData["TradeError"] = "Nie możesz wymienić się sam ze sobą.";
-                    return RedirectToAction("Details", "Listings", new { id = listingId });
+                    return RedirectToAction("Details", "Listings", new { slug = SlugHelper.GenerateSlug(subject.Title), id = listingId });
                 }
                 initiatorId = userId;
                 receiverId = subject.SellerId;
@@ -368,7 +369,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (parent == null && subjectNew.SellerId == userId)
             {
                 TempData["TradeError"] = "Pierwszą propozycję wymiany składa kupujący.";
-                return RedirectToAction("Details", "Listings", new { id = subjectListingId });
+                return RedirectToAction("Details", "Listings", new { slug = SlugHelper.GenerateSlug(subjectNew.Title), id = subjectListingId });
             }
 
             int initiatorId;

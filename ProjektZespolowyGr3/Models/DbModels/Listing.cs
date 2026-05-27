@@ -33,6 +33,9 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
+
         public ICollection<ListingPhoto> Photos { get; set; } = new List<ListingPhoto>();
         public ICollection<ListingTag> Tags { get; set; } = new List<ListingTag>();
         public ICollection<ListingExchangeAcceptedTag> ExchangeAcceptedTags { get; set; } = new List<ListingExchangeAcceptedTag>();

@@ -112,9 +112,9 @@
                                     
                                     @if (listing.Price.HasValue)
                                     {
-                                        <p class="card-text"><strong>@listing.Price.Value.ToString("C")</strong></p>
+                                        <p class="card-text"><strong>@listing.Price.FormatPricePLN()</strong></p>
                                     }
-                                    <a asp-controller="Listings" asp-action="Details" asp-route-id="@listing.Id" class="btn btn-primary btn-sm">Zobacz szczegóły</a>
+                                    <a asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(listing.Title)" asp-route-id="@listing.Id" class="btn btn-primary btn-sm">Zobacz szczegóły</a>
                                 </div>
                             </div>
                         </div>
