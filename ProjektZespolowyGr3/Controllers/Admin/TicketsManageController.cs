@@ -109,6 +109,16 @@ namespace ProjektZespolowyGr3.Controllers.Admin
                     .ThenInclude(a => a.Upload)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
+            if (ticket != null)
+            {
+                var allAttachments = await _context.TicketAttachments
+                    .IgnoreQueryFilters()
+                    .Include(a => a.Upload)
+                    .Where(a => a.TicketId == id)
+                    .ToListAsync();
+                ticket.Attachments = allAttachments;
+            }
+
             if (ticket == null)
             {
                 return NotFound();

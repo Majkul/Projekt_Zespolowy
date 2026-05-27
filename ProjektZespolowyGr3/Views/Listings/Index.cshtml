@@ -1,12 +1,30 @@
+<<<<<<< HEAD
 @model ProjektZespolowyGr3.Models.ViewModels.ListingsFilterViewModel
 
 @{
     ViewData["Title"] = "Oferty";
+=======
+@model IEnumerable<ProjektZespolowyGr3.Models.ViewModels.BrowseListingsViewModel>
+
+@{
+    ViewData["Title"] = "Oferty";
+    var searchString = ViewBag.SearchString as string ?? "";
+    var noResultsMsg = ViewBag.NoResultsMessage as string;
+    var mobileFilterViewData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData)
+    {
+        ["TagSelectId"] = "tagSelectFilterMobile"
+    };
+    var desktopFilterViewData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData)
+    {
+        ["TagSelectId"] = "tagSelectFilterDesktop"
+    };
+>>>>>>> origin/UI_improvements
 }
 
 <div class="container mt-4">
     <h2 class="mb-4">Oferty</h2>
 
+<<<<<<< HEAD
     <form method="get" id="filterForm">
         <div class="row g-4">
 
@@ -314,9 +332,138 @@
                                 </div>
                             </div>
                         }
+=======
+    @* ===== PASEK WYSZUKIWANIA ===== *@
+    <form method="get">
+        <div class="input-group mb-4">
+            <input type="text" name="searchString" class="form-control"
+                   placeholder="Szukaj ofert po tytule lub opisie..."
+                   value="@searchString" />
+            <button class="btn btn-primary" type="submit">Szukaj</button>
+        </div>
+    </form>
+
+    @* ===== MOBILNY PANEL FILTRÓW ===== *@
+    <div class="offcanvas offcanvas-start" tabindex="-1"
+         id="filterOffcanvas" aria-labelledby="filterOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="filterOffcanvasLabel">
+                Filtruj ogłoszenia
+            </h5>
+            <button type="button" class="btn-close"
+                    data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body">
+            @await Html.PartialAsync("_FilterForm", Model, mobileFilterViewData)
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        @* ===== PANEL FILTRÓW ===== *@
+        <div class="col-lg-3 d-none d-lg-block">
+            @await Html.PartialAsync("_FilterForm", Model, desktopFilterViewData)
+        </div>
+
+        @* ===== LISTA OFERT ===== *@
+        <div class="col-lg-9">
+            <button class="btn btn-outline-secondary w-100 mb-3 d-lg-none"
+                    data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
+                <i class="bi bi-funnel"></i> Filtruj ogłoszenia 🔽
+            </button>
+
+            @* Wyniki *@
+            <div class="mb-3">
+                <span class="text-muted small">
+                    Znaleziono: <strong>@Model.Count()</strong> ofert
+                </span>
+            </div>
+
+            @if (!string.IsNullOrEmpty(noResultsMsg))
+            {
+                <div class="alert alert-info">@noResultsMsg</div>
+            }
+
+            <div class="row g-3">
+                @foreach (var item in Model)
+                {
+                    <div class="col-md-6 col-xl-4">
+                        <div class="card h-100 shadow-sm">
+                            @if (!string.IsNullOrEmpty(item.PhotoUrl))
+                            {
+                                <img src="@item.PhotoUrl" class="card-img-top"
+                                     alt="@item.Listing.Title"
+                                     style="height: 180px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <div class="bg-light d-flex align-items-center justify-content-center"
+                                     style="height: 180px;">
+                                    <span class="text-muted small">Brak zdjęcia</span>
+                                </div>
+                            }
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title mb-1">
+                                    <a href="@Url.Action("Details", "Listings", new { slug = SlugHelper.GenerateSlug(item.Listing.Title), id = item.ListingId })"
+                                       class="text-decoration-none text-dark stretched-link">
+                                        @item.Listing.Title
+                                    </a>
+                                </h6>
+
+                                @if (item.Listing.Tags.Any())
+                                {
+                                    <div class="mb-2 d-flex flex-wrap gap-1">
+                                        @foreach (var t in item.Listing.Tags.Take(3))
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-25 text-secondary fw-normal">@t.Tag.Name</span>
+                                        }
+                                    </div>
+                                }
+
+                                <div class="mt-auto d-flex justify-content-between align-items-center">
+                                    @if (item.Listing.Price.HasValue)
+                                    {
+                                        <strong class="text-primary">@item.Listing.Price.FormatPricePLN()</strong>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info text-dark">Wymiana</span>
+                                    }
+                                    <div class="text-end">
+                                        @if (item.ReviewCount > 0)
+                                        {
+                                            <small class="text-muted d-block">⭐ @item.AverageRating.ToString("0.0") (@item.ReviewCount)</small>
+                                        }
+                                        <small class="text-muted">👁 @item.Listing.ViewCount</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-white py-2">
+                                <div class="small text-muted">
+                                    <div>
+                                        <a asp-controller="UserProfile"
+                                           asp-action="Details"
+                                           asp-route-username="@item.Seller?.Username"
+                                           class="text-decoration-none">
+                                            @item.Seller?.Username
+                                        </a>
+                                    </div>
+
+                                    @if (!string.IsNullOrWhiteSpace(item.Seller?.Address))
+                                    {
+                                        <div class="mt-1 text-truncate"
+                                             style="max-width: 100%;"
+                                             title="@item.Seller.Address">
+                                            @item.Seller.Address
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+>>>>>>> origin/UI_improvements
                     </div>
                 }
             </div>
         </div>
-    </form>
+    </div>
 </div>

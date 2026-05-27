@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Moq;
-using Microsoft.AspNetCore.Hosting;
 using ProjektZespolowyGr3.Controllers.User;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
@@ -18,7 +17,6 @@ namespace ProjektZespolowyGr3.Tests.Controllers
     public class TicketsControllerTests : IDisposable
     {
         private readonly MyDBContext _context;
-        private readonly Mock<IWebHostEnvironment> _envMock;
         private readonly IFileService _fileService;
         private readonly TicketsController _controller;
 
@@ -93,6 +91,67 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             var model = viewResult!.Model as IEnumerable<Ticket>;
             model.Should().HaveCount(1);
             model!.First().Subject.Should().Be("User1 Ticket");
+        }
+
+        [Fact]
+        public async Task Details_ShouldReturnView_WhenTicketExists()
+        {
+            // Arrange
+            var user = new User { Username = "user1", Email = "user1@test.com", CreatedAt = DateTime.UtcNow };
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
+            var ticket = new Ticket
+            {
+                UserId = user.Id,
+                Category = TicketCategory.Payment_Issue,
+                Status = TicketStatus.Open,
+                Subject = "Problem z płatnością",
+                Description = "Description",
+                CreatedAt = DateTime.UtcNow,
+                LastActivity = DateTime.UtcNow
+            };
+            _context.Tickets.Add(ticket);
+            _context.SaveChanges();
+
+            // Act
+            var result = await _controller.Details("problem-z-platnoscia", ticket.Id);
+
+            // Assert
+            result.Should().BeOfType<ViewResult>();
+        }
+
+        [Fact]
+        public async Task DetailsById_ShouldRedirectPermanentlyToSlugRoute_WhenTicketExists()
+        {
+            // Arrange
+            var user = new User { Username = "user1", Email = "user1@test.com", CreatedAt = DateTime.UtcNow };
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
+            var ticket = new Ticket
+            {
+                UserId = user.Id,
+                Category = TicketCategory.Payment_Issue,
+                Status = TicketStatus.Open,
+                Subject = "Problem z płatnością",
+                Description = "Description",
+                CreatedAt = DateTime.UtcNow,
+                LastActivity = DateTime.UtcNow
+            };
+            _context.Tickets.Add(ticket);
+            _context.SaveChanges();
+
+            // Act
+            var result = await _controller.DetailsById(ticket.Id);
+
+            // Assert
+            result.Should().BeOfType<RedirectToActionResult>();
+            var redirectResult = (RedirectToActionResult)result;
+            redirectResult.Permanent.Should().BeTrue();
+            redirectResult.ActionName.Should().Be("Details");
+            redirectResult.RouteValues!["slug"].Should().Be("problem-z-platnoscia");
+            redirectResult.RouteValues["id"].Should().Be(ticket.Id);
         }
 
         [Fact]

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Crypto;
+using ProjektZespolowyGr3.Helpers;
 using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.System;
@@ -61,14 +62,10 @@ namespace ProjektZespolowyGr3.Controllers.User
             return View(await query.ToListAsync());
         }
 
-        // GET: Tickets/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: Tickets/slug-5
+        [Route("Tickets/{slug}-{id:int}")]
+        public async Task<IActionResult> Details(string slug, int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var ticket = await _context.Tickets
                 .Include(t => t.Assignee)
                 .Include(t => t.ReportedListing)
@@ -77,12 +74,42 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .Include(t => t.Attachments)
                     .ThenInclude(a => a.Upload)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (ticket != null)
+            {
+                var allAttachments = await _context.TicketAttachments
+                    .IgnoreQueryFilters()
+                    .Include(a => a.Upload)
+                    .Where(a => a.TicketId == id)
+                    .ToListAsync();
+                ticket.Attachments = allAttachments;
+            }
             if (ticket == null)
             {
                 return NotFound();
             }
 
             return View(ticket);
+        }
+
+        // GET: Tickets/Details/5
+        [Route("Tickets/Details/{id:int}")]
+        public async Task<IActionResult> DetailsById(int id)
+        {
+            var ticket = await _context.Tickets
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (ticket == null)
+            {
+                return NotFound();
+            }
+
+            return RedirectToActionPermanent(nameof(Details), new
+            {
+                slug = SlugHelper.GenerateSlug(ticket.Subject),
+                id = ticket.Id
+            });
         }
 
         [HttpGet]
@@ -216,7 +243,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             _context.Add(ticket);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Details", new { id = ticket.Id });
+            return RedirectToAction("Details", new { slug = SlugHelper.GenerateSlug(ticket.Subject), id = ticket.Id });
         }
 
         // GET: Tickets/Edit/5

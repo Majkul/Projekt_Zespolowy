@@ -181,7 +181,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         }
 
         [Fact]
-        public void Details_ShouldRedirectToUserProfile()
+        public async Task Details_ShouldRedirectToUserProfileByUsername()
         {
             // Arrange
             var user = new User
@@ -196,13 +196,14 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             SetupAuthenticatedUser(user.Id);
 
             // Act
-            var result = _controller.Details();
+            var result = await _controller.Details();
 
             // Assert
             result.Should().BeOfType<RedirectToActionResult>();
             var redirectResult = result as RedirectToActionResult;
             redirectResult!.ActionName.Should().Be("Details");
             redirectResult.ControllerName.Should().Be("UserProfile");
+            redirectResult.RouteValues!["username"].Should().Be("testuser");
         }
 
         public void Dispose()

@@ -81,7 +81,7 @@
                     <div class="card border-secondary">
                         <div class="card-header bg-secondary text-white">Otrzymujący Ofertę — @parent.Receiver.Username</div>
                         <div class="card-body">
-                            <p class="mb-2">Szacowana wartość: <strong>@pRecv.ToString("C")</strong></p>
+                            <p class="mb-2">Szacowana wartość: <strong>@pRecv.FormatPricePLN()</strong></p>
                             @foreach (var it in parent.Items.Where(i => i.Side == TradeProposalSide.Receiver).OrderBy(i => i.Id))
                             {
                                 if (it.Listing != null)
@@ -93,7 +93,7 @@
                                 if (it.CashAmount.HasValue)
                                 {
                                     <div class="border rounded p-2 mb-2 bg-light small">
-                                        Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                                        Dopłata gotówką: <strong>@it.CashAmount.FormatPricePLN()</strong>
                                     </div>
                                 }
                                 if (it.CustomOfferTitle != null)
@@ -118,7 +118,7 @@
                     <div class="card border-primary">
                         <div class="card-header bg-primary text-white">Składający Ofertę — @parent.Initiator.Username</div>
                         <div class="card-body">
-                            <p class="mb-2">Szacowana wartość: <strong>@pInit.ToString("C")</strong></p>
+                            <p class="mb-2">Szacowana wartość: <strong>@pInit.FormatPricePLN()</strong></p>
                             @foreach (var it in parent.Items.Where(i => i.Side == TradeProposalSide.Initiator).OrderBy(i => i.Id))
                             {
                                 if (it.Listing != null)
@@ -130,7 +130,7 @@
                                 if (it.CashAmount.HasValue)
                                 {
                                     <div class="border rounded p-2 mb-2 bg-light small">
-                                        Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                                        Dopłata gotówką: <strong>@it.CashAmount.FormatPricePLN()</strong>
                                     </div>
                                 }
                                 if (it.CustomOfferTitle != null)
@@ -162,7 +162,7 @@
             <div class="card border-secondary">
                 <div class="card-header bg-secondary text-white">Otrzymujący Ofertę — @Model.Receiver.Username</div>
                 <div class="card-body">
-                    <p class="mb-2">Szacowana wartość: <strong>@receiverSum.ToString("C")</strong></p>
+                    <p class="mb-2">Szacowana wartość: <strong>@receiverSum.FormatPricePLN()</strong></p>
                     @foreach (var it in Model.Items.Where(i => i.Side == TradeProposalSide.Receiver).OrderBy(i => i.Id))
                     {
                         if (it.Listing != null)
@@ -174,7 +174,7 @@
                         if (it.CashAmount.HasValue)
                         {
                             <div class="border rounded p-2 mb-2 bg-light small">
-                                Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                                Dopłata gotówką: <strong>@it.CashAmount.FormatPricePLN()</strong>
                             </div>
                         }
                         if (it.CustomOfferTitle != null)
@@ -199,7 +199,7 @@
             <div class="card border-primary">
                 <div class="card-header bg-primary text-white">Składający Ofertę — @Model.Initiator.Username</div>
                 <div class="card-body">
-                    <p class="mb-2">Szacowana wartość: <strong>@initiatorSum.ToString("C")</strong></p>
+                    <p class="mb-2">Szacowana wartość: <strong>@initiatorSum.FormatPricePLN()</strong></p>
                     @foreach (var it in Model.Items.Where(i => i.Side == TradeProposalSide.Initiator).OrderBy(i => i.Id))
                     {
                         if (it.Listing != null)
@@ -211,7 +211,7 @@
                         if (it.CashAmount.HasValue)
                         {
                             <div class="border rounded p-2 mb-2 bg-light small">
-                                Dopłata gotówką: <strong>@it.CashAmount.Value.ToString("C")</strong>
+                                Dopłata gotówką: <strong>@it.CashAmount.FormatPricePLN()</strong>
                             </div>
                         }
                         if (it.CustomOfferTitle != null)

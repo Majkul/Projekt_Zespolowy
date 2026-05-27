@@ -400,6 +400,9 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 .ToList()
                 .ForEach(lp => _fileService.DeleteFile(lp.Upload));
             listing.IsArchived = true;
+            listing.IsDeleted = true;
+            listing.DeletedAt = DateTime.UtcNow;
+            listing.UpdatedAt = DateTime.UtcNow;
 
             _context.Tickets
                 .Where(t => t.ReportedListingId == id)
@@ -407,9 +410,14 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 .ForEach(t => _context.Tickets.Remove(t));
 
             _context.Messages
+                .IgnoreQueryFilters()
                 .Where(m => m.ListingId == id)
                 .ToList()
-                .ForEach(m => m.IsArchived = true);
+                .ForEach(m =>
+                {
+                    m.IsDeleted = true;
+                    m.DeletedAt = DateTime.UtcNow;
+                });
 
             _context.SaveChanges();
 

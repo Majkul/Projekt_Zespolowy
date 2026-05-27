@@ -9,6 +9,9 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
         public int UploadId { get; set; }
         public Upload Upload { get; set; } = null!;
+
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
     }
 
 }

@@ -24,3 +24,16 @@ body {
 .text-light-gray {
     color: #bfbfbf;
 }
+
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    overflow-y: auto;
+    max-height: 80vh;
+  }
+}
+
+@media (min-width: 992px) {
+  .navbar-search {
+    width: 41.66666667% !important;
+  }
+}

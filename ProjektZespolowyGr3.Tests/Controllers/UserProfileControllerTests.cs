@@ -38,7 +38,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _context.SaveChanges();
 
             // Act
-            var result = await _controller.Details(user.Id);
+            var result = await _controller.Details(user.Username);
 
             // Assert
             result.Should().BeOfType<ViewResult>();
@@ -48,7 +48,7 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         public async Task Details_ShouldReturnNotFound_WhenUserDoesNotExist()
         {
             // Act
-            var result = await _controller.Details(999);
+            var result = await _controller.Details("missing_user");
 
             // Assert
             result.Should().BeOfType<NotFoundResult>();
@@ -111,10 +111,34 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _context.SaveChanges();
 
             // Act
-            var result = await _controller.Details(seller.Id);
+            var result = await _controller.Details(seller.Username);
 
             // Assert
             result.Should().BeOfType<ViewResult>();
+        }
+
+        [Fact]
+        public async Task DetailsById_ShouldRedirectPermanentlyToUsernameRoute_WhenUserExists()
+        {
+            // Arrange
+            var user = new User
+            {
+                Username = "testuser",
+                Email = "test@test.com",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Users.Add(user);
+            _context.SaveChanges();
+
+            // Act
+            var result = await _controller.DetailsById(user.Id);
+
+            // Assert
+            result.Should().BeOfType<RedirectToActionResult>();
+            var redirectResult = (RedirectToActionResult)result;
+            redirectResult.Permanent.Should().BeTrue();
+            redirectResult.ActionName.Should().Be("Details");
+            redirectResult.RouteValues!["username"].Should().Be("testuser");
         }
 
         public void Dispose()

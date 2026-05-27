@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - HandlujZTym</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ProjektZespolowyGr3.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
@@ -16,28 +17,31 @@
                 
                 <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">HandlujZTym</a>
                 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 
-                <div class="navbar-collapse collapse d-lg-flex">
+                <div id="navbarMain" class="collapse navbar-collapse">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Listings" asp-action="Index">Oferty</a>
                         </li>
                     </ul>
 
-                    <form class="d-flex mx-auto col-12 col-lg-5 mb-2 mb-lg-0" asp-controller="Listings" asp-action="Index" method="get">
-                        <div class="input-group">
-                            <input class="form-control" type="text" name="searchString" placeholder="Szukaj ofert..." aria-label="Szukaj ofert"/>
-                            <button class="btn btn-outline-primary" type="submit">
-                                <i class="bi bi-search"></i> Szukaj
-                            </button>
-                        </div>
-                    </form>
+                    @if (ViewData["HideNavSearch"] as bool? != true)
+                    {
+                        <form class="d-flex w-100 my-2 my-lg-0 mx-lg-auto navbar-search" asp-controller="Listings" asp-action="Index" method="get">
+                            <div class="input-group">
+                                <input class="form-control" type="text" name="searchString" placeholder="Szukaj ofert..." aria-label="Szukaj ofert"/>
+                                <button class="btn btn-outline-primary" type="submit">
+                                    <i class="bi bi-search"></i> Szukaj
+                                </button>
+                            </div>
+                        </form>
+                    }
 
-                    <ul class="navbar-nav ms-auto align-items-center gap-2">
+                    <ul class="navbar-nav ms-auto align-items-center">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             @if (User.IsInRole("Admin"))
@@ -130,7 +134,9 @@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/imageUploader.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -77,6 +77,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             }
 
             IQueryable<Message> query = _context.Messages
+                .IgnoreQueryFilters()
                 .Include(m => m.Sender)
                 .Include(m => m.Receiver)
                 .Where(m =>
@@ -104,17 +105,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .Include(m => m.Photos).ThenInclude(a => a.Upload)
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
-
-            foreach (var message in messages)
-            {
-                if (message.IsArchived && message.TradeProposalId == null)
-                {
-                    message.Content = "Ta wiadomość została usunięta.";
-                    message.Sender = null;
-                    message.Receiver = null;
-                    message.SentAt = DateTime.MinValue;
-                }
-            }
 
             ViewBag.OtherUser = otherUser;
             ViewBag.ListingId = listingId;

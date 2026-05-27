@@ -14,10 +14,11 @@ namespace ProjektZespolowyGr3.Controllers
             _context = context;
         }
 
-        // GET: UserProfile/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: Users/username
+        [Route("Users/{username}")]
+        public async Task<IActionResult> Details(string username)
         {
-            if (id == null)
+            if (string.IsNullOrWhiteSpace(username))
             {
                 return NotFound();
             }
@@ -28,7 +29,7 @@ namespace ProjektZespolowyGr3.Controllers
                         .ThenInclude(lp => lp.Upload)
                 .Include(u => u.Listings)
                     .ThenInclude(l => l.Reviews)
-                .FirstOrDefaultAsync(u => u.Id == id);
+                .FirstOrDefaultAsync(u => u.Username == username);
 
             if (user == null)
             {
@@ -53,6 +54,22 @@ namespace ProjektZespolowyGr3.Controllers
             ViewBag.ActiveListings = activeListings;
 
             return View(user);
+        }
+
+        // GET: UserProfile/Details/5
+        [Route("UserProfile/Details/{id:int}")]
+        public async Task<IActionResult> DetailsById(int id)
+        {
+            var user = await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return RedirectToActionPermanent(nameof(Details), "UserProfile", new { username = user.Username });
         }
     }
 }

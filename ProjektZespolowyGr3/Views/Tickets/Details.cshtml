@@ -58,9 +58,18 @@
                             @foreach (var attachment in Model.Attachments)
                             {
                                 <li>
-                                    <a href="@attachment.Upload.Url" target="_blank" download="@attachment.Upload.FileName">
-                                        @attachment.Upload.FileName
-                                    </a>
+                                    @if (attachment.IsDeleted)
+                                    {
+                                        <span class="text-muted">
+                                            <i class="bi bi-paperclip"></i> Usunięty załącznik
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <a href="@attachment.Upload.Url" target="_blank" download="@attachment.Upload.FileName">
+                                            @attachment.Upload.FileName
+                                        </a>
+                                    }
                                 </li>
                             }
                         </ul>
@@ -75,7 +84,7 @@
                 <div class="card-body">
                     <p>
                         <strong>Zgłoszone przez:</strong>
-                        <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.UserId">
+                        <a asp-controller="UserProfile" asp-action="Details" asp-route-username="@Model.User.Username">
                             @Model.User.Username
                         </a>
                     </p>
@@ -86,7 +95,7 @@
                     {
                         <p>
                             <strong>Zgłoszony użytkownik:</strong>
-                            <a asp-controller="UserProfile" asp-action="Details" asp-route-id="@Model.ReportedUserId">
+                            <a asp-controller="UserProfile" asp-action="Details" asp-route-username="@Model.ReportedUser.Username">
                                 @Model.ReportedUser.Username
                             </a>
                         </p>
@@ -95,7 +104,7 @@
                     {
                         <p>
                             <strong>Zgłoszona oferta:</strong>
-                            <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.ReportedListingId">
+                            <a asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(Model.ReportedListing.Title)" asp-route-id="@Model.ReportedListing.Id">
                                 @Model.ReportedListing.Title
                             </a>
                         </p>
