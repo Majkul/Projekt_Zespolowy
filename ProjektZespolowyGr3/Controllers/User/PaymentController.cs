@@ -135,9 +135,45 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             await _payuSync.TryFinalizeOrderFromPayuApiAsync(order.Id);
             await _context.Entry(order).ReloadAsync();
-            await _payuSync.EnsureListingPurchasedNotificationIfNeededAsync(order.Id);
 
+            if (order.TradeProposalId.HasValue)
+            {
+                var proposal = await _context.TradeProposals.FindAsync(order.TradeProposalId.Value);
+                if (proposal != null)
+                {
+                    int otherUserId = proposal.InitiatorUserId == userId ? proposal.ReceiverUserId : proposal.InitiatorUserId;
+                    return RedirectToAction("Conversation", "Messages", new { userId = otherUserId, listingId = proposal.SubjectListingId });
+                }
+                return RedirectToAction("Index", "Home");
+            }
+
+            await _payuSync.EnsureListingPurchasedNotificationIfNeededAsync(order.Id);
             return View(order);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PayTradeOrder(int tradeProposalId)
+        {
+            var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out var userId))
+                return Unauthorized();
+
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.TradeProposalId == tradeProposalId
+                    && o.BuyerId == userId
+                    && o.Status == OrderStatus.Pending);
+
+            if (order == null)
+                return NotFound("Nie znaleziono oczekującej płatności dla tej wymiany.");
+
+            var listing = await _context.Listings.FindAsync(order.ListingId);
+            if (listing == null)
+                return NotFound();
+
+            var token = await GetPayUTokenAsync();
+            var redirectUrl = await CreatePayUOrderForTradeAsync(order, listing, token);
+
+            return Redirect(redirectUrl);
         }
 
         [HttpGet]
@@ -173,6 +209,76 @@ namespace ProjektZespolowyGr3.Controllers.User
             using var doc = JsonDocument.Parse(json);
             return doc.RootElement.GetProperty("access_token").GetString()
                 ?? throw new InvalidOperationException("PayU OAuth: brak access_token w odpowiedzi.");
+        }
+
+        private async Task<string> CreatePayUOrderForTradeAsync(Order order, Listing listing, string token)
+        {
+            var client = _httpClientFactory.CreateClient("PayU");
+            client.DefaultRequestHeaders.Clear();
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+
+            var notifyUrl = "https://185.238.72.248/Payment/Notify";
+            var unitPrice = ((int)(order.Amount * 100)).ToString();
+
+            var payload = new
+            {
+                notifyUrl = notifyUrl,
+                continueUrl = Url.Action("Success", "Payment",
+                    new { orderId = order.Id }, Request.Scheme),
+
+                customerIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1",
+                merchantPosId = _merchantPosId,
+                description = $"Dopłata do wymiany: {listing.Title}",
+                currencyCode = "PLN",
+                totalAmount = unitPrice,
+
+                buyer = new
+                {
+                    email = User.FindFirstValue(ClaimTypes.Email),
+                    firstName = "Jan",
+                    lastName = "Kowalski",
+                    language = "pl"
+                },
+                products = new[]
+                {
+                    new
+                    {
+                        name = $"Dopłata do wymiany: {listing.Title}",
+                        unitPrice = unitPrice,
+                        quantity = "1"
+                    }
+                }
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await client.PostAsync(
+                $"{_payUBaseUrl}/api/v2_1/orders",
+                content);
+
+            if (response.StatusCode != HttpStatusCode.Found)
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                throw new Exception($"PayU error {response.StatusCode}: {err}");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(json);
+
+            var redirectUri = doc.RootElement.GetProperty("redirectUri").GetString()
+                ?? throw new InvalidOperationException("PayU: brak redirectUri w odpowiedzi.");
+            var payuOrderId = doc.RootElement.GetProperty("orderId").GetString() ?? "";
+
+            order.PayUOrderId = payuOrderId;
+            await _context.SaveChangesAsync();
+
+            return redirectUri;
         }
 
         private async Task<string> CreatePayUOrderAsync(Order order, Listing listing, string token)

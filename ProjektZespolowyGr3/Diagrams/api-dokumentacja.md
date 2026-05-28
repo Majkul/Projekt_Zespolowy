@@ -1,6 +1,6 @@
 # Dokumentacja interfejsu HTTP (stan na marzec 2025)
 
-Aplikacja jest **aplikacją MVC** (widoki HTML, formularze, przekierowania), a nie typowym **REST API JSON**. Poniższa lista opisuje **obsługiwane żądania HTTP** — ścieżki według domyślnego routingu `{controller}/{action}/{id?}` oraz tras z atrybutu `[Route]`.
+Aplikacja jest **aplikacją MVC** (widoki HTML, formularze, przekierowania), a nie typowym **REST API JSON**. Poniższa lista opisuje **obsługiwane żądania HTTP** - ścieżki według domyślnego routingu `{controller}/{action}/{id?}` oraz tras z atrybutu `[Route]`.
 
 **Bazowy wzorzec routingu** (z `Program.cs`): `/{ControllerNamebez„Controller"}/{Action}/{opcjonalny id}`
 
@@ -9,7 +9,7 @@ Legenda uwierzytelniania:
 | Oznaczenie | Znaczenie |
 |------------|-----------|
 | (anonimowe) | bez `[Authorize]` |
-| Zalogowany | `[Authorize]` — cookie |
+| Zalogowany | `[Authorize]` - cookie |
 | Admin | rola `Admin` |
 | Admin lub klient | role `Admin` lub `Client` (np. zarządzanie ogłoszeniami) |
 
@@ -18,17 +18,17 @@ Legenda uwierzytelniania:
 
 | Metoda | Ścieżka | Akcja | Uwierzytelnianie | Opis |
 |--------|---------|--------|------------------|------|
-| GET | `/` lub `/Home` | `Index` | — | Strona główna |
-| GET | `/Home/Privacy` | `Privacy` | — | Polityka prywatności |
-| GET/POST | `/Account/Login` | `Login` | — | Logowanie (`returnUrl` opcjonalnie) |
-| GET | `/Account/Register` | `Register` | — | Formularz rejestracji |
-| POST | `/Account/Register` | `Register` | — | Rejestracja (antiforgery, body: model rejestracji) |
-| GET | `/Account/VerifyEmail` | `VerifyEmail` | — | Weryfikacja e-mail (`email`, `token`) |
-| GET | `/Account/RegisterConfirmation` | `RegisterConfirmation` | — | Potwierdzenie rejestracji |
+| GET | `/` lub `/Home` | `Index` | - | Strona główna |
+| GET | `/Home/Privacy` | `Privacy` | - | Polityka prywatności |
+| GET/POST | `/Account/Login` | `Login` | - | Logowanie (`returnUrl` opcjonalnie) |
+| GET | `/Account/Register` | `Register` | - | Formularz rejestracji |
+| POST | `/Account/Register` | `Register` | - | Rejestracja (antiforgery, body: model rejestracji) |
+| GET | `/Account/VerifyEmail` | `VerifyEmail` | - | Weryfikacja e-mail (`email`, `token`) |
+| GET | `/Account/RegisterConfirmation` | `RegisterConfirmation` | - | Potwierdzenie rejestracji |
 | GET | `/Account/CompleteProfile` | `CompleteProfile` | Zalogowany | Uzupełnienie profilu po rejestracji |
 | POST | `/Account/CompleteProfile` | `CompleteProfile` | Zalogowany | Zapis profilu |
-| POST | `/Account/Logout` | `Logout` | — | Wylogowanie (antiforgery) |
-| GET | `/Home/Error` | `Error` | — | Strona błędu |
+| POST | `/Account/Logout` | `Logout` | - | Wylogowanie (antiforgery) |
+| GET | `/Home/Error` | `Error` | - | Strona błędu |
 
 > Trasy `/Account/...` są mapowane na akcje w **HomeController** przez `[Route("Account/[action]")]`.
 
@@ -38,8 +38,8 @@ Legenda uwierzytelniania:
 
 | Metoda | Ścieżka | Uwierzytelnianie | Opis |
 |--------|---------|------------------|------|
-| GET | `/Listings`, `/Listings/Index` | — | Lista ogłoszeń (`searchString` opcjonalnie) |
-| GET | `/Listings/Details/{id}` | — | Szczegóły ogłoszenia |
+| GET | `/Listings`, `/Listings/Index` | - | Lista ogłoszeń (`searchString` opcjonalnie) |
+| GET | `/Listings/Details/{id}` | - | Szczegóły ogłoszenia |
 | GET | `/Listings/Create` | Zalogowany | Formularz nowego ogłoszenia |
 | POST | `/Listings/Create` | Zalogowany | Utworzenie ogłoszenia |
 | GET | `/Listings/Edit/{id}` | Zalogowany | Edycja |
@@ -53,7 +53,7 @@ Legenda uwierzytelniania:
 
 | Metoda | Ścieżka | Uwierzytelnianie | Opis |
 |--------|---------|------------------|------|
-| GET | `/UserProfile/Details/{id}` | — | Publiczny profil użytkownika i jego oferty |
+| GET | `/UserProfile/Details/{id}` | - | Publiczny profil użytkownika i jego oferty |
 
 ---
 
@@ -105,9 +105,9 @@ Legenda uwierzytelniania:
 
 | Metoda | Ścieżka | Uwierzytelnianie | Opis |
 |--------|---------|------------------|------|
-| POST | `/Payment/Buy` | Zalogowany | Zakup (`listingId`, `quantity`) — przekierowanie do PayU |
-| POST | `/Payment/Notify` | **anonimowe** | Webhook PayU (`IgnoreAntiforgeryToken`) — treść JSON w body |
-| GET | `/Payment/Success` | Zalogowany | Po płatności (`orderId`) — finalizacja zamówienia |
+| POST | `/Payment/Buy` | Zalogowany | Zakup (`listingId`, `quantity`) - przekierowanie do PayU |
+| POST | `/Payment/Notify` | **anonimowe** | Webhook PayU (`IgnoreAntiforgeryToken`) - treść JSON w body |
+| GET | `/Payment/Success` | Zalogowany | Po płatności (`orderId`) - finalizacja zamówienia |
 | GET | `/Payment/Cancel` | Zalogowany | Anulowanie płatności (widok) |
 
 ---
@@ -147,9 +147,9 @@ Legenda uwierzytelniania:
 
 ## Administracja
 
-Kontrolery w `Controllers/Admin/` — w routingu **nie ma** prefiksu `Admin/` w URL; nazwa kontrolera to pierwszy segment ścieżki.
+Kontrolery w `Controllers/Admin/` - w routingu **nie ma** prefiksu `Admin/` w URL; nazwa kontrolera to pierwszy segment ścieżki.
 
-### UserManageController (`/UserManage`) — tylko Admin
+### UserManageController (`/UserManage`) - tylko Admin
 
 | Metoda | Ścieżka | Opis |
 |--------|---------|------|
@@ -158,7 +158,7 @@ Kontrolery w `Controllers/Admin/` — w routingu **nie ma** prefiksu `Admin/` w 
 | POST | `/UserManage/EditUser/{id}` | Zapis |
 | POST | `/UserManage/DeleteUser/{id}` | Usunięcie |
 
-### ListingManageController (`/ListingManage`) — Admin lub Client
+### ListingManageController (`/ListingManage`) - Admin lub Client
 
 | Metoda | Ścieżka | Opis |
 |--------|---------|------|
@@ -167,7 +167,7 @@ Kontrolery w `Controllers/Admin/` — w routingu **nie ma** prefiksu `Admin/` w 
 | POST | `/ListingManage/EditListing/{id}` | Zapis |
 | POST | `/ListingManage/DeleteListing/{id}` | Usunięcie |
 
-### TicketsManageController (`/TicketsManage`) — tylko Admin
+### TicketsManageController (`/TicketsManage`) - tylko Admin
 
 | Metoda | Ścieżka | Opis |
 |--------|---------|------|
@@ -189,7 +189,7 @@ Kontrolery w `Controllers/Admin/` — w routingu **nie ma** prefiksu `Admin/` w 
 ## Uwagi techniczne
 
 1. **Format odpowiedzi**: dominują `ViewResult` i `RedirectToAction`/`Redirect`; wyjątki to m.in. `BadRequest`, `NotFound`, `Forbid`, `Unauthorized`, oraz `Redirect` (zewnętrzny PayU) przy `/Payment/Buy`.
-2. **Antiforgery**: większość akcji POST ma `[ValidateAntiForgeryToken]` — wymaga tokenu z formularza (nie dotyczy np. `/Payment/Notify`).
+2. **Antiforgery**: większość akcji POST ma `[ValidateAntiForgeryToken]` - wymaga tokenu z formularza (nie dotyczy np. `/Payment/Notify`).
 3. **Brak publicznego OpenAPI**: projekt nie używa Swaggersa; niniejszy plik jest **ręczną dokumentacją** zgodną z kodem kontrolerów.
 
 ---

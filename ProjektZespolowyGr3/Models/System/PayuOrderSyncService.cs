@@ -54,13 +54,22 @@ public class PayuOrderSyncService : IPayuOrderSyncService
         if (completed && order.Status != OrderStatus.Paid)
         {
             order.Status = OrderStatus.Paid;
-            var listing = await _context.Listings.FindAsync(new object?[] { order.ListingId }, cancellationToken);
-            if (listing != null)
-                ListingStockHelper.ApplySale(listing, Math.Max(1, order.Quantity));
+
+            if (order.TradeProposalId.HasValue)
+            {
+                await TryFinalizeTradeProposalAsync(order, cancellationToken);
+            }
+            else
+            {
+                var listing = await _context.Listings.FindAsync(new object?[] { order.ListingId }, cancellationToken);
+                if (listing != null)
+                    ListingStockHelper.ApplySale(listing, Math.Max(1, order.Quantity));
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
         }
 
-        if (order.Status == OrderStatus.Paid)
+        if (order.Status == OrderStatus.Paid && !order.TradeProposalId.HasValue)
             await EnsureListingPurchasedNotificationAsync(order, cancellationToken);
     }
 
@@ -85,12 +94,22 @@ public class PayuOrderSyncService : IPayuOrderSyncService
             return;
 
         order.Status = OrderStatus.Paid;
-        var listing = await _context.Listings.FindAsync(new object?[] { order.ListingId }, cancellationToken);
-        if (listing != null)
-            ListingStockHelper.ApplySale(listing, Math.Max(1, order.Quantity));
+
+        if (order.TradeProposalId.HasValue)
+        {
+            await TryFinalizeTradeProposalAsync(order, cancellationToken);
+        }
+        else
+        {
+            var listing = await _context.Listings.FindAsync(new object?[] { order.ListingId }, cancellationToken);
+            if (listing != null)
+                ListingStockHelper.ApplySale(listing, Math.Max(1, order.Quantity));
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
 
-        await EnsureListingPurchasedNotificationAsync(order, cancellationToken);
+        if (!order.TradeProposalId.HasValue)
+            await EnsureListingPurchasedNotificationAsync(order, cancellationToken);
     }
 
     public async Task SyncPendingOrdersForSellerAsync(int sellerUserId, CancellationToken cancellationToken = default)
@@ -125,6 +144,28 @@ public class PayuOrderSyncService : IPayuOrderSyncService
 
         foreach (var oid in paidMissingNotify)
             await EnsureListingPurchasedNotificationIfNeededAsync(oid, cancellationToken);
+    }
+
+    private async Task TryFinalizeTradeProposalAsync(Order paidOrder, CancellationToken cancellationToken)
+    {
+        if (!paidOrder.TradeProposalId.HasValue) return;
+
+        var proposal = await _context.TradeProposals
+            .FindAsync(new object?[] { paidOrder.TradeProposalId.Value }, cancellationToken);
+        if (proposal == null || proposal.Status != TradeProposalStatus.AwaitingPayment)
+            return;
+
+        bool anyStillPending = await _context.Orders
+            .AnyAsync(o => o.TradeProposalId == proposal.Id
+                           && o.Id != paidOrder.Id
+                           && o.Status == OrderStatus.Pending,
+                      cancellationToken);
+
+        if (!anyStillPending)
+        {
+            proposal.Status = TradeProposalStatus.Accepted;
+            proposal.UpdatedAt = DateTime.UtcNow;
+        }
     }
 
     public async Task EnsureListingPurchasedNotificationIfNeededAsync(int orderId, CancellationToken cancellationToken = default)

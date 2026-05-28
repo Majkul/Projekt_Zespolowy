@@ -47,7 +47,9 @@ namespace ProjektZespolowyGr3.Models.DbModels
         [Display(Name = "Anulowana")]
         Cancelled = 3,
         [Display(Name = "Zastąpiona kontrofertą")]
-        Superseded = 4
+        Superseded = 4,
+        [Display(Name = "Oczekuje na dopłatę")]
+        AwaitingPayment = 5
     }
 
     public enum TradeProposalSide

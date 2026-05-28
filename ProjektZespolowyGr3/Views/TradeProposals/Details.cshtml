@@ -32,8 +32,8 @@
         · Ostatnia modyfikacja: @Model.LastModifiedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
     </p>
     <p class="small text-muted border-start border-3 ps-2 mb-3">
-        <strong>Otrzymujący Ofertę</strong> — osoba, której skierowano propozycję (może ją zaakceptować, odrzucić lub złożyć kontrofertę).
-        <strong>Składający Ofertę</strong> — osoba, która wysłała tę propozycję. Te role są stałe dla danej propozycji.
+        <strong>Otrzymujący Ofertę</strong> - osoba, której skierowano propozycję (może ją zaakceptować, odrzucić lub złożyć kontrofertę).
+        <strong>Składający Ofertę</strong> - osoba, która wysłała tę propozycję. Te role są stałe dla danej propozycji.
     </p>
 
     @if (thread.Count > 0)
@@ -43,7 +43,7 @@
             <span class="text-muted">(od najstarszej do najnowszej)</span>
             @if (thread.Count == 1)
             {
-                <p class="small text-muted mt-2 mb-0">Na razie jest jeden krok — kolejne propozycje pojawią się tutaj po złożeniu kontroferty.</p>
+                <p class="small text-muted mt-2 mb-0">Na razie jest jeden krok - kolejne propozycje pojawią się tutaj po złożeniu kontroferty.</p>
             }
             <ol class="mb-0 mt-2 ps-3">
                 @for (var k = 0; k < thread.Count; k++)
@@ -52,7 +52,7 @@
                     var isCurrent = t.Id == Model.Id;
                     <li class="mb-1">
                         <a asp-action="Details" asp-route-id="@t.Id">Krok @(k + 1): @t.Initiator.Username składa propozycję dla @t.Receiver.Username</a>
-                        — @StatusName(t.Status)
+                        - @StatusName(t.Status)
                         @if (isCurrent)
                         {
                             <span class="badge bg-primary ms-1">przeglądasz</span>
@@ -78,7 +78,7 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <div class="card border-secondary">
-                        <div class="card-header bg-secondary text-white">Otrzymujący Ofertę — @parent.Receiver.Username</div>
+                        <div class="card-header bg-secondary text-white">Otrzymujący Ofertę - @parent.Receiver.Username</div>
                         <div class="card-body">
                             <p class="mb-2">Szacowana wartość: <strong>@pRecv.FormatPricePLN()</strong></p>
                             @foreach (var it in parent.Items.Where(i => i.Side == TradeProposalSide.Receiver).OrderBy(i => i.Id))
@@ -101,7 +101,7 @@
                 </div>
                 <div class="col-md-6">
                     <div class="card border-primary">
-                        <div class="card-header bg-primary text-white">Składający Ofertę — @parent.Initiator.Username</div>
+                        <div class="card-header bg-primary text-white">Składający Ofertę - @parent.Initiator.Username</div>
                         <div class="card-body">
                             <p class="mb-2">Szacowana wartość: <strong>@pInit.FormatPricePLN()</strong></p>
                             @foreach (var it in parent.Items.Where(i => i.Side == TradeProposalSide.Initiator).OrderBy(i => i.Id))
@@ -131,7 +131,7 @@
     <div class="row g-3 mb-4">
         <div class="col-md-6">
             <div class="card border-secondary">
-                <div class="card-header bg-secondary text-white">Otrzymujący Ofertę — @Model.Receiver.Username</div>
+                <div class="card-header bg-secondary text-white">Otrzymujący Ofertę - @Model.Receiver.Username</div>
                 <div class="card-body">
                     <p class="mb-2">Szacowana wartość: <strong>@receiverSum.FormatPricePLN()</strong></p>
                     @foreach (var it in Model.Items.Where(i => i.Side == TradeProposalSide.Receiver).OrderBy(i => i.Id))
@@ -154,7 +154,7 @@
         </div>
         <div class="col-md-6">
             <div class="card border-primary">
-                <div class="card-header bg-primary text-white">Składający Ofertę — @Model.Initiator.Username</div>
+                <div class="card-header bg-primary text-white">Składający Ofertę - @Model.Initiator.Username</div>
                 <div class="card-body">
                     <p class="mb-2">Szacowana wartość: <strong>@initiatorSum.FormatPricePLN()</strong></p>
                     @foreach (var it in Model.Items.Where(i => i.Side == TradeProposalSide.Initiator).OrderBy(i => i.Id))
@@ -183,7 +183,7 @@
         <ul class="small">
             @foreach (var h in Model.History.OrderByDescending(x => x.ChangedAt))
             {
-                <li>@h.ChangedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") — @h.User.Username: @h.Summary</li>
+                <li>@h.ChangedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") - @h.User.Username: @h.Summary</li>
             }
         </ul>
     }

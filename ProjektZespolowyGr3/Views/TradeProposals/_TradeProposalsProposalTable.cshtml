@@ -42,7 +42,7 @@
                         @if (showListing)
                         {
                             <td>
-                                @(p.SubjectListing?.Title ?? "—")
+                                @(p.SubjectListing?.Title ?? "-")
                                 @if (p.SubjectListingId > 0)
                                 {
                                     <a class="d-block small" asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(p.SubjectListing?.Title ?? "ogloszenie")" asp-route-id="@p.SubjectListingId">Ogłoszenie</a>

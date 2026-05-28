@@ -1,10 +1,10 @@
 @model ProjektZespolowyGr3.Models.ViewModels.EditListingViewModel
 @{
-    ViewBag.Title = "Edit listing";
+    ViewBag.Title = "Edytuj ofertę";
     var modelId = ViewBag.ModelId;
 }
 
-<h2 class="mb-4">Edit listing</h2>
+<h2 class="mb-4">Edytuj ofertę</h2>
 
 @if (!ViewData.ModelState.IsValid)
 {
@@ -21,17 +21,17 @@
 <form id="edit-listing-form" asp-action="EditListing" asp-route-id="@modelId" method="post" enctype="multipart/form-data" class="w-75">
 
     <div class="mb-3">
-        <label asp-for="Title" class="form-label" id="label-Title">Title</label>
+        <label asp-for="Title" class="form-label" id="label-Title">Tytuł</label>
         <input asp-for="Title" class="form-control" id="input-Title" />
     </div>
 
     <div class="mb-3">
-        <label asp-for="Description" class="form-label" id="label-Description">Description</label>
+        <label asp-for="Description" class="form-label" id="label-Description">Opis</label>
         <textarea asp-for="Description" class="form-control" rows="4" id="input-Description"></textarea>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Price" class="form-label" id="label-Price">Price</label>
+        <label asp-for="Price" class="form-label" id="label-Price">Cena (PLN)</label>
         <input asp-for="Price" type="number" class="form-control" step="0.01" id="input-Price" />
     </div>
 
@@ -43,7 +43,7 @@
     </div>
 
     <div class="mb-3">
-        <label class="form-label" id="label-SelectedTagIds" for="tagSelectEdit">Tags</label>
+        <label class="form-label" id="label-SelectedTagIds" for="tagSelectEdit">Tagi</label>
         <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tagSelectEdit">
         </select>
     </div>
@@ -70,7 +70,7 @@
         </div>
     </div>
 
-    <h4 class="mt-4">Existing Photos</h4>
+    <h4 class="mt-4">Aktualne zdjęcia</h4>
     <div class="row">
         @if (Model.Photos != null && Model.Photos.Any())
         {
@@ -81,23 +81,23 @@
 
                     <div class="form-check">
                         <input type="checkbox" class="form-check-input" name="PhotosToDelete" value="@photo.Id" />
-                        <label class="form-check-label">Delete</label>
+                        <label class="form-check-label">Usuń</label>
                     </div>
                 </div>
             }
         }
         else
         {
-            <p class="text-muted">No photos uploaded.</p>
+            <p class="text-muted">Brak zdjęć.</p>
         }
     </div>
 
     <div class="mb-3 mt-4">
-        <label class="form-label">Add new photos</label>
+        <label class="form-label">Dodaj nowe zdjęcia</label>
         <div class="image-upload-container">
             <input asp-for="PhotoFiles" type="file" class="form-control image-upload-input" multiple accept=".jpg,.jpeg,.png" />
         </div>
-        <small class="text-muted">Max 5 photos, only .jpg/.jpeg/.png</small>
+        <small class="text-muted">Maks. 5 zdjęć, tylko .jpg/.jpeg/.png</small>
     </div>
 
     <div class="form-check mb-3">
@@ -111,8 +111,8 @@
     </div>
 
     <div class="d-flex gap-2 mt-4">
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a class="btn btn-danger" asp-action="Index">Cancel</a>
+        <button type="submit" class="btn btn-primary">Zapisz</button>
+        <a class="btn btn-danger" asp-action="Index">Anuluj</a>
     </div>
 </form>
 
@@ -195,12 +195,12 @@
             if (changedFields.length > 0) {
                 const fieldNames = changedFields.map(f => {
                     switch (f) {
-                        case 'SelectedTagIds': return 'Tags';
-                        case 'SelectedExchangeAcceptedTagIds': return 'Accepted exchange tags'
+                        case 'SelectedTagIds': return 'Tagi';
+                        case 'SelectedExchangeAcceptedTagIds': return 'Akceptowane tagi wymiany'
                         default: return f;
                     }
                 });
-                const msg = "Are you sure you want to change " + fieldNames.join(", ") + "?";
+                const msg = "Czy na pewno chcesz zmienić " + fieldNames.join(", ") + "?";
                 if (!confirm(msg)) {
                     e.preventDefault();
                 }
