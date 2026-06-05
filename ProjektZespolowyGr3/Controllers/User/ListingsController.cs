@@ -421,7 +421,8 @@ namespace ProjektZespolowyGr3.Controllers.User
             return RedirectToAction("Details", new { slug = SlugHelper.GenerateSlug(listing.Title), id = listing.Id });
         }
 
-        // GET: Listings/Edit/5
+        // GET: Listings/
+        // /5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <!-- Nazwy klas migracji EF (np. „payment”) — CS8981 -->
+    <!-- Nazwy klas migracji EF (np. „payment”) - CS8981 -->
     <NoWarn>$(NoWarn);CS8981</NoWarn>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>7a16b429-5f81-4ad9-b92b-89c52ad5abf6</UserSecretsId>

@@ -1,10 +1,10 @@
 ﻿@model DomPogrzebowyProjekt.Models.ViewModels.EditUserViewModel
 @{
-    ViewBag.Title = "Edit user";
+    ViewBag.Title = "Edytuj użytkownika";
     var modelId = ViewBag.ModelId;
 }
 
-<h2 class="mb-4">Edit user</h2>
+<h2 class="mb-4">Edytuj użytkownika</h2>
 @if (!ViewData.ModelState.IsValid)
 {
     <div class="alert alert-danger">
@@ -22,11 +22,11 @@
         <input asp-for="Username" class="form-control" id="input-Username" />
     </div>
     <div class="mb-3">
-        <label asp-for="FirstName" class="form-label" id="label-FirstName">First Name</label>
+        <label asp-for="FirstName" class="form-label" id="label-FirstName">Imię</label>
         <input asp-for="FirstName" class="form-control" id="input-FirstName" />
     </div>
     <div class="mb-3">
-        <label asp-for="LastName" class="form-label" id="label-LastName">Last Name</label>
+        <label asp-for="LastName" class="form-label" id="label-LastName">Nazwisko</label>
         <input asp-for="LastName" class="form-control" id="input-LastName" />
     </div>
     <div class="mb-3">
@@ -34,37 +34,37 @@
         <input asp-for="Email" class="form-control" id="input-Email" />
     </div>
     <div class="mb-3">
-        <label asp-for="Address" class="form-label" id="label-Address">Address</label>
+        <label asp-for="Address" class="form-label" id="label-Address">Adres</label>
         <input asp-for="Address" class="form-control" id="input-Address" />
     </div>
     <div class="mb-3">
-        <label asp-for="Latitude" class="form-label" id="label-Latitude">Latitude</label>
+        <label asp-for="Latitude" class="form-label" id="label-Latitude">Szerokość geograficzna</label>
         <input asp-for="Latitude" class="form-control" id="input-Latitude" />
     </div>
     <div class="mb-3">
-        <label asp-for="Longitude" class="form-label" id="label-Longitude">Longitude</label>
+        <label asp-for="Longitude" class="form-label" id="label-Longitude">Długość geograficzna</label>
         <input asp-for="Longitude" class="form-control" id="input-Longitude" />
     </div>
     <div class="mb-3">
-        <label asp-for="PhoneNumber" class="form-label" id="label-PhoneNumber">Phone number</label>
+        <label asp-for="PhoneNumber" class="form-label" id="label-PhoneNumber">Numer telefonu</label>
         <input asp-for="PhoneNumber" class="form-control" id="input-PhoneNumber" />
     </div>
     <div class="mb-3">
-        <label asp-for="IsAdmin" class="form-check-label" id="label-IsAdmin">Is Admin</label>
+        <label asp-for="IsAdmin" class="form-check-label" id="label-IsAdmin">Administrator</label>
         <input asp-for="IsAdmin" type="checkbox" class="form-check-input" id="input-IsAdmin" />
     </div>
     <div class="mb-3">
-        <label asp-for="IsBanned" class="form-check-label" id="label-IsBanned">Is Banned</label>
+        <label asp-for="IsBanned" class="form-check-label" id="label-IsBanned">Zbanowany</label>
         <input asp-for="IsBanned" type="checkbox" class="form-check-input" id="input-IsBanned" />
     </div>
     <div class="mb-3">
-        <label asp-for="IsDeleted" class="form-check-label" id="label-IsDeleted">Is Deleted</label>
+        <label asp-for="IsDeleted" class="form-check-label" id="label-IsDeleted">Usunięty</label>
         <input asp-for="IsDeleted" type="checkbox" class="form-check-input" id="input-IsDeleted" />
     </div>
 
     <div class="d-flex gap-2 mt-3">
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a class="btn btn-danger" asp-action="Index">Cancel</a>
+        <button type="submit" class="btn btn-primary">Zapisz</button>
+        <a class="btn btn-danger" asp-action="Index">Anuluj</a>
     </div>
 </form>
 
@@ -131,7 +131,7 @@
                 }
             });
             if (changedFields.length > 0) {
-                const msg = "Are you sure you want to change " + changedFields.join(", ") + "?";
+                const msg = "Czy na pewno chcesz zmienić " + changedFields.join(", ") + "?";
                 if (!confirm(msg)) {
                     e.preventDefault();
                 }

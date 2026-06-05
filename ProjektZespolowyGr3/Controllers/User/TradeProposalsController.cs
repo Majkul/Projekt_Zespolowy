@@ -76,7 +76,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         /// <summary>
-        /// Odczytuje np. initiatorQuantities[42]=3 z formularza — pomija nieprawidłowe klucze (binder Dictionary int,int zgłaszałby FormatException).
+        /// Odczytuje np. initiatorQuantities[42]=3 z formularza - pomija nieprawidłowe klucze (binder Dictionary int,int zgłaszałby FormatException).
         /// </summary>
         private static Dictionary<int, int> ParseListingQuantitiesFromForm(IFormCollection form, string prefix)
         {
@@ -592,7 +592,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                     Error =
                         $"Minimalna wartość od kupującego w tym ogłoszeniu to {subject.MinExchangeValue.Value:C}, " +
                         $"a policzona suma jego zaznaczonych ogłoszeń i dopłaty to {buyerSum:C}. " +
-                        $"Liczy się tylko kolumna {kol} — przedmioty zaznaczone u sprzedającego po drugiej stronie nie zwiększają tej sumy. " +
+                        $"Liczy się tylko kolumna {kol} - przedmioty zaznaczone u sprzedającego po drugiej stronie nie zwiększają tej sumy. " +
                         $"Brak własnych ogłoszeń? Użyj dopłaty gotówką po stronie kupującego."
                 };
             }
@@ -684,6 +684,54 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             foreach (var (lid, need) in unitsPerListing)
                 ListingStockHelper.ApplySale(listings[lid], need);
+
+            decimal initiatorCash = proposal.Items
+                .Where(i => i.Side == TradeProposalSide.Initiator && i.CashAmount > 0)
+                .Sum(i => i.CashAmount ?? 0);
+            decimal receiverCash = proposal.Items
+                .Where(i => i.Side == TradeProposalSide.Receiver && i.CashAmount > 0)
+                .Sum(i => i.CashAmount ?? 0);
+
+            if (initiatorCash > 0 || receiverCash > 0)
+            {
+                if (initiatorCash > 0)
+                    _context.Orders.Add(new Order
+                    {
+                        ListingId = proposal.SubjectListingId,
+                        TradeProposalId = proposal.Id,
+                        BuyerId = proposal.InitiatorUserId,
+                        SellerId = proposal.ReceiverUserId,
+                        Amount = initiatorCash,
+                        Quantity = 1,
+                        Status = OrderStatus.Pending,
+                        CreatedAt = DateTime.UtcNow,
+                        PayUOrderId = ""
+                    });
+
+                if (receiverCash > 0)
+                    _context.Orders.Add(new Order
+                    {
+                        ListingId = proposal.SubjectListingId,
+                        TradeProposalId = proposal.Id,
+                        BuyerId = proposal.ReceiverUserId,
+                        SellerId = proposal.InitiatorUserId,
+                        Amount = receiverCash,
+                        Quantity = 1,
+                        Status = OrderStatus.Pending,
+                        CreatedAt = DateTime.UtcNow,
+                        PayUOrderId = ""
+                    });
+
+                proposal.Status = TradeProposalStatus.AwaitingPayment;
+                proposal.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                if (receiverCash > 0)
+                    return RedirectToAction("PayTradeOrder", "Payment", new { tradeProposalId = proposal.Id });
+
+                TempData["TradeAccepted"] = "Wymiana zaakceptowana. Oczekuje na dopłatę od drugiej strony.";
+                return RedirectToAction("Conversation", "Messages", new { userId = proposal.InitiatorUserId, listingId = proposal.SubjectListingId });
+            }
 
             proposal.Status = TradeProposalStatus.Accepted;
             proposal.UpdatedAt = DateTime.UtcNow;

@@ -57,8 +57,8 @@
         <div class="col-md-6">
             <div class="card h-100 border-primary">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <span>Składający — <strong>@Model.InitiatorUsername</strong></span>
-                    <span class="fw-normal small">Wartość: <span id="sum-initiator">—</span></span>
+                    <span>Składający - <strong>@Model.InitiatorUsername</strong></span>
+                    <span class="fw-normal small">Wartość: <span id="sum-initiator">-</span></span>
                 </div>
                 <div class="card-body">
                     @foreach (var l in Model.InitiatorPool)
@@ -137,8 +137,8 @@
         <div class="col-md-6">
             <div class="card h-100 border-secondary">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Otrzymujący — <strong>@Model.ReceiverUsername</strong></span>
-                    <span class="fw-normal small text-muted">Wartość: <span id="sum-receiver">—</span></span>
+                    <span>Otrzymujący - <strong>@Model.ReceiverUsername</strong></span>
+                    <span class="fw-normal small text-muted">Wartość: <span id="sum-receiver">-</span></span>
                 </div>
                 <div class="card-body">
                     @foreach (var l in Model.ReceiverPool)
@@ -273,6 +273,7 @@
                     if (buyerSum < minBuyerThreshold) {
                         hint.className = 'alert alert-warning small py-2 mb-0';
 <<<<<<< HEAD
+<<<<<<< HEAD
                         hint.innerHTML = 'Próg sprzedającego: co najmniej <strong>' +
                             minBuyerThreshold.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' }) +
                             '</strong> łącznej wartości <strong>po stronie kupującego</strong> (' + col +
@@ -282,6 +283,9 @@
 =======
                         hint.innerHTML = 'Twoja strona: <strong>' + fmt(buyerSum) + '</strong> — wymagane minimum: <strong>' + fmt(minBuyerThreshold) + '</strong>';
 >>>>>>> origin/sprint-8
+=======
+                        hint.innerHTML = 'Twoja strona: <strong>' + fmt(buyerSum) + '</strong> - wymagane minimum: <strong>' + fmt(minBuyerThreshold) + '</strong>';
+>>>>>>> origin/main
                     } else {
                         hint.className = 'alert alert-success small py-2 mb-0';
                         hint.textContent = 'Twoja strona spełnia wymagane minimum (' + fmt(buyerSum) + ').';

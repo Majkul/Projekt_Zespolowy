@@ -22,6 +22,27 @@
     var receiverSum = Sum(TradeProposalSide.Receiver);
     var initiatorSum = Sum(TradeProposalSide.Initiator);
     var pending = tp.Status == TradeProposalStatus.Pending;
+    var awaitingPayment = tp.Status == TradeProposalStatus.AwaitingPayment;
+    var accepted = tp.Status == TradeProposalStatus.Accepted;
+
+    decimal initiatorCash = tp.Items.Where(i => i.Side == TradeProposalSide.Initiator && i.CashAmount > 0).Sum(i => i.CashAmount ?? 0);
+    decimal receiverCash = tp.Items.Where(i => i.Side == TradeProposalSide.Receiver && i.CashAmount > 0).Sum(i => i.CashAmount ?? 0);
+
+    // Orders z ViewBag (ładowane przez MessagesController)
+    var myTradeOrders = (ViewBag.MyTradeOrders as Dictionary<int, Order>) ?? new Dictionary<int, Order>();
+    var theirTradeOrders = (ViewBag.TheirTradeOrders as Dictionary<int, Order>) ?? new Dictionary<int, Order>();
+    myTradeOrders.TryGetValue(tp.Id, out var myOrder);
+    theirTradeOrders.TryGetValue(tp.Id, out var theirOrder);
+
+    bool iMustPay = myOrder?.Status == OrderStatus.Pending;
+    bool iAlreadyPaid = myOrder?.Status == OrderStatus.Paid;
+    bool theyMustPay  = theirOrder?.Status == OrderStatus.Pending;
+    bool theyAlreadyPaid = theirOrder?.Status == OrderStatus.Paid;
+
+    // Nazwa i kwota drugiej strony (ich dopłata na moją rzecz)
+    decimal theirCashToMe = theirOrder?.Amount ?? 0;
+    decimal myCashToThem  = myOrder?.Amount ?? 0;
+    string otherName = iAmInitiator ? tp.Receiver.Username : tp.Initiator.Username;
 }
 
 <div class="d-flex mb-3 @(isMine ? "justify-content-end" : "justify-content-start")">
@@ -30,7 +51,7 @@
         {
             var rm = Model.ReplyToMessage;
             <div class="small border-start border-3 border-info ps-2 py-2 mb-2 rounded bg-light">
-                <div class="text-muted mb-1">Kontroferta — odpowiedź na wcześniejszą propozycję</div>
+                <div class="text-muted mb-1">Kontroferta - odpowiedź na wcześniejszą propozycję</div>
                 @if (rm.TradeProposalId != null && rm.TradeProposal != null)
                 {
                     <div>
@@ -45,6 +66,7 @@
                 }
             </div>
         }
+
         <div class="small text-muted mb-1">
             @(isMine ? "Wysłana propozycja" : "Otrzymana propozycja") · @Model.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
             @if (tp.LastModifiedAt > tp.CreatedAt.AddSeconds(1))
@@ -62,9 +84,63 @@
                 <span>W tej propozycji jesteś <strong>Otrzymujący Ofertę</strong> (<strong>@tp.Receiver.Username</strong>).</span>
             }
         </div>
+
+        @*  płatności – pokazywane tylko gdy istnieje dopłata po danej stronie *@
+        @if (awaitingPayment || accepted)
+        {
+            @* Moja dopłata (co ja muszę zapłacić) *@
+            @if (myCashToThem > 0)
+            {
+                if (iMustPay)
+                {
+                    <div class="rounded border border-warning p-3 mb-2 bg-warning bg-opacity-10">
+                        <div class="fw-semibold mb-1" style="color:#856404;">Twoja dopłata - wymagana akcja</div>
+                        <div class="small mb-2">
+                            Musisz przelać <strong>@myCashToThem.FormatPricePLN()</strong> na rzecz <strong>@otherName</strong>.
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <a asp-controller="Payment" asp-action="PayTradeOrder" asp-route-tradeProposalId="@tp.Id"
+                               class="btn btn-warning btn-sm fw-semibold px-3">
+                                Zapłać @myCashToThem.FormatPricePLN() teraz
+                            </a>
+                            <span class="small text-muted">Płatność przez PayU</span>
+                        </div>
+                    </div>
+                }
+                else if (iAlreadyPaid)
+                {
+                    <div class="rounded border border-success p-2 mb-2 bg-success bg-opacity-10 small d-flex align-items-center gap-2">
+                        <span class="text-success fw-semibold">&#10003; Twoja dopłata @myCashToThem.FormatPricePLN() opłacona</span>
+                        <span class="text-muted">- przelano na rzecz <strong>@otherName</strong></span>
+                    </div>
+                }
+            }
+
+            @* Dopłata drugiej strony (co oni muszą zapłacić mnie) *@
+            @if (theirCashToMe > 0)
+            {
+                if (theyMustPay)
+                {
+                    <div class="rounded border border-warning p-3 mb-2 bg-light">
+                        <div class="fw-semibold mb-1" style="color:#856404;">Dopłata od <strong>@otherName</strong> - oczekuje</div>
+                        <div class="small" style="color:#856404;">
+                            Oczekujesz na przelew <strong>@theirCashToMe.FormatPricePLN()</strong> od <strong>@otherName</strong>.
+                            Wymiana zostanie sfinalizowana automatycznie po potwierdzeniu płatności.
+                        </div>
+                    </div>
+                }
+                else if (theyAlreadyPaid)
+                {
+                    <div class="rounded border border-success p-2 mb-2 bg-success bg-opacity-10 small d-flex align-items-center gap-2">
+                        <span class="text-success fw-semibold">&#10003; Dopłata @theirCashToMe.FormatPricePLN() od @otherName opłacona</span>
+                    </div>
+                }
+            }
+        }
+
         <div class="row g-2">
             <div class="col-md-6">
-                <div class="fw-semibold small">Otrzymujący Ofertę — @tp.Receiver.Username</div>
+                <div class="fw-semibold small">Otrzymujący Ofertę - @tp.Receiver.Username</div>
                 <div class="small mb-2">Σ @receiverSum.FormatPricePLN()</div>
                 @{ ViewBag.Compact = true; }
                 @foreach (var it in tp.Items.Where(i => i.Side == TradeProposalSide.Receiver).OrderBy(i => i.Id))
@@ -77,14 +153,20 @@
                     }
                     if (it.CashAmount.HasValue)
                     {
-                        <div class="border rounded p-2 mb-2 bg-white small">
-                            Dopłata gotówką: <strong>@it.CashAmount.FormatPricePLN()</strong>
+                        bool cashPaid = accepted || (awaitingPayment &&
+                            ((iAmInitiator  && theyAlreadyPaid) ||
+                             (!iAmInitiator && iAlreadyPaid)));
+                        bool cashPending = awaitingPayment && !cashPaid;
+                        <div class="border rounded p-2 mb-2 bg-white small d-flex justify-content-between align-items-center gap-2">
+                            <span>Dopłata: <strong>@it.CashAmount.FormatPricePLN()</strong></span>
+                            @if (cashPending) { <span class="badge bg-warning text-dark">Oczekuje</span> }
+                            else if (cashPaid) { <span class="badge bg-success">Opłacono</span> }
                         </div>
                     }
                 }
             </div>
             <div class="col-md-6">
-                <div class="fw-semibold small">Składający Ofertę — @tp.Initiator.Username</div>
+                <div class="fw-semibold small">Składający Ofertę - @tp.Initiator.Username</div>
                 <div class="small mb-2">Σ @initiatorSum.FormatPricePLN()</div>
                 @{ ViewBag.Compact = true; }
                 @foreach (var it in tp.Items.Where(i => i.Side == TradeProposalSide.Initiator).OrderBy(i => i.Id))
@@ -97,13 +179,20 @@
                     }
                     if (it.CashAmount.HasValue)
                     {
-                        <div class="border rounded p-2 mb-2 bg-white small">
-                            Dopłata gotówką: <strong>@it.CashAmount.FormatPricePLN()</strong>
+                        bool cashPaid = accepted || (awaitingPayment &&
+                            ((iAmInitiator  && iAlreadyPaid) ||
+                             (!iAmInitiator && theyAlreadyPaid)));
+                        bool cashPending = awaitingPayment && !cashPaid;
+                        <div class="border rounded p-2 mb-2 bg-white small d-flex justify-content-between align-items-center gap-2">
+                            <span>Dopłata: <strong>@it.CashAmount.FormatPricePLN()</strong></span>
+                            @if (cashPending) { <span class="badge bg-warning text-dark">Oczekuje</span> }
+                            else if (cashPaid) { <span class="badge bg-success">Opłacono</span> }
                         </div>
                     }
                 }
             </div>
         </div>
+
         <div class="mt-2 d-flex flex-wrap gap-1">
             <a asp-controller="TradeProposals" asp-action="Details" asp-route-id="@tp.Id" class="btn btn-sm btn-outline-secondary">Szczegóły</a>
 
@@ -128,11 +217,19 @@
                 <a asp-controller="TradeProposals" asp-action="Compose" asp-route-listingId="@tp.SubjectListingId" asp-route-editTradeProposalId="@tp.Id" class="btn btn-sm btn-outline-primary">Edytuj</a>
             }
         </div>
+
         <div class="mt-2 small">
             @switch (tp.Status)
             {
                 case TradeProposalStatus.Accepted:
-                    <span class="text-success">Propozycja zaakceptowana.</span>
+                    if (initiatorCash > 0 || receiverCash > 0)
+                    {
+                        <span class="text-success fw-semibold">Wymiana sfinalizowana · wszystkie dopłaty opłacone.</span>
+                    }
+                    else
+                    {
+                        <span class="text-success">Propozycja zaakceptowana.</span>
+                    }
                     break;
                 case TradeProposalStatus.Rejected:
                     <span class="text-danger">Propozycja odrzucona.</span>
@@ -142,6 +239,17 @@
                     break;
                 case TradeProposalStatus.Superseded:
                     <span class="text-muted">Zastąpiona kontrofertą.</span>
+                    break;
+                case TradeProposalStatus.AwaitingPayment:
+                    {
+                        var parts = new List<string>();
+                        if (iMustPay) parts.Add($"Twoja dopłata {myCashToThem.FormatPricePLN()} - wymagana");
+                        else if (iAlreadyPaid) parts.Add($"Twoja dopłata {myCashToThem.FormatPricePLN()} - opłacona");
+                        if (theyMustPay) parts.Add($"Dopłata od {otherName} {theirCashToMe.FormatPricePLN()} - oczekuje");
+                        else if (theyAlreadyPaid) parts.Add($"Dopłata od {otherName} {theirCashToMe.FormatPricePLN()} - opłacona");
+                        var summary = string.Join(" · ", parts);
+                        <span style="color:#856404;">@summary</span>
+                    }
                     break;
                 default:
                     <span class="text-muted">Oczekuje na decyzję.</span>

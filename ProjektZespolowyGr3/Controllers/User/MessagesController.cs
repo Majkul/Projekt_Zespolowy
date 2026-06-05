@@ -106,6 +106,34 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
 
+            var tradeProposalIds = messages
+                .Where(m => m.TradeProposalId.HasValue)
+                .Select(m => m.TradeProposalId!.Value)
+                .Distinct()
+                .ToList();
+
+            if (tradeProposalIds.Count > 0)
+            {
+                var tradeOrders = await _context.Orders
+                    .Where(o => o.TradeProposalId.HasValue && tradeProposalIds.Contains(o.TradeProposalId!.Value))
+                    .ToListAsync();
+
+                ViewBag.MyTradeOrders = tradeOrders
+                    .Where(o => o.BuyerId == currentUserId)
+                    .GroupBy(o => o.TradeProposalId!.Value)
+                    .ToDictionary(g => g.Key, g => g.OrderByDescending(o => o.Id).First());
+
+                ViewBag.TheirTradeOrders = tradeOrders
+                    .Where(o => o.SellerId == currentUserId)
+                    .GroupBy(o => o.TradeProposalId!.Value)
+                    .ToDictionary(g => g.Key, g => g.OrderByDescending(o => o.Id).First());
+            }
+            else
+            {
+                ViewBag.MyTradeOrders = new Dictionary<int, Order>();
+                ViewBag.TheirTradeOrders = new Dictionary<int, Order>();
+            }
+
             ViewBag.OtherUser = otherUser;
             ViewBag.ListingId = listingId;
             ViewBag.TicketId = ticketId;

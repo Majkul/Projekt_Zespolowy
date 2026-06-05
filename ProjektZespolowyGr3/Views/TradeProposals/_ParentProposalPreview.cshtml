@@ -25,8 +25,8 @@
             <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-outline-secondary">Pełny widok</a>
         </div>
         <div class="alert alert-light border py-2 mb-0 small">
-            <strong>Nową kontrofertę składasz Ty</strong> — trafi ona do rozmówcy <strong>@Model.ReceiverUsername</strong>.<br />
-            <span class="text-muted">Poniżej: <strong>Otrzymujący Ofertę</strong> i <strong>Składający Ofertę</strong> — role w <em>tej</em> propozycji (odbiorca vs nadawca oferty).</span>
+            <strong>Nową kontrofertę składasz Ty</strong> - trafi ona do rozmówcy <strong>@Model.ReceiverUsername</strong>.<br />
+            <span class="text-muted">Poniżej: <strong>Otrzymujący Ofertę</strong> i <strong>Składający Ofertę</strong> - role w <em>tej</em> propozycji (odbiorca vs nadawca oferty).</span>
         </div>
         <div class="small text-muted mt-2">
             Ostatnia zmiana tej propozycji: @p.LastModifiedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
@@ -36,7 +36,7 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <div class="border rounded p-3 h-100 bg-light border-secondary">
-                    <div class="fw-semibold mb-1">Otrzymujący Ofertę — <span class="text-secondary">@p.Receiver.Username</span></div>
+                    <div class="fw-semibold mb-1">Otrzymujący Ofertę - <span class="text-secondary">@p.Receiver.Username</span></div>
                     <div class="small text-muted mb-2">Szacowana wartość: <strong>@receiverSum.FormatPricePLN()</strong></div>
                     @foreach (var it in p.Items.Where(i => i.Side == TradeProposalSide.Receiver).OrderBy(i => i.Id))
                     {
@@ -57,7 +57,7 @@
             </div>
             <div class="col-md-6">
                 <div class="border rounded p-3 h-100 bg-light border-primary">
-                    <div class="fw-semibold mb-1">Składający Ofertę — <span class="text-primary">@p.Initiator.Username</span></div>
+                    <div class="fw-semibold mb-1">Składający Ofertę - <span class="text-primary">@p.Initiator.Username</span></div>
                     <div class="small text-muted mb-2">Szacowana wartość: <strong>@initiatorSum.FormatPricePLN()</strong></div>
                     @foreach (var it in p.Items.Where(i => i.Side == TradeProposalSide.Initiator).OrderBy(i => i.Id))
                     {

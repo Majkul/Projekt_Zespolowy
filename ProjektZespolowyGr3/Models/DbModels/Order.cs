@@ -29,6 +29,10 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
         public DateTime CreatedAt { get; set; }
         public bool IsArchived { get; set; } = false;
+
+        /// <summary>Ustawiane gdy zamówienie dotyczy dopłaty do wymiany (zamiast zakupu).</summary>
+        public int? TradeProposalId { get; set; }
+        public TradeProposal? TradeProposal { get; set; }
     }
 
     public enum OrderStatus

@@ -1,6 +1,6 @@
 ﻿@model List<ProjektZespolowyGr3.Models.DbModels.User>
 
-<h2 class="mb-4">Users</h2>
+<h2 class="mb-4">Użytkownicy</h2>
 
 @if (ViewBag.SelectedTab == "Users")
 {
@@ -11,13 +11,13 @@
             <input type="text"
                    name="searchString"
                    class="form-control"
-                   placeholder="Search user..."
+                   placeholder="Szukaj użytkownika..."
                    value="@ViewBag.CurrentFilter"
                    style="min-width: 250px;" />
 
-            <button type="submit" class="btn btn-primary">Search</button>
+            <button type="submit" class="btn btn-primary">Szukaj</button>
 
-            <label for="pageSize" class="mb-0 ms-3 me-2 small text-muted">Show limit:</label>
+            <label for="pageSize" class="mb-0 ms-3 me-2 small text-muted">Limit wyników:</label>
             <select id="pageSize"
                     name="pageSize"
                     class="form-select form-select-sm"
@@ -40,7 +40,7 @@
                 }
             </select>
 
-            <label for="roleFilter" class="mb-0 ms-3 me-2 small text-muted">Filter by role:</label>
+            <label for="roleFilter" class="mb-0 ms-3 me-2 small text-muted">Filtruj po roli:</label>
         </div>
     </form>
 }
@@ -49,15 +49,15 @@
     <thead class="table-dark">
         <tr>
             <th scope="col">Id</th>
-            <th scope="col">Username</th>
+            <th scope="col">Login</th>
             <th scope="col">Email</th>
-            <th scope="col">First Name</th>
-            <th scope="col">Last Name</th>
-            <th scope="col">Phone Number</th>
-            <th scope="col">Is Banned</th>
-            <th scope="col">Is Deleted</th>
-            <th scope="col">Created at</th>
-            <th scope="col" style="width: 140px;">Actions</th>
+            <th scope="col">Imię</th>
+            <th scope="col">Nazwisko</th>
+            <th scope="col">Numer telefonu</th>
+            <th scope="col">Zbanowany</th>
+            <th scope="col">Usunięty</th>
+            <th scope="col">Utworzono</th>
+            <th scope="col" style="width: 140px;">Akcje</th>
         </tr>
     </thead>
     <tbody>
@@ -78,9 +78,9 @@
                 <td>@item.IsDeleted</td>
                 <td>@item.CreatedAt</td>
                 <td>
-                    <a asp-action="EditUser" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-2">Edit</a>
-                    <form asp-action="DeleteUser" asp-route-id="@item.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                    <a asp-action="EditUser" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-2">Edytuj</a>
+                    <form asp-action="DeleteUser" asp-route-id="@item.Id" method="post" style="display:inline;" onsubmit="return confirm('Czy na pewno chcesz usunąć tego użytkownika?');">
+                        <button type="submit" class="btn btn-sm btn-danger">Usuń</button>
                     </form>
                 </td>
             </tr>

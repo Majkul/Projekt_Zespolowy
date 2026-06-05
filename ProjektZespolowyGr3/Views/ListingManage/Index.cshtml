@@ -20,13 +20,13 @@
         <input type="text"
                name="searchString"
                class="form-control"
-               placeholder="Search user..."
+               placeholder="Szukaj użytkownika..."
                value="@ViewBag.CurrentFilter"
                style="min-width: 250px;" />
 
-        <button type="submit" class="btn btn-primary">Search</button>
+        <button type="submit" class="btn btn-primary">Szukaj</button>
 
-        <label for="pageSize" class="mb-0 ms-3 me-2 small text-muted">Show limit:</label>
+        <label for="pageSize" class="mb-0 ms-3 me-2 small text-muted">Limit wyników:</label>
         <select id="pageSize"
                 name="pageSize"
                 class="form-select form-select-sm"
@@ -48,7 +48,7 @@
                 }
             }
         </select>
-        <label for="tagFilter" class="mb-0 ms-3 me-2 small text-muted">Filter by tag:</label>
+        <label for="tagFilter" class="mb-0 ms-3 me-2 small text-muted">Filtruj po tagu:</label>
         <select id="tagFilter"
                 name="tagFilter"
                 class="form-select form-select-sm"
@@ -60,7 +60,7 @@
             }
             @foreach (var tag in tags)
             {
-                var label = string.IsNullOrEmpty(tag) ? "-- All --" : tag;
+                var label = string.IsNullOrEmpty(tag) ? "-- Wszystkie --" : tag;
                 if (tag == currentTag)
                 {
                     <option value="@tag" selected="selected">@label</option>
