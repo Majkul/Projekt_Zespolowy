@@ -250,17 +250,12 @@
                 s += sumCustomItems(side);
                 return s;
             }
-<<<<<<< HEAD
-            function sumSide(checkboxName, cashEl, outEl, side) {
-                var s = sumSideRaw(checkboxName, cashEl, side);
-                outEl.textContent = s.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' });
-=======
             function fmt(n) {
                 return n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u00a0/g, ' ') + ' PLN';
             }
-            function sumSide(checkboxName, cashEl, outEl) {
-                outEl.textContent = fmt(sumSideRaw(checkboxName, cashEl));
->>>>>>> origin/sprint-8
+            function sumSide(checkboxName, cashEl, outEl, side) {
+                var s = sumSideRaw(checkboxName, cashEl, side);
+                outEl.textContent = fmt(s);
             }
             function refresh() {
                 sumSide('initiatorListingIds', document.getElementById('initiatorCash'), document.getElementById('sum-initiator'), 'initiator');
@@ -272,20 +267,7 @@
                     var buyerSum = buyerFromInitiatorColumn ? bi : br;
                     if (buyerSum < minBuyerThreshold) {
                         hint.className = 'alert alert-warning small py-2 mb-0';
-<<<<<<< HEAD
-<<<<<<< HEAD
-                        hint.innerHTML = 'Próg sprzedającego: co najmniej <strong>' +
-                            minBuyerThreshold.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' }) +
-                            '</strong> łącznej wartości <strong>po stronie kupującego</strong> (' + col +
-                            ' kolumna: ogłoszenia × szt. + dopłata + przedmioty spoza systemu). Teraz: <strong>' +
-                            buyerSum.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' }) +
-                            '</strong>. Drugą kolumnę (sprzedawca) serwer <em>nie</em> liczy do tego progu.';
-=======
-                        hint.innerHTML = 'Twoja strona: <strong>' + fmt(buyerSum) + '</strong> — wymagane minimum: <strong>' + fmt(minBuyerThreshold) + '</strong>';
->>>>>>> origin/sprint-8
-=======
                         hint.innerHTML = 'Twoja strona: <strong>' + fmt(buyerSum) + '</strong> - wymagane minimum: <strong>' + fmt(minBuyerThreshold) + '</strong>';
->>>>>>> origin/main
                     } else {
                         hint.className = 'alert alert-success small py-2 mb-0';
                         hint.textContent = 'Twoja strona spełnia wymagane minimum (' + fmt(buyerSum) + ').';

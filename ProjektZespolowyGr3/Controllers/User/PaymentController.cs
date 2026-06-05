@@ -307,31 +307,6 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         [HttpGet]
-        public async Task<IActionResult> PayTradeOrder(int tradeProposalId)
-        {
-            var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out var userId))
-                return Unauthorized();
-
-            var order = await _context.Orders
-                .FirstOrDefaultAsync(o => o.TradeProposalId == tradeProposalId
-                    && o.BuyerId == userId
-                    && o.Status == OrderStatus.Pending);
-
-            if (order == null)
-                return NotFound("Nie znaleziono oczekującej płatności dla tej wymiany.");
-
-            var listing = await _context.Listings.FindAsync(order.ListingId);
-            if (listing == null)
-                return NotFound();
-
-            var token = await GetPayUTokenAsync();
-            var redirectUrl = await CreatePayUOrderForTradeAsync(order, listing, token);
-
-            return Redirect(redirectUrl);
-        }
-
-        [HttpGet]
         public IActionResult Cancel()
         {
             return View();
@@ -366,7 +341,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                 ?? throw new InvalidOperationException("PayU OAuth: brak access_token w odpowiedzi.");
         }
 
-<<<<<<< HEAD
         private async Task<string> CreatePayUOrderForTradeAsync(TradeOrder tradeOrder, TradeProposal trade, string token)
         {
             var client = _httpClientFactory.CreateClient("PayU");
@@ -391,24 +365,10 @@ namespace ProjektZespolowyGr3.Controllers.User
                     unitPrice = ((int)(tradeOrder.ShippingCost * 100)).ToString(),
                     quantity = "1"
                 });
-=======
-        private async Task<string> CreatePayUOrderForTradeAsync(Order order, Listing listing, string token)
-        {
-            var client = _httpClientFactory.CreateClient("PayU");
-            client.DefaultRequestHeaders.Clear();
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-
-            var notifyUrl = "https://185.238.72.248/Payment/Notify";
-            var unitPrice = ((int)(order.Amount * 100)).ToString();
->>>>>>> origin/main
 
             var payload = new
             {
                 notifyUrl = notifyUrl,
-<<<<<<< HEAD
                 continueUrl = Url.Action("TradeOrderSuccess", "Payment",
                     new { tradeOrderId = tradeOrder.Id }, Request.Scheme),
                 customerIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1",
@@ -416,17 +376,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                 description = $"Płatność za wymianę #{trade.Id}",
                 currencyCode = "PLN",
                 totalAmount = ((int)(tradeOrder.TotalAmount * 100)).ToString(),
-=======
-                continueUrl = Url.Action("Success", "Payment",
-                    new { orderId = order.Id }, Request.Scheme),
-
-                customerIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1",
-                merchantPosId = _merchantPosId,
-                description = $"Dopłata do wymiany: {listing.Title}",
-                currencyCode = "PLN",
-                totalAmount = unitPrice,
-
->>>>>>> origin/main
                 buyer = new
                 {
                     email = User.FindFirstValue(ClaimTypes.Email),
@@ -434,7 +383,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                     lastName = "Kowalski",
                     language = "pl"
                 },
-<<<<<<< HEAD
                 products = products.ToArray()
             };
 
@@ -442,27 +390,6 @@ namespace ProjektZespolowyGr3.Controllers.User
                 JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
             var response = await client.PostAsync($"{_payUBaseUrl}/api/v2_1/orders", content);
-=======
-                products = new[]
-                {
-                    new
-                    {
-                        name = $"Dopłata do wymiany: {listing.Title}",
-                        unitPrice = unitPrice,
-                        quantity = "1"
-                    }
-                }
-            };
-
-            var content = new StringContent(
-                JsonSerializer.Serialize(payload),
-                Encoding.UTF8,
-                "application/json");
-
-            var response = await client.PostAsync(
-                $"{_payUBaseUrl}/api/v2_1/orders",
-                content);
->>>>>>> origin/main
 
             if (response.StatusCode != HttpStatusCode.Found)
             {
@@ -474,17 +401,10 @@ namespace ProjektZespolowyGr3.Controllers.User
             using var doc = JsonDocument.Parse(json);
 
             var redirectUri = doc.RootElement.GetProperty("redirectUri").GetString()
-<<<<<<< HEAD
                 ?? throw new InvalidOperationException("PayU: brak redirectUri.");
             var payuOrderId = doc.RootElement.GetProperty("orderId").GetString() ?? "";
 
             tradeOrder.PayUOrderId = payuOrderId;
-=======
-                ?? throw new InvalidOperationException("PayU: brak redirectUri w odpowiedzi.");
-            var payuOrderId = doc.RootElement.GetProperty("orderId").GetString() ?? "";
-
-            order.PayUOrderId = payuOrderId;
->>>>>>> origin/main
             await _context.SaveChangesAsync();
 
             return redirectUri;

@@ -71,27 +71,6 @@
                     <span asp-validation-for="SelectedTagIds" class="text-danger"></span>
                 </div>
 
-<<<<<<< HEAD
-                <div class="mb-3">
-                    <label asp-for="Type" class="form-label fw-bold">Typ ogłoszenia *</label>
-                    <select asp-for="Type" class="form-select" asp-items="Html.GetEnumSelectList<ProjektZespolowyGr3.Models.DbModels.ListingType>()" id="type-select">
-                    </select>
-                    <span asp-validation-for="Type" class="text-danger"></span>
-                </div>
-
-                <div class="card mb-3 border-info" id="exchange-card">
-                    <div class="card-header bg-info bg-opacity-10" id="exchange-card-header">Wymiana (opcjonalnie)</div>
-                    <div class="card-body">
-                        <div class="form-check mb-3" id="not-exchangeable-row">
-                            <input asp-for="NotExchangeable" class="form-check-input" id="not-exchangeable-input" />
-                            <label asp-for="NotExchangeable" class="form-check-label">Nie do wymiany — nie pokazuj tego ogłoszenia w propozycjach wymiany</label>
-                        </div>
-                        <div id="exchange-fields">
-                            <div class="mb-3" id="min-exchange-row">
-                                <label asp-for="MinExchangeValue" class="form-label">Minimalna wartość oferty kupującego (PLN)</label>
-                                <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" class="form-control" />
-                                <small class="text-muted">Pusta wartość = brak progu. Dotyczy sumy szacowanej po stronie kupującego.</small>
-=======
                 @if (isForTrade)
                 {
                     <input type="hidden" name="NotExchangeable" value="false" />
@@ -115,7 +94,6 @@
                                 <label asp-for="MinExchangeValue" class="form-label">Minimalna wartość oferty kupującego (PLN)</label>
                                 <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" class="form-control" />
                                 <small class="text-muted">Pusta wartość = brak progu.</small>
->>>>>>> origin/sprint-8
                             </div>
                             <div class="mb-3">
                                 <label asp-for="ExchangeDescription" class="form-label">Czego szukasz w zamian</label>
@@ -230,40 +208,6 @@
     }
 
     <script>
-<<<<<<< HEAD
-        const typeSelect = document.getElementById('type-select');
-        const priceGroup = document.getElementById('price-group');
-        const exchangeCard = document.getElementById('exchange-card');
-        const exchangeCardHeader = document.getElementById('exchange-card-header');
-        const notExchangeableRow = document.getElementById('not-exchangeable-row');
-        const notExchangeableInput = document.getElementById('not-exchangeable-input');
-        const minExchangeRow = document.getElementById('min-exchange-row');
-        const TRADE_VALUE = '@((int)ProjektZespolowyGr3.Models.DbModels.ListingType.Trade)';
-
-        function syncTypeUI() {
-            const isTrade = typeSelect.value === TRADE_VALUE;
-
-            priceGroup.style.display = isTrade ? 'none' : '';
-
-            if (isTrade) {
-                notExchangeableRow.style.display = 'none';
-                notExchangeableInput.checked = false;
-                notExchangeableInput.disabled = true;
-                minExchangeRow.style.display = 'none';
-                exchangeCard.className = 'card mb-3 border-primary';
-                exchangeCardHeader.textContent = 'Szczegóły wymiany';
-            } else {
-                notExchangeableRow.style.display = '';
-                notExchangeableInput.disabled = false;
-                minExchangeRow.style.display = '';
-                exchangeCard.className = 'card mb-3 border-info';
-                exchangeCardHeader.textContent = 'Wymiana (opcjonalnie)';
-            }
-        }
-
-        typeSelect.addEventListener('change', syncTypeUI);
-        syncTypeUI();
-=======
         @if (!isForTrade)
         {
             <text>
@@ -296,6 +240,5 @@
             });
             </text>
         }
->>>>>>> origin/sprint-8
     </script>
 }

@@ -57,7 +57,6 @@ public class PayuOrderSyncService : IPayuOrderSyncService
             .FirstOrDefaultAsync(o => o.PayUOrderId == payuOrderId, cancellationToken);
         if (order != null)
         {
-<<<<<<< HEAD
             if (completed && order.Status != OrderStatus.Paid)
             {
                 order.Status = OrderStatus.Paid;
@@ -118,26 +117,6 @@ public class PayuOrderSyncService : IPayuOrderSyncService
                     tokenOrder.UserId, cardToken[..Math.Min(8, cardToken.Length)] + "…");
             }
         }
-=======
-            order.Status = OrderStatus.Paid;
-
-            if (order.TradeProposalId.HasValue)
-            {
-                await TryFinalizeTradeProposalAsync(order, cancellationToken);
-            }
-            else
-            {
-                var listing = await _context.Listings.FindAsync(new object?[] { order.ListingId }, cancellationToken);
-                if (listing != null)
-                    ListingStockHelper.ApplySale(listing, Math.Max(1, order.Quantity));
-            }
-
-            await _context.SaveChangesAsync(cancellationToken);
-        }
-
-        if (order.Status == OrderStatus.Paid && !order.TradeProposalId.HasValue)
-            await EnsureListingPurchasedNotificationAsync(order, cancellationToken);
->>>>>>> origin/main
     }
 
     public async Task TryFinalizeOrderFromPayuApiAsync(int orderId, CancellationToken cancellationToken = default)
@@ -175,13 +154,8 @@ public class PayuOrderSyncService : IPayuOrderSyncService
 
         await _context.SaveChangesAsync(cancellationToken);
 
-<<<<<<< HEAD
         await _cardFeeService.TryDispatchPayoutAsync(order, cancellationToken);
         await EnsureListingPurchasedNotificationAsync(order, cancellationToken);
-=======
-        if (!order.TradeProposalId.HasValue)
-            await EnsureListingPurchasedNotificationAsync(order, cancellationToken);
->>>>>>> origin/main
     }
 
     public async Task TryFinalizeTradeOrderFromPayuApiAsync(int tradeOrderId, CancellationToken cancellationToken = default)

@@ -370,7 +370,6 @@
 
     @if (Model.History != null && Model.History.Any())
     {
-<<<<<<< HEAD
         <details class="mb-4">
             <summary class="fw-bold text-muted small" style="cursor:pointer;">Historia zmian (@Model.History.Count())</summary>
             <ul class="small mt-2">
@@ -515,15 +514,6 @@
                 </div>
             </div>
         }
-=======
-        <h5>Historia zmian</h5>
-        <ul class="small">
-            @foreach (var h in Model.History.OrderByDescending(x => x.ChangedAt))
-            {
-                <li>@h.ChangedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") - @h.User.Username: @h.Summary</li>
-            }
-        </ul>
->>>>>>> origin/main
     }
 
     @{
