@@ -290,7 +290,7 @@
     z-index: 1055;
 }
 
-.filter-card .ts-dropdown {
+.ts-dropdown {
     z-index: 1056;
     background: #fff;
     border-color: var(--tblr-border-color, #dbe0e6);
