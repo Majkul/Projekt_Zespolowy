@@ -74,13 +74,6 @@
                                    data-listing-price="@priceStr"
                                    checked="@(Model.SelectedInitiatorListingIds.Contains(l.Id))" />
                             <label class="form-check-label flex-grow-1 mb-0" for="i_@l.Id">@l.Title (@l.Price.FormatPricePLN())@(l.StockQuantity > 1 ? $" · {l.StockQuantity} szt." : "")</label>
-                            @{
-                                var img = l.Photos?.FirstOrDefault(p => p.IsFeatured)?.Upload?.Url ?? l.Photos?.FirstOrDefault()?.Upload?.Url;
-                            }
-                            @if (!string.IsNullOrEmpty(img))
-                            {
-                                <img src="@img" alt="" class="rounded flex-shrink-0" style="width:40px;height:40px;object-fit:cover;" />
-                            }
                             @if (l.StockQuantity > 1)
                             {
                                 <div class="d-flex align-items-center gap-1 ms-auto">
@@ -91,6 +84,13 @@
                             else
                             {
                                 <input type="hidden" name="initiatorQuantities[@l.Id]" value="1" />
+                            }
+                            @{
+                                var img = l.Photos?.FirstOrDefault(p => p.IsFeatured)?.Upload?.Url ?? l.Photos?.FirstOrDefault()?.Upload?.Url;
+                            }
+                            @if (!string.IsNullOrEmpty(img))
+                            {
+                                <img src="@img" alt="" class="rounded flex-shrink-0" style="width:40px;height:40px;object-fit:cover;" />
                             }
                         </div>
                     }
@@ -127,13 +127,6 @@
                                    data-listing-price="@priceStr"
                                    checked="@(Model.SelectedReceiverListingIds.Contains(l.Id))" />
                             <label class="form-check-label flex-grow-1 mb-0" for="r_@l.Id">@l.Title (@l.Price.FormatPricePLN())@(l.StockQuantity > 1 ? $" · {l.StockQuantity} szt." : "")</label>
-                            @{
-                                var img = l.Photos?.FirstOrDefault(p => p.IsFeatured)?.Upload?.Url ?? l.Photos?.FirstOrDefault()?.Upload?.Url;
-                            }
-                            @if (!string.IsNullOrEmpty(img))
-                            {
-                                <img src="@img" alt="" class="rounded flex-shrink-0" style="width:40px;height:40px;object-fit:cover;" />
-                            }
                             @if (l.StockQuantity > 1)
                             {
                                 <div class="d-flex align-items-center gap-1 ms-auto">
@@ -144,6 +137,13 @@
                             else
                             {
                                 <input type="hidden" name="receiverQuantities[@l.Id]" value="1" />
+                            }
+                            @{
+                                var img = l.Photos?.FirstOrDefault(p => p.IsFeatured)?.Upload?.Url ?? l.Photos?.FirstOrDefault()?.Upload?.Url;
+                            }
+                            @if (!string.IsNullOrEmpty(img))
+                            {
+                                <img src="@img" alt="" class="rounded flex-shrink-0" style="width:40px;height:40px;object-fit:cover;" />
                             }
                         </div>
                     }
