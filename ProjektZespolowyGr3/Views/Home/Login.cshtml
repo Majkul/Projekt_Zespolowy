@@ -16,6 +16,14 @@
 
         <div class="card card-md">
             <div class="card-body">
+                @if (TempData["AlertSuccess"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                        @TempData["AlertSuccess"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
                 <form asp-action="Login">
                     <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                     <div class="mb-3">
