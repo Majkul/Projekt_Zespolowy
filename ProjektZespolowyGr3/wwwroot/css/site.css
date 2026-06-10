@@ -35,9 +35,62 @@
 }
 
 @media (max-width: 991.98px) {
+    /* Zwinięte menu nie może przekraczać wysokości ekranu */
     .navbar-collapse {
         max-height: 80vh;
         overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    /* Prawa grupa (konto, powiadomienia, panel) w wąskim widoku tworzy
+       poziomy, wyśrodkowany rząd ikon zamiast pionowej kolumny przy lewej */
+    .app-navbar .navbar-nav.ms-auto {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .app-navbar .navbar-nav .nav-link {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+
+    /* Rozwijane menu w zwiniętym navbarze: zamiast pozycjonowania
+       absolutnego (które ucieka poza ekran) renderuj je w przepływie,
+       na całą szerokość, bez strzałki i nadmiarowego cienia */
+    .app-navbar .navbar-collapse .dropdown-menu {
+        position: static !important;
+        float: none;
+        width: 100%;
+        margin-top: 0.25rem;
+        border: 0;
+        box-shadow: none;
+        background-color: rgba(15, 23, 42, 0.03);
+        border-radius: var(--tblr-border-radius, 6px);
+    }
+
+    .app-navbar .navbar-collapse .dropdown-menu-arrow::before {
+        display: none;
+    }
+
+    /* Formularz wyszukiwania zajmuje pełną szerokość pod menu */
+    .app-navbar .navbar-search {
+        max-width: 100% !important;
+    }
+}
+
+/* Zapobiega poziomemu przewijaniu strony wywołanemu przez navbar
+   na bardzo wąskich ekranach */
+@media (max-width: 575.98px) {
+    .app-navbar .container-xl {
+        flex-wrap: wrap;
+    }
+
+    .app-navbar .navbar-brand {
+        font-size: 1.05rem;
     }
 }
 
@@ -206,6 +259,33 @@
         border-color: rgba(var(--tblr-primary-rgb, 0, 84, 166), 0.35);
         box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
     }
+
+/* Poświata (glow) dla wyróżnionych ofert */
+.listing-card-featured {
+    border-color: rgba(245, 159, 0, 0.55);
+    box-shadow: 0 0 0 1px rgba(245, 159, 0, 0.45), 0 0 18px rgba(245, 159, 0, 0.45);
+    animation: listing-featured-glow 2.4s ease-in-out infinite;
+}
+
+    .listing-card-featured:hover {
+        border-color: rgba(245, 159, 0, 0.75);
+        box-shadow: 0 0 0 1px rgba(245, 159, 0, 0.55), 0 18px 40px rgba(245, 159, 0, 0.35);
+    }
+
+@keyframes listing-featured-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 1px rgba(245, 159, 0, 0.45), 0 0 14px rgba(245, 159, 0, 0.35);
+    }
+    50% {
+        box-shadow: 0 0 0 1px rgba(245, 159, 0, 0.55), 0 0 24px rgba(245, 159, 0, 0.55);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .listing-card-featured {
+        animation: none;
+    }
+}
 
 .listing-card-media {
     position: relative;
