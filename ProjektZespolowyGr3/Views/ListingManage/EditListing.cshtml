@@ -33,17 +33,20 @@
                     <div class="mb-3">
                         <label asp-for="Title" class="form-label" id="label-Title">Tytuł</label>
                         <input asp-for="Title" class="form-control" id="input-Title" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="Description" class="form-label" id="label-Description">Opis</label>
                         <textarea asp-for="Description" class="form-control" rows="4" id="input-Description"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="Price" class="form-label" id="label-Price">Cena (PLN)</label>
                             <input asp-for="Price" type="number" class="form-control" step="0.01" min="0" max="1000000" id="input-Price" />
+                            <span asp-validation-for="Price" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label asp-for="StockQuantity" class="form-label" id="label-StockQuantity">Liczba sztuk</label>
@@ -56,6 +59,7 @@
                     <div class="mb-3">
                         <label class="form-label" id="label-SelectedTagIds" for="tagSelectEdit">Tagi</label>
                         <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tagSelectEdit"></select>
+                        <span asp-validation-for="SelectedTagIds" class="text-danger small"></span>
                     </div>
 
                     <div class="card card-sm mb-3 border-info" id="exchange-fields">
@@ -64,6 +68,8 @@
                             <div class="mb-3">
                                 <label asp-for="MinExchangeValue" class="form-label" id="label-MinExchangeValue">Minimalna wartość oferty kupującego (PLN)</label>
                                 <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" max="1000000" class="form-control" id="input-MinExchangeValue" />
+                                <small class="form-hint">Pusta wartość = brak progu.</small>
+                                <span asp-validation-for="MinExchangeValue" class="text-danger small"></span>
                             </div>
                             <div class="mb-3">
                                 <label asp-for="ExchangeDescription" class="form-label" id="label-ExchangeDescription">Czego szukasz w zamian</label>
@@ -72,6 +78,7 @@
                             <div class="mb-0">
                                 <label class="form-label" id="label-SelectedExchangeAcceptedTagIds" for="tagSelectEditExchange">Akceptowane tagi przy wymianie</label>
                                 <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tagSelectEditExchange"></select>
+                                <small class="form-hint">Jeśli nic nie wybierzesz - dowolne kategorie.</small>
                             </div>
                         </div>
                     </div>
@@ -110,6 +117,7 @@
                             <input asp-for="PhotoFiles" type="file" class="form-control image-upload-input" multiple accept=".jpg,.jpeg,.png" />
                         </div>
                         <small class="form-hint">Maks. 5 zdjęć, tylko .jpg/.jpeg/.png</small>
+                        <span asp-validation-for="PhotoFiles" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-2">
@@ -142,150 +150,125 @@
     </div>
 </div>
 
-<script>
-    const notExchangeableSelect = document.getElementById('input-NotExchangeable');
-    const priceLabel = document.getElementById('label-Price');
-    const exchangeFields = document.getElementById('exchange-fields');
-    const exchangeFieldNames = ['MinExchangeValue', 'ExchangeDescription', 'SelectedExchangeAcceptedTagIds'];
-
-    const priceLabelText = "Cena (PLN)";
-
-    function toggleIsPriceRequired() {
-        priceLabel.textContent = priceLabelText + (notExchangeableSelect.checked ? " *" : "");
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        const notExchangeableSelect = document.getElementById('input-NotExchangeable');
+        const priceLabel = document.getElementById('label-Price');
+        const exchangeFields = document.getElementById('exchange-fields');
+        const exchangeFieldNames = ['MinExchangeValue', 'ExchangeDescription', 'SelectedExchangeAcceptedTagIds'];
 
-    function toggleExchangeFields() {
-        const disabled = notExchangeableSelect.checked;
-        exchangeFields.classList.toggle('d-none', disabled);
-        exchangeFields.querySelectorAll('input, textarea, select').forEach(function (input) {
-            input.disabled = disabled;
-            if (disabled) {
-                if (input.multiple) {
-                    Array.from(input.options).forEach(option => option.selected = false);
+        const priceLabelText = "Cena (PLN)";
+
+        function toggleIsPriceRequired() {
+            priceLabel.textContent = priceLabelText + (notExchangeableSelect.checked ? " *" : "");
+        }
+
+        function toggleExchangeFields() {
+            const disabled = notExchangeableSelect.checked;
+            exchangeFields.classList.toggle('d-none', disabled);
+            exchangeFields.querySelectorAll('input, textarea, select').forEach(function (input) {
+                if (input.class.classList.contains(disabled)) {
+                    input.classList.remove('disabled');
+                    input.classList.remove('locked');
                 } else {
-                    input.value = '';
+                    input.classList.add('disabled');
+                    input.classList.add('locked');
                 }
-            }
-        });
-    }
-
-    function normalizeText(value) {
-        return (value || '').trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    }
-
-    function selectedValues(input) {
-        return Array.from(input.selectedOptions)
-            .map(option => option.value)
-            .sort((a, b) => Number(a) - Number(b))
-            .join(',');
-    }
-
-    function isExchangeField(field) {
-        return exchangeFieldNames.includes(field);
-    }
-
-    const initialValues = {
-        Title: normalizeText(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Title ?? ""))),
-        Description: normalizeText(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Description ?? ""))),
-        Price: '@(Model.Price.HasValue ? Model.Price.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")',
-        SelectedTagIds: '@string.Join(",", (Model.SelectedTagIds ?? new List<int>()).OrderBy(id => id))',
-        StockQuantity: '@Model.StockQuantity',
-        NotExchangeable: '@Model.NotExchangeable.ToString().ToLower()',
-        MinExchangeValue: '@(!Model.NotExchangeable && Model.MinExchangeValue.HasValue ? Model.MinExchangeValue.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")',
-        ExchangeDescription: normalizeText(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.NotExchangeable ? "" : Model.ExchangeDescription ?? ""))),
-        SelectedExchangeAcceptedTagIds: '@(!Model.NotExchangeable ? string.Join(",", (Model.SelectedExchangeAcceptedTagIds ?? new List<int>()).OrderBy(id => id)) : "")',
-        IsFeatured: '@Model.IsFeatured.ToString().ToLower()',
-        IsPrivate: '@Model.IsPrivate.ToString().ToLower()'
-    };
-
-    function currentValue(field, input) {
-        if (isExchangeField(field) && notExchangeableSelect.checked) {
-            return '';
-        }
-
-        if (input.type === "checkbox") {
-            return input.checked.toString();
-        }
-
-        if (input.multiple) {
-            return selectedValues(input);
-        }
-
-        return normalizeText(input.value);
-    }
-
-    function updateLabel(field, value) {
-        const label = document.getElementById('label-' + field);
-        if (label) {
-            label.style.fontWeight = value !== initialValues[field] ? 'bold' : 'normal';
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const fields = initialValues ? Object.keys(initialValues) : [];
-
-        fields.forEach(function (field) {
-            const input = document.getElementById(getInputId(field));
-            if (input) {
-                if (input.type === "checkbox") {
-                    input.addEventListener('change', function () {
-                        updateLabel(field, currentValue(field, input));
-                    });
-                } else if (input.multiple) {
-                    input.addEventListener('change', function () {
-                        updateLabel(field, currentValue(field, input));
-                    });
-                } else {
-                    input.addEventListener('input', function () {
-                        updateLabel(field, currentValue(field, input));
-                    });
-                }
-            }
-        });
-
-        notExchangeableSelect.addEventListener('change', function () {
-            toggleIsPriceRequired();
-            toggleExchangeFields();
-            fields.forEach(function (field) {
-                const input = document.getElementById(getInputId(field));
-                if (input) {
-                    updateLabel(field, currentValue(field, input));
-                }
+                input.disabled = disabled;
             });
-        });
-        toggleIsPriceRequired();
-        toggleExchangeFields();
+        }
 
-        const form = document.getElementById('edit-listing-form');
-        form.addEventListener('submit', function (e) {
-            let changedFields = [];
+        function normalizeText(value) {
+            return (value || '').trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        }
+
+        function selectedValues(input) {
+            return Array.from(input.selectedOptions)
+                .map(option => option.value)
+                .sort((a, b) => Number(a) - Number(b))
+                .join(',');
+        }
+
+        function isExchangeField(field) {
+            return exchangeFieldNames.includes(field);
+        }
+
+        const initialValues = {
+            Title: normalizeText(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Title ?? ""))),
+            Description: normalizeText(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Description ?? ""))),
+            Price: '@(Model.Price.HasValue ? Model.Price.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")',
+            SelectedTagIds: '@string.Join(",", (Model.SelectedTagIds ?? new List<int>()).OrderBy(id => id))',
+            StockQuantity: '@Model.StockQuantity',
+            NotExchangeable: '@Model.NotExchangeable.ToString().ToLower()',
+            MinExchangeValue: '@(!Model.NotExchangeable && Model.MinExchangeValue.HasValue ? Model.MinExchangeValue.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")',
+            ExchangeDescription: normalizeText(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.NotExchangeable ? "" : Model.ExchangeDescription ?? ""))),
+            SelectedExchangeAcceptedTagIds: '@(!Model.NotExchangeable ? string.Join(",", (Model.SelectedExchangeAcceptedTagIds ?? new List<int>()).OrderBy(id => id)) : "")',
+            IsFeatured: '@Model.IsFeatured.ToString().ToLower()',
+            IsPrivate: '@Model.IsPrivate.ToString().ToLower()'
+        };
+
+        function currentValue(field, input) {
+            if (isExchangeField(field) && notExchangeableSelect.checked) {
+                return '';
+            }
+
+            if (input.type === "checkbox") {
+                return input.checked.toString();
+            }
+
+            if (input.multiple) {
+                return selectedValues(input);
+            }
+
+            return normalizeText(input.value);
+        }
+
+        function updateLabel(field, value) {
+            const label = document.getElementById('label-' + field);
+            if (label) {
+                label.style.fontWeight = value !== initialValues[field] ? 'bold' : 'normal';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const fields = initialValues ? Object.keys(initialValues) : [];
+
             fields.forEach(function (field) {
                 const input = document.getElementById(getInputId(field));
-                let value;
                 if (input) {
-                    value = currentValue(field, input);
-                    if (value != initialValues[field]) {
-                        changedFields.push(field);
+                    if (input.type === "checkbox") {
+                        input.addEventListener('change', function () {
+                            updateLabel(field, currentValue(field, input));
+                        });
+                    } else if (input.multiple) {
+                        input.addEventListener('change', function () {
+                            updateLabel(field, currentValue(field, input));
+                        });
+                    } else {
+                        input.addEventListener('input', function () {
+                            updateLabel(field, currentValue(field, input));
+                        });
                     }
                 }
             });
 
-            if (changedFields.length > 0) {
-                const fieldNames = changedFields.map(f => {
-                    switch (f) {
-                        case 'SelectedTagIds': return 'Tagi';
-                        case 'SelectedExchangeAcceptedTagIds': return 'Akceptowane tagi wymiany'
-                        default: return f;
+            notExchangeableSelect.addEventListener('change', function () {
+                toggleIsPriceRequired();
+                toggleExchangeFields();
+                fields.forEach(function (field) {
+                    const input = document.getElementById(getInputId(field));
+                    if (input) {
+                        updateLabel(field, currentValue(field, input));
                     }
                 });
-                const msg = "Czy na pewno chcesz zmienić " + fieldNames.join(", ") + "?";
-                if (!confirm(msg)) {
-                    e.preventDefault();
-                }
-            }
-        });
-    });
+            });
+            toggleIsPriceRequired();
+            toggleExchangeFields();
 
+<<<<<<< HEAD
     let shippingCount = @Model.ShippingOptions.Count;
     function addShippingRow() {
         const container = document.getElementById('shipping-options-container');
@@ -329,6 +312,47 @@
                 return 'tagSelectEditExchange';
             default:
                 return 'input-' + field;
+=======
+            const form = document.getElementById('edit-listing-form');
+            form.addEventListener('submit', function (e) {
+                let changedFields = [];
+                fields.forEach(function (field) {
+                    const input = document.getElementById(getInputId(field));
+                    let value;
+                    if (input) {
+                        value = currentValue(field, input);
+                        if (value != initialValues[field]) {
+                            changedFields.push(field);
+                        }
+                    }
+                });
+
+                if (changedFields.length > 0) {
+                    const fieldNames = changedFields.map(f => {
+                        switch (f) {
+                            case 'SelectedTagIds': return 'Tagi';
+                            case 'SelectedExchangeAcceptedTagIds': return 'Akceptowane tagi wymiany'
+                            default: return f;
+                        }
+                    });
+                    const msg = "Czy na pewno chcesz zmienić " + fieldNames.join(", ") + "?";
+                    if (!confirm(msg)) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+
+        function getInputId(field) {
+            switch (field) {
+                case 'SelectedTagIds':
+                    return 'tagSelectEdit';
+                case 'SelectedExchangeAcceptedTagIds':
+                    return 'tagSelectEditExchange';
+                default:
+                    return 'input-' + field;
+            }
+>>>>>>> origin/fixy-2
         }
-    }
-</script>
+    </script>
+}

@@ -201,8 +201,9 @@ namespace ProjektZespolowyGr3.Controllers.User
                 rootTradeProposalId = edit.RootTradeProposalId ?? edit.Id;
             }
 
-            var initiatorPool = await QueryPool(initiatorId, userId, rootTradeProposalId);
-            var receiverPool = await QueryPool(receiverId, userId, rootTradeProposalId);
+            var requiredTags = subject.ExchangeAcceptedTags.Select(e => e.TagId).ToList();
+            var initiatorPool = await QueryPool(initiatorId, userId, requiredTags, rootTradeProposalId);
+            var receiverPool = await QueryPool(receiverId, userId, [], rootTradeProposalId);
 
             var initiatorUser = await _context.Users.FindAsync(initiatorId);
             var receiverUser = await _context.Users.FindAsync(receiverId);
@@ -276,12 +277,14 @@ namespace ProjektZespolowyGr3.Controllers.User
             return View(vm);
         }
 
-        private async Task<List<Listing>> QueryPool(int sellerId, int currentUserId, int? rootTradeProposalId = null)
+        private async Task<List<Listing>> QueryPool(int sellerId, int currentUserId, List<int> requiredTags, int? rootTradeProposalId = null)
         {
+            var requiresTags = requiredTags.Count > 0;
+
             var query = _context.Listings
                 .Include(l => l.Photos).ThenInclude(p => p.Upload)
                 .Include(l => l.Tags).ThenInclude(t => t.Tag)
-                .Where(l => l.SellerId == sellerId && !l.IsArchived && !l.NotExchangeable && l.StockQuantity > 0 && !l.IsSold);
+                .Where(l => l.SellerId == sellerId && !l.IsArchived && !l.NotExchangeable && l.StockQuantity > 0 && !l.IsSold && (!requiresTags || l.Tags.Any(t => requiredTags.Contains(t.TagId))));
 
             if (sellerId != currentUserId)
             {

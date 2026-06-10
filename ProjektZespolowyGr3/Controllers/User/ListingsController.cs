@@ -327,8 +327,6 @@ namespace ProjektZespolowyGr3.Controllers.User
         [HttpGet]
         public async Task<IActionResult> Create(int? forTradeListingId)
         {
-            // TODO: usunac
-            _helper.MakeSomeTags();
             var model = new CreateListingViewModel
             {
                 AvailableTags = _context.Tags
