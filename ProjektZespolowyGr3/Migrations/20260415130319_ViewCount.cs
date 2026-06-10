@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -10,12 +10,9 @@ namespace ProjektZespolowyGr3.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "ViewCount",
-                table: "Listings",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0);
+            migrationBuilder.Sql(@"
+ALTER TABLE ""Listings"" ADD COLUMN IF NOT EXISTS ""ViewCount"" integer NOT NULL DEFAULT 0;
+");
         }
 
         /// <inheritdoc />

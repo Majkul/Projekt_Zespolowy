@@ -4,6 +4,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
 {
     public class User
     {
+        [Required, Key]
         public int Id { get; set; }
 
         [Required]

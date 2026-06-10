@@ -1,0 +1,41 @@
+﻿@{
+    var selectedTab = ViewBag.SelectedTab as string ?? "Users";
+
+    List<T> GetModelList<T>()
+    {
+        if (Model is List<T> list)
+            return list;
+        return new List<T>();
+    }
+}
+
+<h2>Users manage</h2>
+
+<ul class="nav nav-tabs" role="tablist">
+    @foreach (var tab in new[] { "Users", "Admins" })
+    {
+        var isActive = (selectedTab == tab) ? "active" : "";
+        <li class="nav-item" role="presentation">
+            <a class="nav-link @isActive" href="@Url.Action("Index", new { tab })" role="tab" aria-selected="@(isActive == "active")">@tab</a>
+        </li>
+    }
+</ul>
+
+<div class="tab-content mt-3">
+    @switch (selectedTab)
+    {
+        case "Users":
+            var users = GetModelList<ProjektZespolowyGr3.Models.DbModels.User>();
+            <partial name="_Users" model="users" />
+            break;
+
+        case "Admins":
+            var admins = GetModelList<ProjektZespolowyGr3.Models.DbModels.User>();
+            <partial name="_Admins" model="admins" />
+            break;
+
+        default:
+            <div class="alert alert-warning">Invalid tab selected.</div>
+            break;
+    }
+</div>

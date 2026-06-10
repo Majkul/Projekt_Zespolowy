@@ -108,6 +108,12 @@
                         <td>@item.Listing.Price.FormatPricePLN()</td>
                         <td>
                             <div class="btn-list flex-nowrap">
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <form asp-action="ToggleFeature" asp-route-id="@item.Listing.Id" method="post">
+                                        <button type="submit" class="btn btn-sm @(item.Listing.IsFeatured ? "btn-warning" : "btn-outline-warning")" title="@(item.Listing.IsFeatured ? "Usuń wyróżnienie" : "Wyróżnij ofertę")">★</button>
+                                    </form>
+                                }
                                 @if (!showArchived)
                                 {
                                     <a asp-action="EditListing" asp-route-id="@item.Listing.Id" class="btn btn-sm btn-outline-primary">Edytuj</a>

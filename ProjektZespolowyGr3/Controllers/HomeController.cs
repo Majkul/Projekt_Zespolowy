@@ -33,6 +33,14 @@ public class HomeController : Controller
     public async Task<IActionResult> Index()
     {
         // Pobierz kilka najnowszych aktywnych ofert do wyświetlenia na stronie głównej
+        var featuredListings = await _context.Listings
+            .Where(l => l.IsFeatured && !l.IsSold && !l.IsArchived)
+            .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
+            .Include(l => l.Seller)
+            .OrderByDescending(l => l.CreatedAt)
+            .Take(4)
+            .ToListAsync();
+
         var latestListings = await _context.Listings
             .Where(l => !l.IsSold && !l.IsArchived && !l.IsPrivate && l.StockQuantity > 0)
             .Include(l => l.Photos)
@@ -42,6 +50,7 @@ public class HomeController : Controller
             .Take(8)
             .ToListAsync();
 
+        ViewBag.FeaturedListings = featuredListings;
         ViewBag.LatestListings = latestListings;
         return View();
     }

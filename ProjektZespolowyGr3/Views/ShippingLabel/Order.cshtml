@@ -1,0 +1,148 @@
+@model ProjektZespolowyGr3.Models.ViewModels.ShippingLabelViewModel
+
+@{
+    ViewData["Title"] = "Etykieta nadawcza – " + Model.ReferenceNumber;
+    Layout = "_Layout";
+}
+
+<style>
+    @@media print {
+        .no-print { display: none !important; }
+        body { background: white !important; }
+        .label-card { box-shadow: none !important; border: 2px solid #000 !important; }
+    }
+
+    .label-card {
+        border: 2px solid #212529;
+        border-radius: 8px;
+        max-width: 700px;
+        margin: 0 auto;
+        font-family: 'Courier New', monospace;
+    }
+
+    .label-header {
+        background: #212529;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 5px 5px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .label-section {
+        padding: 16px 20px;
+        border-bottom: 1px dashed #999;
+    }
+
+    .label-section:last-child { border-bottom: none; }
+
+    .label-role {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #6c757d;
+        margin-bottom: 4px;
+    }
+
+    .label-name {
+        font-size: 1.15rem;
+        font-weight: bold;
+    }
+
+    .barcode {
+        font-size: 2.5rem;
+        letter-spacing: 8px;
+        color: #212529;
+        font-family: 'Libre Barcode 39', monospace;
+    }
+
+    .ref-text {
+        font-size: 0.75rem;
+        text-align: center;
+        letter-spacing: 2px;
+        color: #444;
+    }
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Libre+Barcode+39&display=swap" rel="stylesheet">
+
+<div class="container mt-4 mb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+        <h4 class="mb-0">Etykieta nadawcza — @Model.LabelType</h4>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-primary">
+                🖨️ Drukuj etykietę
+            </button>
+            <a href="javascript:history.back()" class="btn btn-outline-secondary">Wróć</a>
+        </div>
+    </div>
+
+    <div class="alert alert-info no-print" role="alert">
+        <strong>Wskazówka:</strong> Wytnij wzdłuż ramki i przyklej do paczki. Jeśli adres jest niepełny, uzupełnij go ręcznie.
+    </div>
+
+    <div class="label-card shadow mt-3">
+
+        <div class="label-header">
+            <div>
+                <div style="font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; opacity:0.7;">HandlujZTym</div>
+                <div style="font-size:1rem; font-weight:bold;">📦 @Model.LabelType</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.7rem; opacity:0.7;">Data</div>
+                <div>@Model.Date.ToLocalTime().ToString("dd.MM.yyyy")</div>
+            </div>
+        </div>
+
+        <div class="label-section">
+            <div class="label-role">Nadawca (Od)</div>
+            <div class="label-name">@Model.From.Name</div>
+            @if (!string.IsNullOrWhiteSpace(Model.From.Address))
+            {
+                <div>@Model.From.Address</div>
+            }
+            else
+            {
+                <div class="text-muted fst-italic" style="font-size:0.85rem;">Adres nie został podany w profilu</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.From.Phone))
+            {
+                <div class="text-muted" style="font-size:0.85rem;">Tel: @Model.From.Phone</div>
+            }
+        </div>
+
+        <div class="label-section" style="background:#f8f9fa;">
+            <div class="label-role" style="color:#0d6efd; font-weight:bold;">Odbiorca (Do) ▼</div>
+            <div class="label-name" style="font-size:1.35rem;">@Model.To.Name</div>
+            @if (!string.IsNullOrWhiteSpace(Model.To.Address))
+            {
+                <div style="font-size:1.05rem;">@Model.To.Address</div>
+            }
+            else
+            {
+                <div class="text-muted fst-italic" style="font-size:0.85rem;">Adres nie został podany w profilu — uzupełnij ręcznie</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.To.Phone))
+            {
+                <div class="text-muted" style="font-size:0.85rem;">Tel: @Model.To.Phone</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.To.Email))
+            {
+                <div class="text-muted" style="font-size:0.85rem;">E-mail: @Model.To.Email</div>
+            }
+        </div>
+
+        <div class="label-section">
+            <div class="label-role">Zawartość</div>
+            <div>@Model.Contents</div>
+        </div>
+
+        <div class="label-section text-center">
+            <div class="barcode">*@Model.ReferenceNumber*</div>
+            <div class="ref-text">@Model.ReferenceNumber</div>
+        </div>
+
+    </div>
+</div>

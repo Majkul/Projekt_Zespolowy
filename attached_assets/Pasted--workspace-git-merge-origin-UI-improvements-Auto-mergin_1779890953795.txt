@@ -1,0 +1,29 @@
+/workspace$ git merge origin/UI_improvements
+Auto-merging .gitignore
+Auto-merging ProjektZespolowyGr3.Tests/Controllers/ListingsControllerTests.cs
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3.Tests/Controllers/ListingsControllerTests.cs
+Auto-merging ProjektZespolowyGr3/Controllers/Admin/ListingManageController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/User/ListingsController.cs
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Controllers/User/ListingsController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/User/MessagesController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/User/ReviewsController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/User/TicketsController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/User/TradeProposalsController.cs
+Auto-merging ProjektZespolowyGr3/Migrations/MyDBContextModelSnapshot.cs
+Auto-merging ProjektZespolowyGr3/Models/DbModels/Listing.cs
+Auto-merging ProjektZespolowyGr3/Models/DbModels/User.cs
+Auto-merging ProjektZespolowyGr3/Models/MyDBContext.cs
+Auto-merging ProjektZespolowyGr3/ProjektZespolowyGr3.csproj
+Auto-merging ProjektZespolowyGr3/Views/Home/Index.cshtml
+Auto-merging ProjektZespolowyGr3/Views/ListingManage/EditListing.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/ListingManage/EditListing.cshtml
+Auto-merging ProjektZespolowyGr3/Views/ListingManage/Index.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Listings/Create.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Listings/Details.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Listings/Index.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/Listings/Index.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Shared/_Layout.cshtml
+Auto-merging ProjektZespolowyGr3/Views/TradeProposals/Compose.cshtml
+Auto-merging ProjektZespolowyGr3/Views/TradeProposals/Details.cshtml
+CONFLICT (modify/delete): ProjektZespolowyGr3/appsettings.Development.json deleted in HEAD and modified in origin/UI_improvements.  Version origin/UI_improvements of ProjektZespolowyGr3/appsettings.Development.json left in tree.
+Automatic merge failed; fix conflicts and then commit the result.

@@ -44,5 +44,11 @@ namespace ProjektZespolowyGr3.Models.ViewModels
 
         /// <summary>Przy kontrofercie – propozycja, na którą odpowiadasz (tylko do podglądu).</summary>
         public TradeProposal? ParentProposal { get; set; }
+
+        /// <summary>Nieformalne przedmioty (niezgłoszone w systemie) oferowane przez inicjatora.</summary>
+        public List<CustomItemInput> InitiatorCustomItems { get; set; } = new();
+
+        /// <summary>Nieformalne przedmioty (niezgłoszone w systemie) oferowane przez odbiorcę.</summary>
+        public List<CustomItemInput> ReceiverCustomItems { get; set; } = new();
     }
 }

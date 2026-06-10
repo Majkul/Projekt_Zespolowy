@@ -17,5 +17,11 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
         /// <summary>Dopłata gotówką po danej stronie wymiany.</summary>
         public decimal? CashAmount { get; set; }
+
+        /// <summary>Tytuł/opis nieformalnego przedmiotu (niezgłoszonego w systemie) dodanego do oferty.</summary>
+        public string? CustomOfferTitle { get; set; }
+
+        /// <summary>Szacowana wartość nieformalnego przedmiotu (PLN).</summary>
+        public decimal? CustomOfferEstimatedValue { get; set; }
     }
 }

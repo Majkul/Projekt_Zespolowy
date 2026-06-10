@@ -59,11 +59,7 @@ namespace ProjektZespolowyGr3.Migrations
                 oldClrType: typeof(string),
                 oldType: "text");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_Username",
-                table: "Users",
-                column: "Username",
-                unique: true);
+            migrationBuilder.Sql(@"CREATE UNIQUE INDEX IF NOT EXISTS ""IX_Users_Username"" ON ""Users"" (""Username"");");
         }
 
         /// <inheritdoc />

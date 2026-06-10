@@ -25,8 +25,9 @@ namespace ProjektZespolowyGr3.Controllers.User
         private readonly HelperService _helper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IGeocodingService _geocodingService;
+        private readonly ICardFeeService _cardFeeService;
 
-        public ListingsController(MyDBContext context, IFileService fileService, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor, IGeocodingService geocodingService)
+        public ListingsController(MyDBContext context, IFileService fileService, AuthService auth, HelperService helper, IHttpContextAccessor httpContextAccessor, IGeocodingService geocodingService, ICardFeeService cardFeeService)
         {
             _context = context;
             _fileService = fileService;
@@ -34,15 +35,17 @@ namespace ProjektZespolowyGr3.Controllers.User
             _helper = helper;
             _httpContextAccessor = httpContextAccessor;
             _geocodingService = geocodingService;
+            _cardFeeService = cardFeeService;
         }
 
         // GET: Listings
         public async Task<IActionResult> Index(
             string? searchString,
-            List<int>? tagIds,
+            string? location,
+            string? type,
             decimal? minPrice,
             decimal? maxPrice,
-            string? listingType,
+            List<int>? selectedTagIds,
             string? sortBy,
             int? maxDistanceKm,
             double? userLat,
@@ -56,19 +59,21 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             ViewBag.AllTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
             ViewBag.SearchString = searchString;
-            ViewBag.TagIds = tagIds ?? new List<int>();
+            ViewBag.TagIds = selectedTagIds ?? new List<int>();
             ViewBag.MinPrice = minPrice;
             ViewBag.MaxPrice = maxPrice;
-            ViewBag.ListingType = listingType ?? "";
+            ViewBag.ListingType = type ?? "";
             ViewBag.SortBy = sortBy ?? "newest";
             ViewBag.MaxDistanceKm = maxDistanceKm;
             ViewBag.UserLat = userLat;
             ViewBag.UserLng = userLng;
             ViewBag.PageSize = pageSize;
 
+            selectedTagIds ??= new List<int>();
+
             IQueryable<Listing> query = _context.Listings
-                .Include(l => l.Photos)
-                    .ThenInclude(lp => lp.Upload)
+                .Where(l => !l.IsArchived)
+                .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
                 .Include(l => l.Reviews)
                 .Include(l => l.Seller)
                     .ThenInclude(s => s.Listings)
@@ -77,6 +82,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                     .ThenInclude(lt => lt.Tag)
                 .Where(l => l.IsArchived == false && l.IsPrivate == false && !l.IsSold && l.StockQuantity > 0);
 
+            // Text search
             if (!string.IsNullOrWhiteSpace(searchString))
             {
                 var term = searchString.Trim();
@@ -85,19 +91,34 @@ namespace ProjektZespolowyGr3.Controllers.User
                     (l.Description != null && EF.Functions.ILike(l.Description, $"%{term}%")));
             }
 
-            if (tagIds?.Any() == true)
-                query = query.Where(l => l.Tags.Any(lt => tagIds.Contains(lt.TagId)));
+            // Location filter
+            if (!string.IsNullOrWhiteSpace(location))
+            {
+                var locTerm = location.Trim();
+                query = query.Where(l => l.Location != null && EF.Functions.ILike(l.Location, $"%{locTerm}%"));
+            }
 
+            // Type filter
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                if (type == "Sale")
+                    query = query.Where(l => l.Type == ListingType.Sale);
+                else if (type == "Trade")
+                    query = query.Where(l => l.Type == ListingType.Trade);
+            }
+
+            // Price range
             if (minPrice.HasValue)
-                query = query.Where(l => l.Price >= minPrice.Value);
-
+                query = query.Where(l => l.Price == null || l.Price >= minPrice.Value);
             if (maxPrice.HasValue)
-                query = query.Where(l => l.Price <= maxPrice.Value);
+                query = query.Where(l => l.Price == null || l.Price <= maxPrice.Value);
 
-            if (listingType == "sale")
-                query = query.Where(l => l.Price.HasValue);
-            else if (listingType == "trade")
-                query = query.Where(l => !l.NotExchangeable);
+            // Tag filter
+            if (selectedTagIds.Any())
+            {
+                foreach (var tagId in selectedTagIds)
+                    query = query.Where(l => l.Tags.Any(lt => lt.TagId == tagId));
+            }
 
             var requiresInMemoryPagination = sortBy == "rating" || (maxDistanceKm.HasValue && userLat.HasValue && userLng.HasValue);
 
@@ -222,6 +243,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 .Include(l => l.Reviews)
                     .ThenInclude(r => r.Photos)
                         .ThenInclude(rp => rp.Upload)
+                .Include(l => l.ShippingOptions)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (listing == null)
@@ -399,7 +421,9 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 Title = model.Title,
                 Description = model.Description,
-                Price = model.Price,
+                Location = string.IsNullOrWhiteSpace(model.Location) ? null : model.Location.Trim(),
+                Type = model.Type,
+                Price = model.Type == ListingType.Trade ? null : model.Price,
                 StockQuantity = model.StockQuantity,
                 SellerId = currentUserId,
                 CreatedAt = DateTime.UtcNow,
@@ -413,6 +437,15 @@ namespace ProjektZespolowyGr3.Controllers.User
                     : model.ExchangeDescription.Trim()
             };
             ListingStockHelper.SyncSoldFlag(listing);
+
+            foreach (var opt in model.ShippingOptions.Where(o => !string.IsNullOrWhiteSpace(o.Name)))
+            {
+                listing.ShippingOptions.Add(new ListingShippingOption
+                {
+                    Name = opt.Name.Trim(),
+                    Price = Math.Max(0, opt.Price)
+                });
+            }
 
             if (model.SelectedTagIds?.Any() == true)
             {
@@ -455,6 +488,12 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             _context.Listings.Add(listing);
             await _context.SaveChangesAsync();
+
+            var (feeOk, feeError) = await _cardFeeService.TryChargeListingFeeAsync(currentUserId, listing.Title);
+            if (feeOk)
+                TempData["ListingFeeInfo"] = "Pobrano opłatę za wystawienie ogłoszenia (0,50 PLN).";
+            else if (!string.IsNullOrEmpty(feeError))
+                TempData["ListingFeeWarning"] = $"Ogłoszenie wystawione, ale nie pobrano opłaty: {feeError}";
 
             if (forTradeListingId.HasValue)
                 return RedirectToAction("Compose", "TradeProposals", new { listingId = forTradeListingId.Value, preselectListingId = listing.Id });

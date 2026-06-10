@@ -1,0 +1,18 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+WORKDIR /app
+
+COPY ProjektZespolowyGr3/ProjektZespolowyGr3.csproj ProjektZespolowyGr3/
+RUN dotnet restore ProjektZespolowyGr3/ProjektZespolowyGr3.csproj
+
+COPY ProjektZespolowyGr3/ ProjektZespolowyGr3/
+
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_URLS=http://+:5000
+ENV DOTNET_USE_POLLING_FILE_WATCHER=1
+
+EXPOSE 5000
+
+WORKDIR /app/ProjektZespolowyGr3
+
+ENTRYPOINT ["dotnet", "run", "--no-launch-profile", "--project", "ProjektZespolowyGr3.csproj"]

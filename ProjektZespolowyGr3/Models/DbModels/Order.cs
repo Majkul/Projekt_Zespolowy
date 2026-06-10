@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ProjektZespolowyGr3.Models.DbModels
 {
     public class Order
@@ -17,6 +19,13 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
         public string PayUOrderId { get; set; } = string.Empty;
         public OrderStatus Status { get; set; }
+
+        /// <summary>Wybrana opcja dostawy (nazwa zapamiętana w momencie zakupu).</summary>
+        [StringLength(100)]
+        public string? SelectedShippingName { get; set; }
+
+        /// <summary>Koszt dostawy doliczony do zamówienia.</summary>
+        public decimal ShippingCost { get; set; } = 0;
 
         public DateTime CreatedAt { get; set; }
         public bool IsArchived { get; set; } = false;

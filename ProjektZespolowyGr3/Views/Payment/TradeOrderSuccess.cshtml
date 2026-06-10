@@ -1,0 +1,71 @@
+@model ProjektZespolowyGr3.Models.DbModels.TradeOrder
+@using ProjektZespolowyGr3.Models.DbModels
+
+@{
+    ViewData["Title"] = "Płatność za wymianę";
+}
+
+<div class="container mt-4" style="max-width:600px;">
+
+    @if (Model.Status == OrderStatus.Paid)
+    {
+        <div class="alert alert-success d-flex align-items-center gap-3 mb-4">
+            <span style="font-size:2rem;">✅</span>
+            <div>
+                <h4 class="mb-1">Płatność potwierdzona!</h4>
+                <p class="mb-0">Płatność za wymianę nr <strong>@Model.TradeProposalId</strong> została zrealizowana.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning d-flex align-items-center gap-3 mb-4">
+            <span style="font-size:2rem;">⏳</span>
+            <div>
+                <h4 class="mb-1">Płatność w trakcie przetwarzania</h4>
+                <p class="mb-0">Status zostanie potwierdzony automatycznie.</p>
+            </div>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Szczegóły płatności</h5>
+            <ul class="list-unstyled mb-0">
+                <li><strong>Wymiana nr:</strong> #@Model.TradeProposalId</li>
+                @if (Model.CashAmount > 0)
+                {
+                    <li><strong>Dopłata gotówkowa:</strong> @Model.CashAmount.ToString("C")</li>
+                }
+                @if (Model.ShippingCost > 0)
+                {
+                    <li><strong>Dostawa (@(Model.SelectedShippingName ?? "—")):</strong> @Model.ShippingCost.ToString("C")</li>
+                }
+                <li class="mt-1"><strong>Łącznie:</strong> @Model.TotalAmount.ToString("C")</li>
+                <li><strong>Data:</strong> @Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card border-primary mb-4">
+        <div class="card-header bg-primary text-white">📦 Etykiety wysyłkowe</div>
+        <div class="card-body">
+            <p class="mb-3">Wygeneruj etykiety nadawcze dla obu stron wymiany.</p>
+            <a asp-controller="ShippingLabel" asp-action="Trade" asp-route-tradeId="@Model.TradeProposalId"
+               class="btn btn-primary" target="_blank">
+                🖨️ Generuj etykiety wysyłkowe
+            </a>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a asp-controller="TradeProposals" asp-action="Details" asp-route-id="@Model.TradeProposalId"
+           class="btn btn-outline-secondary">
+            Wróć do wymiany
+        </a>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+            Strona główna
+        </a>
+    </div>
+
+</div>

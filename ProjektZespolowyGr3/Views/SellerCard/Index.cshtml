@@ -1,0 +1,158 @@
+@{
+    ViewData["Title"] = "Karta płatnicza";
+    var card = ViewBag.Card as ProjektZespolowyGr3.Models.DbModels.SellerCard;
+    var payouts = ViewBag.Payouts as List<ProjektZespolowyGr3.Models.DbModels.SellerPayout> ?? new();
+}
+
+<h2 class="mb-1">Karta płatnicza</h2>
+<p class="text-muted mb-4">
+    Podepnij kartę kredytową lub debetową, aby automatycznie opłacać wystawienie ogłoszeń (0,50&nbsp;PLN/szt.)
+    i otrzymywać wypłaty po sprzedaży (prowizja platformy: 5%).
+</p>
+
+@if (TempData["CardError"] != null)
+{
+    <div class="alert alert-danger">@TempData["CardError"]</div>
+}
+@if (TempData["CardSuccess"] != null)
+{
+    <div class="alert alert-success">@TempData["CardSuccess"]</div>
+}
+
+<div class="row g-4 mb-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header fw-semibold">
+                <i class="bi bi-credit-card me-2"></i>Podpięta karta
+            </div>
+            <div class="card-body">
+                @if (card != null)
+                {
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="bg-primary text-white rounded px-3 py-2 fw-bold fs-5" style="min-width:80px;text-align:center;">
+                            @card.Brand
+                        </div>
+                        <div>
+                            <div class="fw-semibold">•••• •••• •••• @(card.MaskedNumber.Length >= 4 ? card.MaskedNumber[^4..] : card.MaskedNumber)</div>
+                            <small class="text-muted">Ważna do: @card.ExpiryMonth.ToString("D2")/@card.ExpiryYear &nbsp;|&nbsp; Dodana: @card.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</small>
+                        </div>
+                    </div>
+                    <div class="alert alert-success py-2 small mb-3">
+                        <i class="bi bi-check-circle me-1"></i>
+                        Karta aktywna. Opłaty za wystawianie i wypłaty będą obsługiwane automatycznie.
+                    </div>
+                    <form asp-action="RemoveCard" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger btn-sm"
+                                onclick="return confirm('Czy na pewno chcesz usunąć kartę? Przyszłe wypłaty będą wstrzymane.')">
+                            <i class="bi bi-trash me-1"></i>Usuń kartę
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted small mb-3">Nie masz jeszcze podpiętej karty.</p>
+                    <p class="text-muted small mb-3">
+                        Zostaniesz przekierowany/a do bezpiecznej strony PayU, gdzie wprowadzisz dane karty.
+                        Zostanie pobrana opłata weryfikacyjna <strong>0,50 PLN</strong>.
+                    </p>
+                    <form asp-action="RequestTokenization" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Dodaj kartę
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header fw-semibold">
+                <i class="bi bi-info-circle me-2"></i>Jak to działa?
+            </div>
+            <div class="card-body small">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="bi bi-1-circle text-primary me-2"></i><strong>Dodaj kartę</strong> — kliknij „Dodaj kartę" i wprowadź dane na stronie PayU. Pobieramy 0,50 PLN weryfikacyjne.</li>
+                    <li class="mb-2"><i class="bi bi-2-circle text-primary me-2"></i><strong>Wystawienie ogłoszenia</strong> — przy każdym nowym ogłoszeniu pobieramy <strong>0,50 PLN</strong> z Twojej karty.</li>
+                    <li class="mb-2"><i class="bi bi-3-circle text-primary me-2"></i><strong>Sprzedaż</strong> — gdy kupujący opłaci zakup, po potrąceniu 5% prowizji reszta zostaje automatycznie przesłana na Twoją kartę.</li>
+                    <li class="mb-2"><i class="bi bi-4-circle text-primary me-2"></i><strong>Błąd karty</strong> — jeśli płatność nie przejdzie, zobaczysz to w historii poniżej i otrzymasz powiadomienie.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-3">Historia wypłat</h4>
+
+@if (!payouts.Any())
+{
+    <p class="text-muted">Brak historii wypłat.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Data</th>
+                    <th>Zamówienie</th>
+                    <th class="text-end">Sprzedaż</th>
+                    <th class="text-end">Prowizja (5%)</th>
+                    <th class="text-end">Wypłata</th>
+                    <th>Status</th>
+                    <th>Uwagi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in payouts)
+                {
+                    <tr>
+                        <td class="text-nowrap">@p.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>
+                            @if (p.OrderId.HasValue)
+                            {
+                                <a asp-controller="Payment" asp-action="Success" asp-route-orderId="@p.OrderId" class="text-decoration-none">#@p.OrderId</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td class="text-end">@p.GrossAmount.ToString("C")</td>
+                        <td class="text-end text-muted">@p.CommissionAmount.ToString("C")</td>
+                        <td class="text-end fw-semibold">@p.NetAmount.ToString("C")</td>
+                        <td>
+                            @switch (p.Status)
+                            {
+                                case ProjektZespolowyGr3.Models.DbModels.SellerPayoutStatus.Paid:
+                                    <span class="badge bg-success">Wypłacono</span>
+                                    break;
+                                case ProjektZespolowyGr3.Models.DbModels.SellerPayoutStatus.Pending:
+                                    <span class="badge bg-warning text-dark">Oczekuje</span>
+                                    break;
+                                case ProjektZespolowyGr3.Models.DbModels.SellerPayoutStatus.Failed:
+                                    <span class="badge bg-danger">Błąd</span>
+                                    break;
+                                case ProjektZespolowyGr3.Models.DbModels.SellerPayoutStatus.NoCard:
+                                    <span class="badge bg-secondary">Brak karty</span>
+                                    break;
+                            }
+                        </td>
+                        <td class="small text-muted" style="max-width:200px;">
+                            @if (!string.IsNullOrEmpty(p.ErrorMessage))
+                            {
+                                <span title="@p.ErrorMessage">@(p.ErrorMessage.Length > 60 ? p.ErrorMessage[..60] + "…" : p.ErrorMessage)</span>
+                            }
+                            else if (p.ProcessedAt.HasValue)
+                            {
+                                <span>@p.ProcessedAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

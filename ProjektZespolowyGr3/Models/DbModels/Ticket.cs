@@ -17,6 +17,7 @@ namespace ProjektZespolowyGr3.Models.DbModels
 
         public DateTime CreatedAt { get; set; }
         public DateTime LastActivity { get; set; }
+        public bool IsArchived { get; set; } = false;
 
         public int? ReportedUserId { get; set; }
         public User? ReportedUser { get; set; }

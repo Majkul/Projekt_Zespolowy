@@ -47,12 +47,15 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         [HttpPost]
-        public async Task<IActionResult> Buy(int listingId, int quantity = 1)
+        public async Task<IActionResult> Buy(int listingId, int quantity = 1, int? shippingOptionId = null)
         {
             var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out var userId))
                 return Unauthorized();
-            var listing = await _context.Listings.FindAsync(listingId);
+
+            var listing = await _context.Listings
+                .Include(l => l.ShippingOptions)
+                .FirstOrDefaultAsync(l => l.Id == listingId);
 
             if (listing == null || listing.IsArchived || !ListingStockHelper.CanSell(listing, quantity))
                 return BadRequest("Oferta nie istnieje, jest niedostępna lub podano złą ilość.");
@@ -60,20 +63,38 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (!listing.Price.HasValue)
                 return BadRequest("Ta oferta nie jest na sprzedaż.");
 
-            // wlasne
             if (listing.SellerId == userId)
-            {
                 return BadRequest("Nie można kupić własnej oferty");
-            }
 
             var unitPrice = listing.Price!.Value;
+            decimal shippingCost = 0;
+            string? shippingName = null;
+
+            if (shippingOptionId.HasValue)
+            {
+                var opt = listing.ShippingOptions.FirstOrDefault(o => o.Id == shippingOptionId.Value);
+                if (opt != null)
+                {
+                    shippingCost = opt.Price;
+                    shippingName = opt.Name;
+                }
+            }
+            else if (listing.ShippingOptions.Any())
+            {
+                // Seller has shipping options but buyer didn't pick one — redirect back
+                TempData["BuyError"] = "Proszę wybrać metodę dostawy przed zakupem.";
+                return RedirectToAction("Details", "Listings", new { id = listingId });
+            }
+
             var order = new Order
             {
                 ListingId = listing.Id,
                 BuyerId = userId,
                 SellerId = listing.SellerId,
-                Amount = unitPrice * quantity,
+                Amount = unitPrice * quantity + shippingCost,
                 Quantity = quantity,
+                SelectedShippingName = shippingName,
+                ShippingCost = shippingCost,
                 Status = OrderStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
                 PayUOrderId = ""
@@ -89,6 +110,126 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         [HttpPost]
+        public async Task<IActionResult> BuyTradeOrder(int tradeId, int? shippingOptionId = null)
+        {
+            var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out var userId))
+                return Unauthorized();
+
+            var trade = await _context.TradeProposals
+                .Include(p => p.Initiator)
+                .Include(p => p.Receiver)
+                .Include(p => p.Items)
+                    .ThenInclude(i => i.Listing!)
+                        .ThenInclude(l => l!.ShippingOptions)
+                .FirstOrDefaultAsync(p => p.Id == tradeId);
+
+            if (trade == null)
+                return NotFound();
+            if (trade.Status != TradeProposalStatus.Accepted)
+                return BadRequest("Wymiana nie została zaakceptowana.");
+            if (trade.InitiatorUserId != userId && trade.ReceiverUserId != userId)
+                return Forbid();
+
+            var payerSide = trade.InitiatorUserId == userId
+                ? TradeProposalSide.Initiator
+                : TradeProposalSide.Receiver;
+
+            var receiverUserId = payerSide == TradeProposalSide.Initiator
+                ? trade.ReceiverUserId
+                : trade.InitiatorUserId;
+
+            // Check if TradeOrder already exists for this side
+            var existingOrder = await _context.TradeOrders
+                .FirstOrDefaultAsync(o => o.TradeProposalId == tradeId && o.PayerSide == payerSide);
+            if (existingOrder != null && existingOrder.Status == OrderStatus.Paid)
+            {
+                TempData["TradePaymentInfo"] = "Płatność za tę stronę wymiany została już zrealizowana.";
+                return RedirectToAction("Details", "TradeProposals", new { id = tradeId });
+            }
+
+            // Calculate cash supplement from payer's side items
+            var cashAmount = trade.Items
+                .Where(i => i.Side == payerSide && i.CashAmount.HasValue)
+                .Sum(i => i.CashAmount!.Value);
+
+            // Collect all shipping options from payer's listing items
+            var payerListings = trade.Items
+                .Where(i => i.Side == payerSide && i.Listing != null)
+                .Select(i => i.Listing!)
+                .ToList();
+            var allShippingOptions = payerListings.SelectMany(l => l.ShippingOptions).ToList();
+
+            decimal shippingCost = 0;
+            string? shippingName = null;
+
+            if (shippingOptionId.HasValue)
+            {
+                var opt = allShippingOptions.FirstOrDefault(o => o.Id == shippingOptionId.Value);
+                if (opt != null)
+                {
+                    shippingCost = opt.Price;
+                    shippingName = opt.Name;
+                }
+            }
+            else if (allShippingOptions.Any())
+            {
+                TempData["TradePaymentError"] = "Proszę wybrać metodę dostawy.";
+                return RedirectToAction("Details", "TradeProposals", new { id = tradeId });
+            }
+
+            var totalAmount = cashAmount + shippingCost;
+            if (totalAmount <= 0)
+            {
+                TempData["TradePaymentError"] = "Brak kwoty do zapłaty — dopłata gotówkowa i koszt dostawy wynoszą 0 PLN.";
+                return RedirectToAction("Details", "TradeProposals", new { id = tradeId });
+            }
+
+            var tradeOrder = existingOrder ?? new TradeOrder();
+            tradeOrder.TradeProposalId = tradeId;
+            tradeOrder.PayerUserId = userId;
+            tradeOrder.ReceiverUserId = receiverUserId;
+            tradeOrder.PayerSide = payerSide;
+            tradeOrder.CashAmount = cashAmount;
+            tradeOrder.ShippingCost = shippingCost;
+            tradeOrder.TotalAmount = totalAmount;
+            tradeOrder.SelectedShippingName = shippingName;
+            tradeOrder.Status = OrderStatus.Pending;
+            tradeOrder.CreatedAt = DateTime.UtcNow;
+            tradeOrder.PayUOrderId = "";
+
+            if (existingOrder == null)
+                _context.TradeOrders.Add(tradeOrder);
+
+            await _context.SaveChangesAsync();
+
+            var token = await GetPayUTokenAsync();
+            var redirectUrl = await CreatePayUOrderForTradeAsync(tradeOrder, trade, token);
+            return Redirect(redirectUrl);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TradeOrderSuccess(int tradeOrderId)
+        {
+            var tradeOrder = await _context.TradeOrders
+                .Include(o => o.TradeProposal)
+                .FirstOrDefaultAsync(o => o.Id == tradeOrderId);
+            if (tradeOrder == null)
+                return NotFound();
+
+            var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out var userId))
+                return Unauthorized();
+            if (tradeOrder.PayerUserId != userId && !User.IsInRole("Admin"))
+                return Forbid();
+
+            await _payuSync.TryFinalizeTradeOrderFromPayuApiAsync(tradeOrder.Id);
+            await _context.Entry(tradeOrder).ReloadAsync();
+
+            return View(tradeOrder);
+        }
+
+        [HttpPost]
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Notify()
@@ -100,17 +241,31 @@ namespace ProjektZespolowyGr3.Controllers.User
 
                 using var doc = JsonDocument.Parse(body);
 
-                var payuOrderId = doc.RootElement
-                    .GetProperty("order")
-                    .GetProperty("orderId")
-                    .GetString();
+                var orderEl = doc.RootElement.GetProperty("order");
+                var payuOrderId = orderEl.GetProperty("orderId").GetString();
+                var payuStatus = orderEl.GetProperty("status").GetString();
 
-                var payuStatus = doc.RootElement
-                    .GetProperty("order")
-                    .GetProperty("status")
-                    .GetString();
+                string? cardToken = null;
+                string? cardMasked = null;
+                string? cardBrand = null;
+                int cardExpiryMonth = 0, cardExpiryYear = 0;
 
-                await _payuSync.HandleNotifyAsync(payuOrderId ?? "", payuStatus);
+                if (orderEl.TryGetProperty("payMethod", out var pm))
+                {
+                    if (pm.TryGetProperty("cardToken", out var ct)) cardToken = ct.GetString();
+                    if (pm.TryGetProperty("card", out var card))
+                    {
+                        if (card.TryGetProperty("cardNumberMasked", out var cn)) cardMasked = cn.GetString();
+                        if (card.TryGetProperty("brand", out var br)) cardBrand = br.GetString();
+                        if (card.TryGetProperty("expirationMonth", out var em) && int.TryParse(em.GetString(), out var emv))
+                            cardExpiryMonth = emv;
+                        if (card.TryGetProperty("expirationYear", out var ey) && int.TryParse(ey.GetString(), out var eyv))
+                            cardExpiryYear = eyv;
+                    }
+                }
+
+                await _payuSync.HandleNotifyAsync(payuOrderId ?? "", payuStatus,
+                    cardToken, cardMasked, cardBrand, cardExpiryMonth, cardExpiryYear);
             }
             catch (Exception ex)
             {
@@ -152,31 +307,6 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         [HttpGet]
-        public async Task<IActionResult> PayTradeOrder(int tradeProposalId)
-        {
-            var idClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out var userId))
-                return Unauthorized();
-
-            var order = await _context.Orders
-                .FirstOrDefaultAsync(o => o.TradeProposalId == tradeProposalId
-                    && o.BuyerId == userId
-                    && o.Status == OrderStatus.Pending);
-
-            if (order == null)
-                return NotFound("Nie znaleziono oczekującej płatności dla tej wymiany.");
-
-            var listing = await _context.Listings.FindAsync(order.ListingId);
-            if (listing == null)
-                return NotFound();
-
-            var token = await GetPayUTokenAsync();
-            var redirectUrl = await CreatePayUOrderForTradeAsync(order, listing, token);
-
-            return Redirect(redirectUrl);
-        }
-
-        [HttpGet]
         public IActionResult Cancel()
         {
             return View();
@@ -211,30 +341,41 @@ namespace ProjektZespolowyGr3.Controllers.User
                 ?? throw new InvalidOperationException("PayU OAuth: brak access_token w odpowiedzi.");
         }
 
-        private async Task<string> CreatePayUOrderForTradeAsync(Order order, Listing listing, string token)
+        private async Task<string> CreatePayUOrderForTradeAsync(TradeOrder tradeOrder, TradeProposal trade, string token)
         {
             var client = _httpClientFactory.CreateClient("PayU");
             client.DefaultRequestHeaders.Clear();
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             var notifyUrl = "https://185.238.72.248/Payment/Notify";
-            var unitPrice = ((int)(order.Amount * 100)).ToString();
+
+            var products = new List<object>();
+            if (tradeOrder.CashAmount > 0)
+                products.Add(new
+                {
+                    name = $"Dopłata do wymiany #{trade.Id}",
+                    unitPrice = ((int)(tradeOrder.CashAmount * 100)).ToString(),
+                    quantity = "1"
+                });
+            if (tradeOrder.ShippingCost > 0)
+                products.Add(new
+                {
+                    name = $"Wysyłka — {tradeOrder.SelectedShippingName ?? "dostawa"}",
+                    unitPrice = ((int)(tradeOrder.ShippingCost * 100)).ToString(),
+                    quantity = "1"
+                });
 
             var payload = new
             {
                 notifyUrl = notifyUrl,
-                continueUrl = Url.Action("Success", "Payment",
-                    new { orderId = order.Id }, Request.Scheme),
-
+                continueUrl = Url.Action("TradeOrderSuccess", "Payment",
+                    new { tradeOrderId = tradeOrder.Id }, Request.Scheme),
                 customerIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1",
                 merchantPosId = _merchantPosId,
-                description = $"Dopłata do wymiany: {listing.Title}",
+                description = $"Płatność za wymianę #{trade.Id}",
                 currencyCode = "PLN",
-                totalAmount = unitPrice,
-
+                totalAmount = ((int)(tradeOrder.TotalAmount * 100)).ToString(),
                 buyer = new
                 {
                     email = User.FindFirstValue(ClaimTypes.Email),
@@ -242,25 +383,13 @@ namespace ProjektZespolowyGr3.Controllers.User
                     lastName = "Kowalski",
                     language = "pl"
                 },
-                products = new[]
-                {
-                    new
-                    {
-                        name = $"Dopłata do wymiany: {listing.Title}",
-                        unitPrice = unitPrice,
-                        quantity = "1"
-                    }
-                }
+                products = products.ToArray()
             };
 
             var content = new StringContent(
-                JsonSerializer.Serialize(payload),
-                Encoding.UTF8,
-                "application/json");
+                JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(
-                $"{_payUBaseUrl}/api/v2_1/orders",
-                content);
+            var response = await client.PostAsync($"{_payUBaseUrl}/api/v2_1/orders", content);
 
             if (response.StatusCode != HttpStatusCode.Found)
             {
@@ -272,10 +401,10 @@ namespace ProjektZespolowyGr3.Controllers.User
             using var doc = JsonDocument.Parse(json);
 
             var redirectUri = doc.RootElement.GetProperty("redirectUri").GetString()
-                ?? throw new InvalidOperationException("PayU: brak redirectUri w odpowiedzi.");
+                ?? throw new InvalidOperationException("PayU: brak redirectUri.");
             var payuOrderId = doc.RootElement.GetProperty("orderId").GetString() ?? "";
 
-            order.PayUOrderId = payuOrderId;
+            tradeOrder.PayUOrderId = payuOrderId;
             await _context.SaveChangesAsync();
 
             return redirectUri;
