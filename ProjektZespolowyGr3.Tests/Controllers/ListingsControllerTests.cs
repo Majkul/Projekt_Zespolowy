@@ -18,14 +18,9 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         private readonly MyDBContext _context;
         private readonly AuthService _authService;
         private readonly HelperService _helperService;
-<<<<<<< HEAD
-        private readonly IFileService _fileService;
-        private readonly IGeocodingService _geocodingService;
-        private readonly ICardFeeService _cardFeeService;
-=======
         private readonly Mock<IFileService> _fileServiceMock;
         private readonly Mock<IGeocodingService> _geocodingServiceMock;
->>>>>>> origin/main
+        private readonly Mock<ICardFeeService> _cardFeeServiceMock;
         private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
         private readonly ListingsController _controller;
 
@@ -37,18 +32,11 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             _context = new MyDBContext(options);
             _authService = new AuthService(_context);
             _helperService = new HelperService(_context);
-<<<<<<< HEAD
-            _fileService = new Mock<IFileService>().Object;
-            _geocodingService = new Mock<IGeocodingService>().Object;
-            _cardFeeService = new Mock<ICardFeeService>().Object;
-            _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            _controller = new ListingsController(_context, _fileService, _authService, _helperService, _httpContextAccessorMock.Object, _geocodingService, _cardFeeService);
-=======
             _fileServiceMock = new Mock<IFileService>();
             _geocodingServiceMock = new Mock<IGeocodingService>();
+            _cardFeeServiceMock = new Mock<ICardFeeService>();
             _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            _controller = new ListingsController(_context, _fileServiceMock.Object, _authService, _helperService, _httpContextAccessorMock.Object, _geocodingServiceMock.Object);
->>>>>>> origin/main
+            _controller = new ListingsController(_context, _fileServiceMock.Object, _authService, _helperService, _httpContextAccessorMock.Object, _geocodingServiceMock.Object, _cardFeeServiceMock.Object);
             _controller.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()

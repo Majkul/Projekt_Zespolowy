@@ -49,11 +49,6 @@ namespace ProjektZespolowyGr3.Controllers.User
             string? sortBy,
             int? maxDistanceKm,
             double? userLat,
-<<<<<<< HEAD
-            double? userLng)
-        {
-            selectedTagIds ??= new List<int>();
-=======
             double? userLng,
             int page = 1,
             int pageSize = 24
@@ -64,16 +59,17 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             ViewBag.AllTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
             ViewBag.SearchString = searchString;
-            ViewBag.TagIds = tagIds ?? new List<int>();
+            ViewBag.TagIds = selectedTagIds ?? new List<int>();
             ViewBag.MinPrice = minPrice;
             ViewBag.MaxPrice = maxPrice;
-            ViewBag.ListingType = listingType ?? "";
+            ViewBag.ListingType = type ?? "";
             ViewBag.SortBy = sortBy ?? "newest";
             ViewBag.MaxDistanceKm = maxDistanceKm;
             ViewBag.UserLat = userLat;
             ViewBag.UserLng = userLng;
             ViewBag.PageSize = pageSize;
->>>>>>> origin/main
+
+            selectedTagIds ??= new List<int>();
 
             IQueryable<Listing> query = _context.Listings
                 .Where(l => !l.IsArchived)
@@ -124,19 +120,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                     query = query.Where(l => l.Tags.Any(lt => lt.TagId == tagId));
             }
 
-<<<<<<< HEAD
-            // Sort
-            query = sortBy switch
-            {
-                "price_asc"   => query.OrderBy(l => l.Price),
-                "price_desc"  => query.OrderByDescending(l => l.Price),
-                "oldest"      => query.OrderBy(l => l.CreatedAt),
-                "most_viewed" => query.OrderByDescending(l => l.ViewCount),
-                _             => query.OrderByDescending(l => l.CreatedAt),
-            };
-=======
             var requiresInMemoryPagination = sortBy == "rating" || (maxDistanceKm.HasValue && userLat.HasValue && userLng.HasValue);
->>>>>>> origin/main
 
             if (sortBy != "rating")
             {
@@ -152,18 +136,6 @@ namespace ProjektZespolowyGr3.Controllers.User
             List<BrowseListingsViewModel> model;
             int totalCount;
 
-<<<<<<< HEAD
-            ViewBag.SearchString = searchString ?? "";
-            ViewBag.AllTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
-            ViewBag.TagIds = selectedTagIds;
-            ViewBag.MinPrice = minPrice;
-            ViewBag.MaxPrice = maxPrice;
-            ViewBag.ListingType = type ?? "";
-            ViewBag.SortBy = sortBy ?? "newest";
-            ViewBag.MaxDistanceKm = maxDistanceKm;
-            ViewBag.UserLat = userLat;
-            ViewBag.UserLng = userLng;
-=======
             if (requiresInMemoryPagination)
             {
                 var listings = await query.ToListAsync();
@@ -214,7 +186,6 @@ namespace ProjektZespolowyGr3.Controllers.User
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = finalTotalPages;
             ViewBag.TotalCount = totalCount;
->>>>>>> origin/main
 
             if (!model.Any())
                 ViewBag.NoResultsMessage = "Nie znaleziono ofert spełniających kryteria.";

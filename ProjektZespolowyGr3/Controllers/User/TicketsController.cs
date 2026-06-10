@@ -176,9 +176,6 @@ namespace ProjektZespolowyGr3.Controllers.User
             };
             return View("Create", vm);
         }
-<<<<<<< HEAD
-        [Authorize]
-=======
 
         [HttpGet]
         public async Task<IActionResult> ReportReview(int reviewId)
@@ -210,7 +207,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             return View("Create", vm);
         }
 
->>>>>>> origin/main
+        [Authorize]
         // GET: Tickets/Create
         public IActionResult Create()
         {

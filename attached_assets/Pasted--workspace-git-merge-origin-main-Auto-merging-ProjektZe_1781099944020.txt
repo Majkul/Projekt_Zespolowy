@@ -1,0 +1,43 @@
+~/workspace$ git merge origin/main
+Auto-merging ProjektZespolowyGr3.Tests/Controllers/ListingsControllerTests.cs
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3.Tests/Controllers/ListingsControllerTests.cs
+Auto-merging ProjektZespolowyGr3/Controllers/Admin/ListingManageController.cs
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Controllers/Admin/ListingManageController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/HomeController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/User/ListingsController.cs
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Controllers/User/ListingsController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/User/MessagesController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/User/ReviewsController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/User/TicketsController.cs
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Controllers/User/TicketsController.cs
+Auto-merging ProjektZespolowyGr3/Controllers/User/TradeProposalsController.cs
+Auto-merging ProjektZespolowyGr3/Migrations/MyDBContextModelSnapshot.cs
+Auto-merging ProjektZespolowyGr3/Models/DbModels/Ticket.cs
+Auto-merging ProjektZespolowyGr3/Models/DbModels/User.cs
+Auto-merging ProjektZespolowyGr3/Models/ViewModels/CreateListingViewModel.cs
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Models/ViewModels/CreateListingViewModel.cs
+Auto-merging ProjektZespolowyGr3/Models/ViewModels/EditListingViewModel.cs
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Models/ViewModels/EditListingViewModel.cs
+Auto-merging ProjektZespolowyGr3/ProjektZespolowyGr3.csproj
+Auto-merging ProjektZespolowyGr3/Views/Home/Index.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/Home/Index.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Home/Login.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Home/Register.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/Home/Register.cshtml
+Auto-merging ProjektZespolowyGr3/Views/ListingManage/EditListing.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/ListingManage/EditListing.cshtml
+Auto-merging ProjektZespolowyGr3/Views/ListingManage/Index.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/ListingManage/Index.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Listings/Create.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/Listings/Create.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Listings/Details.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/Listings/Details.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Listings/Index.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/Listings/Index.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Payment/Success.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/Payment/Success.cshtml
+Auto-merging ProjektZespolowyGr3/Views/Shared/_Layout.cshtml
+CONFLICT (content): Merge conflict in ProjektZespolowyGr3/Views/Shared/_Layout.cshtml
+Auto-merging ProjektZespolowyGr3/Views/TradeProposals/Compose.cshtml
+Auto-merging ProjektZespolowyGr3/Views/TradeProposals/Details.cshtml
+Automatic merge failed; fix conflicts and then commit the result.

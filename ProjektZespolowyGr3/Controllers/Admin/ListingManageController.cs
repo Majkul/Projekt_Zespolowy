@@ -330,7 +330,6 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
 
         [HttpPost]
-<<<<<<< HEAD
         public async Task<IActionResult> ToggleFeature(int id)
         {
             if (!User.IsInRole("Admin"))
@@ -347,11 +346,8 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
         }
 
         [HttpPost]
-        public async Task<IActionResult> ArchiveListing(int id)
-=======
         [ValidateAntiForgeryToken]
-        public IActionResult RestoreListing(int id)
->>>>>>> origin/main
+        public async Task<IActionResult> RestoreListing(int id)
         {
             int userId = 0;
             var isAdmin = User.IsInRole("Admin");
@@ -363,28 +359,16 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                     int.TryParse(userIdClaim, out userId);
             }
 
-<<<<<<< HEAD
-            var listing = await _context.Listings.FindAsync(id);
-=======
             var listing = _context.Listings
                 .IgnoreQueryFilters()
                 .FirstOrDefault(l => l.Id == id);
->>>>>>> origin/main
             if (listing == null) return NotFound();
             if (!isAdmin && listing.SellerId != userId) return Forbid();
-
-<<<<<<< HEAD
-            listing.IsArchived = !listing.IsArchived;
-            listing.ArchivedAt = listing.IsArchived ? DateTime.UtcNow : null;
-=======
-            if (!isAdmin && listing.SellerId != userId)
-                return Forbid();
 
             if (!CanRestoreListing(listing))
                 return BadRequest();
 
             listing.IsArchived = false;
->>>>>>> origin/main
             listing.UpdatedAt = DateTime.UtcNow;
 
             var relatedTickets = await _context.Tickets

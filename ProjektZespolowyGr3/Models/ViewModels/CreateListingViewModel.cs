@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
-<<<<<<< HEAD
 using ProjektZespolowyGr3.Models.DbModels;
-=======
 using ProjektZespolowyGr3.Models;
->>>>>>> origin/main
 using System.ComponentModel.DataAnnotations;
 
 namespace ProjektZespolowyGr3.Models.ViewModels
@@ -20,12 +17,9 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         [StringLength(1000)]
         public string? Description { get; set; }
 
-<<<<<<< HEAD
         public ListingType Type { get; set; } = ListingType.Sale;
 
-=======
         [Range(0, MarketplaceLimits.MaxListingPrice, ErrorMessage = "Cena musi być między 0 a 1 000 000.")]
->>>>>>> origin/main
         public decimal? Price { get; set; }
 
         [Range(1, 1_000_000, ErrorMessage = "Ilość musi być między 1 a 1 000 000.")]

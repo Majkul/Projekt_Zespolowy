@@ -17,44 +17,6 @@
                 <form asp-action="Register" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<<<<<<< HEAD
-                <div class="mb-3">
-                    <label asp-for="Login" class="form-label">Login</label>
-                    <input asp-for="Login" class="form-control" />
-                    <span asp-validation-for="Login" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label">Email</label>
-                    <input asp-for="Email" class="form-control" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Password" class="form-label">Hasło</label>
-                    <input asp-for="Password" type="password" class="form-control" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="ConfirmPassword" class="form-label">Powtórz hasło</label>
-                    <input asp-for="ConfirmPassword" type="password" class="form-control" />
-                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                </div>
-                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
-                <div class="form-group">
-                    @Html.LabelFor(m => m.Login)
-                    @Html.TextBoxFor(m => m.Login, new { @class = "form-control" })
-                    @Html.ValidationMessageFor(m => m.Login, "", new { @class = "text-danger" })
-                </div>
-                <div class="form-group">
-                    @Html.LabelFor(m => m.Password)
-                    @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
-                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
-                </div>
-                <div class="d-flex justify-content-between">
-                    <a asp-action="Index" class="btn btn-outline-secondary">Powrót</a>
-                    <input type="submit" value="Zarejestruj się" class="btn btn-primary" />
-                </div>
-            </form>
-=======
                     <div class="mb-3">
                         <label asp-for="Login" class="form-label">Login</label>
                         <input asp-for="Login" class="form-control" />
@@ -75,7 +37,6 @@
                         <input asp-for="ConfirmPassword" type="password" class="form-control" />
                         <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                     </div>
->>>>>>> origin/main
 
                     @if (TempData["AlertError"] != null)
                     {
