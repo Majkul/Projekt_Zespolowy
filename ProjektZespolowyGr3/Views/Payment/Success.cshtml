@@ -1,10 +1,16 @@
+<<<<<<< HEAD
 ﻿@model ProjektZespolowyGr3.Models.DbModels.Order
 @using ProjektZespolowyGr3.Models.DbModels
+=======
+@model ProjektZespolowyGr3.Models.DbModels.Order
+>>>>>>> origin/main
 
 @{
     ViewData["Title"] = "Płatność przyjęta";
+    ViewData["HideNavSearch"] = true;
 }
 
+<<<<<<< HEAD
 <div class="container mt-4" style="max-width:600px;">
 
     @if (Model.Status == OrderStatus.Paid)
@@ -69,4 +75,24 @@
         Wróć na stronę główną
     </a>
 
+=======
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card card-md">
+            <div class="card-body">
+                <div class="empty">
+                    <div class="empty-icon"><i class="bi bi-check-circle fs-1 text-success"></i></div>
+                    <p class="empty-title">Płatność została rozpoczęta</p>
+                    <p class="empty-subtitle text-secondary">
+                        Dziękujemy za złożenie zamówienia. Numer zamówienia: <strong>@Model.Id</strong>.<br />
+                        Status płatności zostanie potwierdzony automatycznie.
+                    </p>
+                    <div class="empty-action">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Wróć na stronę główną</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+>>>>>>> origin/main
 </div>

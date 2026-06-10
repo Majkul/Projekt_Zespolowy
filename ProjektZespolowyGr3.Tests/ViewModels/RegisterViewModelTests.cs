@@ -1,6 +1,7 @@
 using Xunit;
 using FluentAssertions;
 using System.ComponentModel.DataAnnotations;
+using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.ViewModels;
 
 namespace ProjektZespolowyGr3.Tests.ViewModels
@@ -58,6 +59,42 @@ namespace ProjektZespolowyGr3.Tests.ViewModels
 
             // Assert
             validationResults.Should().Contain(v => v.MemberNames.Contains("Email"));
+        }
+
+        [Fact]
+        public void RegisterViewModel_ShouldRejectEmailLongerThanLimit()
+        {
+            var model = new RegisterViewModel
+            {
+                Login = "testuser",
+                Email = new string('a', MarketplaceLimits.MaxEmailLength - "@x.pl".Length + 1) + "@x.pl",
+                Password = "Password123",
+                ConfirmPassword = "Password123"
+            };
+
+            var validationResults = ValidateModel(model);
+
+            validationResults.Should().Contain(v => v.MemberNames.Contains("Email"));
+        }
+
+        [Theory]
+        [InlineData("short")]
+        [InlineData("lowercase123")]
+        [InlineData("UPPERCASE123")]
+        [InlineData("NoDigitsHere")]
+        public void RegisterViewModel_ShouldRejectWeakPassword(string password)
+        {
+            var model = new RegisterViewModel
+            {
+                Login = "testuser",
+                Email = "test@test.com",
+                Password = password,
+                ConfirmPassword = password
+            };
+
+            var validationResults = ValidateModel(model);
+
+            validationResults.Should().Contain(v => v.MemberNames.Contains("Password"));
         }
 
         private IList<ValidationResult> ValidateModel(object model)

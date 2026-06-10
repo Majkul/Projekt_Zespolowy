@@ -49,9 +49,31 @@ namespace ProjektZespolowyGr3.Controllers.User
             string? sortBy,
             int? maxDistanceKm,
             double? userLat,
+<<<<<<< HEAD
             double? userLng)
         {
             selectedTagIds ??= new List<int>();
+=======
+            double? userLng,
+            int page = 1,
+            int pageSize = 24
+            )
+        {
+            pageSize = ClampPageSize(pageSize);
+            page = Math.Max(1, page);
+
+            ViewBag.AllTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
+            ViewBag.SearchString = searchString;
+            ViewBag.TagIds = tagIds ?? new List<int>();
+            ViewBag.MinPrice = minPrice;
+            ViewBag.MaxPrice = maxPrice;
+            ViewBag.ListingType = listingType ?? "";
+            ViewBag.SortBy = sortBy ?? "newest";
+            ViewBag.MaxDistanceKm = maxDistanceKm;
+            ViewBag.UserLat = userLat;
+            ViewBag.UserLng = userLng;
+            ViewBag.PageSize = pageSize;
+>>>>>>> origin/main
 
             IQueryable<Listing> query = _context.Listings
                 .Where(l => !l.IsArchived)
@@ -62,7 +84,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                         .ThenInclude(sl => sl.Reviews)
                 .Include(l => l.Tags)
                     .ThenInclude(lt => lt.Tag)
-                .Where(l => l.IsArchived == false && l.IsPrivate == false && l.StockQuantity > 0);
+                .Where(l => l.IsArchived == false && l.IsPrivate == false && !l.IsSold && l.StockQuantity > 0);
 
             // Text search
             if (!string.IsNullOrWhiteSpace(searchString))
@@ -102,6 +124,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                     query = query.Where(l => l.Tags.Any(lt => lt.TagId == tagId));
             }
 
+<<<<<<< HEAD
             // Sort
             query = sortBy switch
             {
@@ -111,37 +134,25 @@ namespace ProjektZespolowyGr3.Controllers.User
                 "most_viewed" => query.OrderByDescending(l => l.ViewCount),
                 _             => query.OrderByDescending(l => l.CreatedAt),
             };
+=======
+            var requiresInMemoryPagination = sortBy == "rating" || (maxDistanceKm.HasValue && userLat.HasValue && userLng.HasValue);
+>>>>>>> origin/main
 
-            var listings = await query.ToListAsync();
-
-            if (maxDistanceKm.HasValue && userLat.HasValue && userLng.HasValue)
+            if (sortBy != "rating")
             {
-                listings = listings
-                .Where(l =>
-                    l.Seller is { Latitude: double sellerLat, Longitude: double sellerLng } &&
-                    (sellerLat != 0 || sellerLng != 0) &&
-                    _geocodingService.CalculateDistanceKm(
-                        userLat.Value,
-                        userLng.Value,
-                        sellerLat,
-                        sellerLng
-                    ) <= maxDistanceKm.Value)
-                .ToList();
+                query = sortBy switch
+                {
+                    "price_asc"  => query.OrderBy(l => l.Price.HasValue ? 0 : 1).ThenBy(l => l.Price),
+                    "price_desc" => query.OrderBy(l => l.Price.HasValue ? 0 : 1).ThenByDescending(l => l.Price),
+                    "views"      => query.OrderByDescending(l => l.ViewCount),
+                    _            => query.OrderByDescending(l => l.CreatedAt),
+                };
             }
 
-            var model = listings.Select(l => new BrowseListingsViewModel
-            {
-                Listing = l,
-                ListingId = l.Id,
-                Seller = l.Seller,
-                SellerId = l.SellerId,
-                PhotoUrl = l.Photos.FirstOrDefault(lp => lp.IsFeatured)?.Upload.Url,
-                AverageRating = l.Seller.Listings.SelectMany(sl => sl.Reviews).Any()
-                    ? l.Seller.Listings.SelectMany(sl => sl.Reviews).Average(r => r.Rating)
-                    : 0,
-                ReviewCount = l.Seller.Listings.SelectMany(sl => sl.Reviews).Count(),
-            }).ToList();
+            List<BrowseListingsViewModel> model;
+            int totalCount;
 
+<<<<<<< HEAD
             ViewBag.SearchString = searchString ?? "";
             ViewBag.AllTags = await _context.Tags.OrderBy(t => t.Name).ToListAsync();
             ViewBag.TagIds = selectedTagIds;
@@ -152,6 +163,58 @@ namespace ProjektZespolowyGr3.Controllers.User
             ViewBag.MaxDistanceKm = maxDistanceKm;
             ViewBag.UserLat = userLat;
             ViewBag.UserLng = userLng;
+=======
+            if (requiresInMemoryPagination)
+            {
+                var listings = await query.ToListAsync();
+
+                if (maxDistanceKm.HasValue && userLat.HasValue && userLng.HasValue)
+                {
+                    listings = listings
+                    .Where(l =>
+                        l.Seller is { Latitude: double sellerLat, Longitude: double sellerLng } &&
+                        (sellerLat != 0 || sellerLng != 0) &&
+                        _geocodingService.CalculateDistanceKm(
+                            userLng.Value,
+                            userLat.Value,
+                            sellerLng,
+                            sellerLat
+                        ) <= maxDistanceKm.Value)
+                    .ToList();
+                }
+
+                model = listings.Select(ToBrowseListingsViewModel).ToList();
+
+                if (sortBy == "rating")
+                    model = model.OrderByDescending(m => m.AverageRating).ToList();
+
+                totalCount = model.Count;
+                var totalPages = GetTotalPages(totalCount, pageSize);
+                page = Math.Min(page, totalPages);
+                model = model
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+            }
+            else
+            {
+                totalCount = await query.CountAsync();
+                var totalPages = GetTotalPages(totalCount, pageSize);
+                page = Math.Min(page, totalPages);
+
+                var listings = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                model = listings.Select(ToBrowseListingsViewModel).ToList();
+            }
+
+            var finalTotalPages = GetTotalPages(totalCount, pageSize);
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = finalTotalPages;
+            ViewBag.TotalCount = totalCount;
+>>>>>>> origin/main
 
             if (!model.Any())
                 ViewBag.NoResultsMessage = "Nie znaleziono ofert spełniających kryteria.";
@@ -159,6 +222,37 @@ namespace ProjektZespolowyGr3.Controllers.User
             ViewData["HideNavSearch"] = true;
 
             return View(model);
+        }
+
+        private static int ClampPageSize(int pageSize)
+        {
+            return pageSize switch
+            {
+                < 1 => 24,
+                > 96 => 96,
+                _ => pageSize
+            };
+        }
+
+        private static int GetTotalPages(int totalCount, int pageSize)
+        {
+            return Math.Max(1, (int)Math.Ceiling(totalCount / (double)pageSize));
+        }
+
+        private static BrowseListingsViewModel ToBrowseListingsViewModel(Listing l)
+        {
+            return new BrowseListingsViewModel
+            {
+                Listing = l,
+                ListingId = l.Id,
+                Seller = l.Seller,
+                SellerId = l.SellerId,
+                PhotoUrl = (l.Photos.FirstOrDefault(lp => lp.IsFeatured) ?? l.Photos.FirstOrDefault())?.Upload.Url,
+                AverageRating = l.Seller.Listings.SelectMany(sl => sl.Reviews).Any()
+                    ? l.Seller.Listings.SelectMany(sl => sl.Reviews).Average(r => r.Rating)
+                    : 0,
+                ReviewCount = l.Seller.Listings.SelectMany(sl => sl.Reviews).Count(),
+            };
         }
 
         // GET: Listings/slug-5
@@ -213,6 +307,20 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             listing.ViewCount++;
             await _context.SaveChangesAsync();
+
+            ViewBag.CanReview = false;
+            ViewBag.HasReviewed = false;
+            var currentUserIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (int.TryParse(currentUserIdClaim, out var currentUserId) && currentUserId != listing.SellerId)
+            {
+                var hasReviewed = await _context.Reviews
+                    .AnyAsync(r => r.ListingId == listing.Id && r.ReviewerId == currentUserId);
+                var boughtListing = await _context.Orders
+                    .AnyAsync(o => o.ListingId == listing.Id && o.BuyerId == currentUserId && o.Status == OrderStatus.Paid);
+                ViewBag.HasReviewed = hasReviewed;
+                ViewBag.CanReview = boughtListing && !hasReviewed;
+            }
+
             return View(listing);
         }
 
@@ -319,17 +427,13 @@ namespace ProjektZespolowyGr3.Controllers.User
                 }
             }
 
-            // cena potzebna jesli "nie do wymiany"
-            if (model.NotExchangeable && (!model.Price.HasValue || model.Price.Value <= 0))
-            {
-                ModelState.AddModelError("Price", "Price must be greater than zero.");
-            }
-
             if (model.StockQuantity < 1)
                 ModelState.AddModelError(nameof(CreateListingViewModel.StockQuantity), "Liczba sztuk musi być co najmniej 1.");
 
             foreach (var (field, message) in _fileService.ValidateImages(model.PhotoFiles, maxCount: 5))
                 ModelState.AddModelError(field, message);
+
+            AddEmptyPhotoFileErrors(model.PhotoFiles, nameof(CreateListingViewModel.PhotoFiles));
 
             if (!ModelState.IsValid)
             {
@@ -343,6 +447,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return View(model);
             }
 
+            var notExchangeable = forTradeListingId.HasValue ? false : model.NotExchangeable;
             var listing = new Listing
             {
                 Title = model.Title,
@@ -354,10 +459,13 @@ namespace ProjektZespolowyGr3.Controllers.User
                 SellerId = currentUserId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                NotExchangeable = forTradeListingId.HasValue ? false : model.NotExchangeable,
+                NotExchangeable = notExchangeable,
                 IsPrivate = forTradeListingId.HasValue ? true : model.IsPrivate,
-                MinExchangeValue = model.MinExchangeValue,
-                ExchangeDescription = string.IsNullOrWhiteSpace(model.ExchangeDescription) ? null : model.ExchangeDescription.Trim()
+                IsFeatured = forTradeListingId.HasValue ? false : model.IsFeatured,
+                MinExchangeValue = notExchangeable ? null : model.MinExchangeValue,
+                ExchangeDescription = notExchangeable || string.IsNullOrWhiteSpace(model.ExchangeDescription)
+                    ? null
+                    : model.ExchangeDescription.Trim()
             };
             ListingStockHelper.SyncSoldFlag(listing);
 
@@ -380,7 +488,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 }
             }
 
-            if (model.SelectedExchangeAcceptedTagIds?.Any() == true)
+            if (!notExchangeable && model.SelectedExchangeAcceptedTagIds?.Any() == true)
             {
                 foreach (var tagId in model.SelectedExchangeAcceptedTagIds.Distinct())
                 {
@@ -395,6 +503,9 @@ namespace ProjektZespolowyGr3.Controllers.User
                 bool first = true;
                 foreach (var file in model.PhotoFiles)
                 {
+                    if (file == null || file.Length == 0)
+                        continue;
+
                     var upload = await _fileService.SaveFileAsync(file, currentUserId);
                     listing.Photos.Add(new ListingPhoto
                     {
@@ -514,6 +625,20 @@ namespace ProjektZespolowyGr3.Controllers.User
         private bool ListingExists(int id)
         {
             return _context.Listings.Any(e => e.Id == id);
+        }
+
+        private void AddEmptyPhotoFileErrors(IList<IFormFile>? files, string field)
+        {
+            if (files == null)
+                return;
+
+            foreach (var file in files)
+            {
+                if (file == null || file.Length == 0)
+                {
+                    ModelState.AddModelError(field, "Wybrane zdjęcie jest niedostępne. Wybierz plik ponownie.");
+                }
+            }
         }
     }
 }

@@ -30,7 +30,39 @@ namespace ProjektZespolowyGr3.Tests.Views
             partial.Should().Contain("name=\"tagIds\"");
             partial.Should().Contain("name=\"sortBy\"");
             partial.Should().Contain("name=\"maxDistanceKm\"");
+            partial.Should().Contain("name=\"pageSize\"");
             partial.Should().Contain("Zastosuj filtry");
+        }
+
+        [Fact]
+        public void Index_ShouldRenderPaginationLinksThatPreserveFilters()
+        {
+            var index = ReadProjectFile(Path.Combine("ProjektZespolowyGr3", "Views", "Listings", "Index.cshtml"));
+
+            index.Should().Contain("string PageUrl(int pageNumber)");
+            index.Should().Contain("href=\"@PageUrl(pageNumber)\"");
+            index.Should().Contain("new(\"page\"");
+            index.Should().Contain("new(\"pageSize\"");
+            index.Should().Contain("AddQueryValue(query, \"searchString\", searchString)");
+            index.Should().Contain("new KeyValuePair<string, string?>(\"tagIds\"");
+            index.Should().Contain("AddQueryValue(query, \"minPrice\", minPrice)");
+            index.Should().Contain("AddQueryValue(query, \"maxPrice\", maxPrice)");
+            index.Should().Contain("AddQueryValue(query, \"listingType\", listingType)");
+            index.Should().Contain("AddQueryValue(query, \"sortBy\", sortBy)");
+            index.Should().Contain("AddQueryValue(query, \"maxDistanceKm\", maxDistanceKm)");
+            index.Should().Contain("AddQueryValue(query, \"userLat\", userLat)");
+            index.Should().Contain("AddQueryValue(query, \"userLng\", userLng)");
+        }
+
+        [Fact]
+        public void FilterForm_ShouldStartWithNeutralLocationPrompt()
+        {
+            var partial = ReadProjectFile(Path.Combine("ProjektZespolowyGr3", "Views", "Listings", "_FilterForm.cshtml"));
+
+            partial.Should().Contain("Użyj mojej lokalizacji");
+            partial.Should().Contain("location-feedback");
+            partial.Should().Contain("Najpierw użyj swojej lokalizacji");
+            partial.Should().NotContain("maxDistanceKm.HasValue && (!userLat.HasValue || !userLng.HasValue)");
         }
 
         [Fact]
@@ -61,6 +93,17 @@ namespace ProjektZespolowyGr3.Tests.Views
             siteJs.Should().Contain("new TomSelect");
             siteJs.Should().Contain("plugins: ['remove_button']");
             siteJs.Should().Contain("placeholder: 'Wybierz tagi...'");
+        }
+
+        [Fact]
+        public void FilterCard_ShouldKeepTomSelectDropdownAboveFollowingFields()
+        {
+            var siteCss = ReadProjectFile(Path.Combine("ProjektZespolowyGr3", "wwwroot", "css", "site.css"))
+                .Replace("\r\n", "\n");
+
+            siteCss.Should().Contain(".filter-card .ts-wrapper {\n    position: relative;\n}");
+            siteCss.Should().Contain(".filter-card .ts-wrapper.dropdown-active {\n    z-index: 1055;\n}");
+            siteCss.Should().Contain(".filter-card .ts-dropdown {\n    z-index: 1056;\n    background: #fff;");
         }
 
         private static string ReadProjectFile(string relativePath, [CallerFilePath] string sourceFilePath = "")

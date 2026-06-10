@@ -1,63 +1,50 @@
-﻿@model ProjektZespolowyGr3.Models.DbModels.Review
+@model ProjektZespolowyGr3.Models.DbModels.Review
 
 @{
-    ViewData["Title"] = "Usuń";
+    ViewData["Title"] = "Usuń recenzję";
 }
 
-<h1>Usuń</h1>
+<div class="page-header mb-4">
+    <h2 class="page-title text-danger">Usuń recenzję</h2>
+</div>
 
-<h3>Czy na pewno chcesz usunąć?</h3>
-<div>
-    <h4>Recenzja</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Listing)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Listing.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Rating)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Rating)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Reviewer)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Reviewer.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Upvotes)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Upvotes)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Downvotes)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Downvotes)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Usuń" class="btn btn-danger" /> |
-        <a asp-action="Index">Powrót do listy</a>
-    </form>
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-8">
+        <div class="card">
+            <div class="card-status-top bg-danger"></div>
+            <div class="card-body">
+                <h3 class="card-title">Czy na pewno chcesz usunąć tę recenzję?</h3>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Listing)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Listing.Id)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Rating)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Rating)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Reviewer)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Reviewer.Id)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Description)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Description)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.CreatedAt)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Upvotes)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Upvotes)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Downvotes)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Downvotes)</dd>
+                </dl>
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <form asp-action="Delete" class="d-inline">
+                    <input type="hidden" asp-for="Id" />
+                    <button type="submit" class="btn btn-danger">Usuń</button>
+                </form>
+                <a asp-action="Index" class="btn btn-outline-secondary">Powrót do listy</a>
+            </div>
+        </div>
+    </div>
 </div>

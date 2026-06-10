@@ -1,30 +1,65 @@
-﻿@using ProjektZespolowyGr3.Models.DbModels
+@using ProjektZespolowyGr3.Models.DbModels
 @{
     ViewData["Title"] = "Strona główna";
     var featuredListings = ViewBag.FeaturedListings as List<Listing> ?? new List<Listing>();
     var latestListings = ViewBag.LatestListings as List<Listing> ?? new List<Listing>();
+    var saleCount = latestListings.Count(l => l.Price.HasValue);
+    var tradeCount = latestListings.Count(l => !l.NotExchangeable);
+    var saleListingsLabel = ListingPresentationHelper.FormatSaleListingsCount(saleCount).Substring(saleCount.ToString().Length).TrimStart();
+    var tradeListingsLabel = ListingPresentationHelper.FormatTradeListingsCount(tradeCount).Substring(tradeCount.ToString().Length).TrimStart();
 }
 
-<div class="hero-section bg-light py-5 mb-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8 text-center">
-                <h1 class="display-4 mb-4">Znajdź to, czego szukasz</h1>
-                <p class="lead mb-4">Największy serwis ogłoszeń w okolicy</p>
-                
-                <form asp-controller="Listings" asp-action="Index" method="get" class="mt-4">
-                    <div class="input-group input-group-lg">
-                        <input type="text" name="searchString" class="form-control" placeholder="Szukaj ofert..." aria-label="Szukaj ofert">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="bi bi-search"></i> Szukaj
-                        </button>
+<section class="market-hero mb-5">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <h1 class="display-4 fw-bold mb-3">Kupuj, sprzedawaj i wymieniaj bez kombinowania</h1>
+            <p class="lead mb-0">
+                Przeglądaj ogłoszenia z okolicy, znajdź coś w dobrej cenie albo zaproponuj wymianę zamiast klasycznej sprzedaży.
+            </p>
+
+            <form asp-controller="Listings" asp-action="Index" method="get" class="mt-4">
+                <div class="input-group input-group-lg">
+                    <input type="text" name="searchString" class="form-control" placeholder="Czego dziś szukasz?" aria-label="Szukaj ofert">
+                    <button class="btn btn-warning" type="submit">
+                        <i class="bi bi-search me-1"></i> Szukaj
+                    </button>
+                </div>
+            </form>
+
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <a asp-controller="Listings" asp-action="Index" class="btn btn-light">
+                    <i class="bi bi-grid me-1"></i> Przeglądaj oferty
+                </a>
+                <a asp-controller="Listings" asp-action="Create" class="btn btn-outline-light">
+                    <i class="bi bi-plus-circle me-1"></i> Dodaj ofertę
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="market-hero-panel">
+                <div class="market-hero-summary">
+                    <div>
+                        <div class="text-white-50 small">Na stronie głównej</div>
+                        <h2 class="h4 mb-0">Najnowsze ogłoszenia</h2>
                     </div>
-                </form>
+                    <i class="bi bi-bag-check market-hero-panel-icon text-warning"></i>
+                </div>
+                <div class="market-stat-grid">
+                    <div class="market-stat">
+                        <div class="market-stat-value">@saleCount</div>
+                        <div class="market-stat-label">@saleListingsLabel</div>
+                    </div>
+                    <div class="market-stat">
+                        <div class="market-stat-value">@tradeCount</div>
+                        <div class="market-stat-label">@tradeListingsLabel</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
+<<<<<<< HEAD
 <div class="container">
 
     @if (featuredListings.Any())
@@ -82,81 +117,114 @@
     <div class="row mb-4">
         <div class="col-12">
             <h2 class="mb-4">Najnowsze oferty</h2>
+=======
+<section class="mb-5">
+    <div class="section-heading">
+        <div>
+            <span class="text-uppercase small fw-bold text-primary">Świeże okazje</span>
+            <h2 class="mb-1">Najnowsze oferty</h2>
+            <p class="mb-0">Szybki podgląd tego, co ostatnio dodali użytkownicy.</p>
+>>>>>>> origin/main
         </div>
+        <a asp-controller="Listings" asp-action="Index" class="btn btn-outline-primary">
+            Zobacz wszystkie
+        </a>
     </div>
 
     @if (latestListings.Any())
     {
-        <div class="row">
+        <div class="row listing-grid">
             @foreach (var listing in latestListings)
             {
-                <div class="col-md-3 mb-4">
-                    <div class="card h-100">
-                        @if (listing.Photos != null && listing.Photos.Any())
-                        {
-                            var featuredPhoto = listing.Photos.FirstOrDefault(p => p.IsFeatured) ?? listing.Photos.First();
-                            <img src="@featuredPhoto.Upload.Url" class="card-img-top" alt="@listing.Title" style="height: 200px; object-fit: cover;">
-                        }
-                        else
-                        {
-                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <span class="text-white">Brak zdjęcia</span>
-                            </div>
-                        }
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">@listing.Title</h5>
-                            @if (!string.IsNullOrEmpty(listing.Description))
+                var isSale = listing.Price.HasValue;
+                var badges = ListingPresentationHelper.GetListingBadges(listing);
+                <div class="col-sm-6 col-xl-3">
+                    <article class="card listing-card h-100">
+                        <div class="ratio ratio-4x3 listing-card-media">
+                            @if (listing.Photos != null && listing.Photos.Any())
                             {
-                                <p class="card-text text-muted small">@(listing.Description.Length > 100 ? listing.Description.Substring(0, 100) + "..." : listing.Description)</p>
-                            }
-                            @if (listing.Price.HasValue)
-                            {
-                                <p class="card-text"><strong class="text-primary">@listing.Price.FormatPricePLN()</strong></p>
+                                var featuredPhoto = listing.Photos.FirstOrDefault(p => p.IsFeatured) ?? listing.Photos.First();
+                                <img src="@featuredPhoto.Upload.Url" class="listing-card-img" alt="@listing.Title">
                             }
                             else
                             {
-                                <p class="card-text"><span class="badge bg-info">Wymiana</span></p>
+                                <div class="listing-card-placeholder">
+                                    <i class="bi bi-image"></i>
+                                    <span>Brak zdjęcia</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <div class="listing-statuses">
+                                @foreach (var badge in badges)
+                                {
+                                    <span class="badge @badge.CssClass">@badge.Label</span>
+                                }
+                            </div>
+                            <h3 class="h5 card-title mb-2">@listing.Title</h3>
+                            @if (!string.IsNullOrEmpty(listing.Description))
+                            {
+                                <p class="card-text text-muted small">
+                                    @(listing.Description.Length > 86 ? listing.Description.Substring(0, 86) + "..." : listing.Description)
+                                </p>
                             }
                             <div class="mt-auto">
-                                <a asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(listing.Title)" asp-route-id="@listing.Id" class="btn btn-primary btn-sm w-100">Zobacz szczegóły</a>
+                                @if (isSale)
+                                {
+                                    <div class="listing-price fw-bold mb-3">@listing.Price.FormatPricePLN()</div>
+                                }
+                                else
+                                {
+                                    <div class="mb-3">
+                                        <span class="badge bg-green-lt">Otwarta wymiana</span>
+                                    </div>
+                                }
+                                <a asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(listing.Title)" asp-route-id="@listing.Id" class="btn btn-primary w-100">
+                                    Zobacz szczegóły
+                                </a>
                             </div>
                         </div>
-                        <div class="card-footer text-muted small">
-                            <a asp-controller="UserProfile" asp-action="Details" asp-route-username="@listing.Seller.Username" class="text-decoration-none">
-                                @listing.Seller.Username
-                            </a>
-                            <span class="float-end">@listing.CreatedAt.ToString("dd.MM.yyyy")</span>
+                        <div class="card-footer bg-white">
+                            <div class="d-flex justify-content-between align-items-center small">
+                                <a asp-controller="UserProfile" asp-action="Details" asp-route-username="@listing.Seller.Username" class="listing-meta text-decoration-none">
+                                    <i class="bi bi-person-circle"></i>
+                                    <span>@listing.Seller.Username</span>
+                                </a>
+                                <span class="text-muted">@listing.CreatedAt.ToString("dd.MM.yyyy")</span>
+                            </div>
                         </div>
-                    </div>
+                    </article>
                 </div>
             }
         </div>
     }
     else
     {
-        <div class="row">
-            <div class="col-12 text-center">
-                <p class="text-muted">Brak dostępnych ofert. <a asp-controller="Listings" asp-action="Create">Dodaj pierwszą ofertę!</a></p>
+        <div class="card card-md">
+            <div class="card-body">
+                <div class="empty">
+                    <div class="empty-icon"><i class="bi bi-bag fs-1"></i></div>
+                    <p class="empty-title">Brak dostępnych ofert</p>
+                    <p class="empty-subtitle text-secondary">Dodaj pierwszą ofertę i rozkręć marketplace.</p>
+                    <div class="empty-action">
+                        <a asp-controller="Listings" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Dodaj ofertę</a>
+                    </div>
+                </div>
             </div>
         </div>
     }
-</div>
+</section>
 
-<div class="container mb-5">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="mb-4">Ostatnio oglądane</h2>
-            <div id="viewing-history" class="row"></div>
+<section class="mb-5">
+    <div class="section-heading">
+        <div>
+            <span class="text-uppercase small fw-bold text-primary">Historia</span>
+            <h2 class="mb-1">Ostatnio oglądane</h2>
+            <p class="mb-0">Wracaj szybko do ofert, które już sprawdzałeś.</p>
         </div>
     </div>
-</div>
-
-
-<div class="row mt-4">
-    <div class="col-12 text-center">
-        <a asp-controller="Listings" asp-action="Index" class="btn btn-outline-primary btn-lg">Zobacz wszystkie oferty</a>
-    </div>
-</div>
+    <div id="viewing-history" class="row listing-grid"></div>
+</section>
 
 @section Scripts {
     <script>
@@ -187,25 +255,28 @@
             var history = JSON.parse(localStorage.getItem('listingHistory') || '[]');
             var container = document.getElementById('viewing-history');
             if (history.length === 0) {
-                container.innerHTML = '<div class="col-12 text-muted">Brak historii oglądania.</div>';
+                container.innerHTML = '<div class="col-12"><div class="card"><div class="card-body text-secondary text-center">Brak historii oglądania.</div></div></div>';
                 return;
             }
             history.forEach(function(listing) {
                 var slug = listing.slug || generateSlug(listing.title);
                 var html = `
-                <div class="col-md-3 mb-4">
-                    <div class="card h-100">
-                        ${listing.image ? `<img src="${listing.image}" class="card-img-top" style="height: 200px; object-fit: cover;">` : `
-                        <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
-                            <span class="text-white">Brak zdjęcia</span>
-                        </div>`}
+                <div class="col-sm-6 col-xl-3">
+                    <article class="card listing-card h-100">
+                        <div class="ratio ratio-4x3 listing-card-media">
+                            ${listing.image ? `<img src="${listing.image}" class="listing-card-img" alt="${listing.title}">` : `
+                            <div class="listing-card-placeholder">
+                                <i class="bi bi-image"></i>
+                                <span>Brak zdjęcia</span>
+                            </div>`}
+                        </div>
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">${listing.title}</h5>
+                            <h3 class="h5 card-title">${listing.title}</h3>
                             <div class="mt-auto">
-                                <a href="/Listings/${slug}-${listing.id}" class="btn btn-primary btn-sm w-100">Zobacz szczegóły</a>
+                                <a href="/Listings/${slug}-${listing.id}" class="btn btn-primary w-100">Zobacz szczegóły</a>
                             </div>
                         </div>
-                    </div>
+                    </article>
                 </div>
                 `;
                 container.innerHTML += html;

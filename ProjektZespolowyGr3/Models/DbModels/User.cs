@@ -14,6 +14,8 @@ namespace ProjektZespolowyGr3.Models.DbModels
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string Email { get; set; } = string.Empty;
+        [MaxLength(1000)]
+        public string? ProfileDescription { get; set; }
         public string? Address { get; set; }
         public bool IsBanned { get; set; } = false;
         public bool IsAdmin { get; set; } = false;

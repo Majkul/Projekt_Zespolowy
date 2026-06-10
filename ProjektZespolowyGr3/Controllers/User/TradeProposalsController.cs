@@ -512,10 +512,10 @@ namespace ProjektZespolowyGr3.Controllers.User
             int? rootTradeProposalId)
         {
             if (subject.SellerId == initiatorId && !initiatorListingIds.Contains(subject.Id))
-                return new TradeSidesResult { Error = "Musisz uwzględnić ogłoszenie, w którego kontekście wysyłasz wymianę (po Twojej stronie)." };
+                return new TradeSidesResult { Error = "Dodaj ogłoszenie z kontekstu wymiany po swojej stronie." };
 
             if (subject.SellerId == receiverId && !receiverListingIds.Contains(subject.Id))
-                return new TradeSidesResult { Error = "Musisz uwzględnić ogłoszenie, w którego kontekście wysyłasz wymianę (po stronie rozmówcy)." };
+                return new TradeSidesResult { Error = "Dodaj ogłoszenie z kontekstu wymiany po stronie rozmówcy." };
 
             var initiatorListingsQuery = _context.Listings
                 .Include(l => l.Tags).ThenInclude(t => t.Tag)
@@ -554,17 +554,17 @@ namespace ProjektZespolowyGr3.Controllers.User
             var receiverListings = await receiverListingsQuery.ToListAsync();
 
             if (initiatorListings.Count != initiatorListingIds.Distinct().Count())
-                return new TradeSidesResult { Error = "Nieprawidłowa lista ogłoszeń po Twojej stronie (inicjator)." };
+                return new TradeSidesResult { Error = "Wybrano niedostępne ogłoszenie po Twojej stronie." };
 
             if (receiverListings.Count != receiverListingIds.Distinct().Count())
-                return new TradeSidesResult { Error = "Nieprawidłowa lista ogłoszeń po stronie rozmówcy." };
+                return new TradeSidesResult { Error = "Wybrano niedostępne ogłoszenie po stronie rozmówcy." };
 
             var initiatorQtyByListingId = new Dictionary<int, int>();
             foreach (var l in initiatorListings)
             {
                 var q = ResolvePostedQuantity(initiatorQuantities, l.Id);
                 if (q > l.StockQuantity)
-                    return new TradeSidesResult { Error = $"Ogłoszenie „{l.Title}”: możesz wybrać co najwyżej {l.StockQuantity} szt." };
+                    return new TradeSidesResult { Error = "Wybrano niedostępną ilość." };
                 initiatorQtyByListingId[l.Id] = q;
             }
 
@@ -573,7 +573,7 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 var q = ResolvePostedQuantity(receiverQuantities, l.Id);
                 if (q > l.StockQuantity)
-                    return new TradeSidesResult { Error = $"Ogłoszenie „{l.Title}”: możesz wybrać co najwyżej {l.StockQuantity} szt." };
+                    return new TradeSidesResult { Error = "Wybrano niedostępną ilość." };
                 receiverQtyByListingId[l.Id] = q;
             }
 
@@ -584,16 +584,9 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             if (subject.MinExchangeValue.HasValue && buyerSum < subject.MinExchangeValue.Value)
             {
-                var kol = subject.SellerId == receiverId
-                    ? "niebieskiej (składający ofertę)"
-                    : "szarej (otrzymujący ofertę), gdy kontrofertę składa właściciel ogłoszenia";
                 return new TradeSidesResult
                 {
-                    Error =
-                        $"Minimalna wartość od kupującego w tym ogłoszeniu to {subject.MinExchangeValue.Value:C}, " +
-                        $"a policzona suma jego zaznaczonych ogłoszeń i dopłaty to {buyerSum:C}. " +
-                        $"Liczy się tylko kolumna {kol} - przedmioty zaznaczone u sprzedającego po drugiej stronie nie zwiększają tej sumy. " +
-                        $"Brak własnych ogłoszeń? Użyj dopłaty gotówką po stronie kupującego."
+                    Error = $"Wartość Twojej strony jest za niska. Minimum: {subject.MinExchangeValue.Value:0.##}, obecnie: {buyerSum:0.##}."
                 };
             }
 
@@ -604,7 +597,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 {
                     var tagIds = listing.Tags.Select(t => t.TagId).ToHashSet();
                     if (!tagIds.Any(tid => acceptedTagIds.Contains(tid)))
-                        return new TradeSidesResult { Error = "Każde ogłoszenie ze strony kupującego musi mieć co najmniej jeden z tagów akceptowanych przez sprzedającego." };
+                        return new TradeSidesResult { Error = "Wybrano ogłoszenie spoza akceptowanych tagów." };
                 }
             }
 

@@ -1,9 +1,21 @@
-﻿@{
+@{
     ViewData["Title"] = "Błąd płatności";
+    ViewData["HideNavSearch"] = true;
 }
 
-<h2>Wystąpił problem</h2>
-
-<p>
-    Spróbuj ponownie później lub skontaktuj się z obsługą.
-</p>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card card-md">
+            <div class="card-body">
+                <div class="empty">
+                    <div class="empty-icon"><i class="bi bi-exclamation-triangle fs-1 text-danger"></i></div>
+                    <p class="empty-title">Wystąpił problem</p>
+                    <p class="empty-subtitle text-secondary">Spróbuj ponownie później lub skontaktuj się z obsługą.</p>
+                    <div class="empty-action">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Wróć na stronę główną</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

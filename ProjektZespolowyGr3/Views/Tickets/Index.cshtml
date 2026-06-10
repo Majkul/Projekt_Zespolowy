@@ -1,10 +1,10 @@
-﻿@model IEnumerable<ProjektZespolowyGr3.Models.DbModels.Ticket>
+@model IEnumerable<ProjektZespolowyGr3.Models.DbModels.Ticket>
 @using ProjektZespolowyGr3.Models.DbModels
 @using System.ComponentModel.DataAnnotations
 
 @{
     ViewData["Title"] = "Moje zgłoszenia";
-    
+
     string GetDisplayName(Enum value)
     {
         var type = value.GetType();
@@ -19,43 +19,51 @@
         }
         return value.ToString().Replace("_", " ");
     }
+
+    string StatusBadge(TicketStatus s) => s switch
+    {
+        TicketStatus.Open => "bg-yellow-lt",
+        TicketStatus.Resolved => "bg-green-lt",
+        TicketStatus.In_Progress => "bg-blue-lt",
+        _ => "bg-secondary-lt"
+    };
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Moje zgłoszenia</h2>
-        <a asp-action="Create" class="btn btn-primary">Stwórz nowe zgłoszenie</a>
+<div class="page-header mb-4">
+    <div class="row align-items-center">
+        <div class="col">
+            <h2 class="page-title">Moje zgłoszenia</h2>
+        </div>
+        <div class="col-auto ms-auto">
+            <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Stwórz nowe zgłoszenie</a>
+        </div>
     </div>
+</div>
 
-    @if (Model.Any())
-    {
+@if (Model.Any())
+{
+    <div class="card">
         <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
+            <table class="table table-vcenter card-table">
+                <thead>
                     <tr>
                         <th>Temat</th>
                         <th>Kategoria</th>
                         <th>Status</th>
                         <th>Utworzono</th>
                         <th>Ostatnia aktywność</th>
-                        <th>Akcje</th>
+                        <th class="w-1">Akcje</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td>@item.Subject</td>
-                            <td>
-                                <span class="badge bg-info">@GetDisplayName(item.Category)</span>
-                            </td>
-                            <td>
-                                <span class="badge bg-@(item.Status == TicketStatus.Open ? "warning" : item.Status == TicketStatus.Resolved ? "success" : item.Status == TicketStatus.In_Progress ? "primary" : "secondary")">
-                                    @GetDisplayName(item.Status)
-                                </span>
-                            </td>
-                            <td>@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
-                            <td>@item.LastActivity.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td class="fw-bold">@item.Subject</td>
+                            <td><span class="badge bg-azure-lt">@GetDisplayName(item.Category)</span></td>
+                            <td><span class="badge @StatusBadge(item.Status)">@GetDisplayName(item.Status)</span></td>
+                            <td class="text-secondary">@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td class="text-secondary">@item.LastActivity.ToString("dd.MM.yyyy HH:mm")</td>
                             <td>
                                 <a asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(item.Subject)" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Szczegóły</a>
                             </td>
@@ -64,11 +72,20 @@
                 </tbody>
             </table>
         </div>
-    }
-    else
-    {
-        <div class="alert alert-info">
-            <p class="mb-0">Nie masz jeszcze żadnych zgłoszeń. <a asp-action="Create">Utwórz pierwsze zgłoszenie</a></p>
+    </div>
+}
+else
+{
+    <div class="card card-md">
+        <div class="card-body">
+            <div class="empty">
+                <div class="empty-icon"><i class="bi bi-ticket-perforated fs-1 text-secondary"></i></div>
+                <p class="empty-title">Brak zgłoszeń</p>
+                <p class="empty-subtitle text-secondary">Nie masz jeszcze żadnych zgłoszeń.</p>
+                <div class="empty-action">
+                    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Utwórz pierwsze zgłoszenie</a>
+                </div>
+            </div>
         </div>
-    }
-</div>
+    </div>
+}

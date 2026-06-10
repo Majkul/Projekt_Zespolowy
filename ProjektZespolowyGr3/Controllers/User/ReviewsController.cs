@@ -89,6 +89,16 @@ namespace ProjektZespolowyGr3.Controllers.User
                 return BadRequest("Nie możesz oceniać własnego ogłoszenia.");
             }
 
+            if (!CanReviewListing(listingId, userId))
+            {
+                return BadRequest("Opinię można dodać tylko po zakupie ogłoszenia.");
+            }
+
+            if (_context.Reviews.Any(r => r.ListingId == listingId && r.ReviewerId == userId))
+            {
+                return BadRequest("Już oceniłeś to ogłoszenie.");
+            }
+
             var model = new CreateReviewViewModel
             {
                 ListingId = listingId,
@@ -136,6 +146,12 @@ namespace ProjektZespolowyGr3.Controllers.User
             if (listing.SellerId == userId)
             {
                 ModelState.AddModelError("", "Nie możesz oceniać własnego ogłoszenia.");
+                return View(model);
+            }
+
+            if (!CanReviewListing(model.ListingId, userId))
+            {
+                ModelState.AddModelError("", "Opinię można dodać tylko po zakupie ogłoszenia.");
                 return View(model);
             }
 
@@ -257,6 +273,14 @@ namespace ProjektZespolowyGr3.Controllers.User
         private bool ReviewExists(int id)
         {
             return _context.Reviews.Any(e => e.Id == id);
+        }
+
+        private bool CanReviewListing(int listingId, int userId)
+        {
+            return _context.Orders.Any(o =>
+                o.ListingId == listingId &&
+                o.BuyerId == userId &&
+                o.Status == OrderStatus.Paid);
         }
     }
 }

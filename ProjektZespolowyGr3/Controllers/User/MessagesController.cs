@@ -138,6 +138,12 @@ namespace ProjektZespolowyGr3.Controllers.User
             ViewBag.ListingId = listingId;
             ViewBag.TicketId = ticketId;
             ViewBag.CurrentUserId = currentUserId;
+            ViewBag.ListingContext = listingId.HasValue
+                ? await _context.Listings
+                    .IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(l => l.Id == listingId.Value)
+                : null;
 
             return View(messages);
         }
@@ -159,6 +165,12 @@ namespace ProjektZespolowyGr3.Controllers.User
 
             if (!hasText && !hasPhotos)
                 return RedirectToAction(nameof(Conversation), new { userId = receiverId, listingId, ticketId });
+
+            if (hasText && content.Trim().Length > MarketplaceLimits.MaxMessageLength)
+            {
+                TempData["MessageError"] = $"Wiadomość może mieć maksymalnie {MarketplaceLimits.MaxMessageLength} znaków.";
+                return RedirectToAction(nameof(Conversation), new { userId = receiverId, listingId, ticketId });
+            }
 
             foreach (var (field, errorMessage) in _fileService.ValidateImages(photos, maxCount: 5, field: "Photos"))
             {

@@ -1,13 +1,21 @@
-﻿@{
+@{
     ViewData["Title"] = "Płatność anulowana";
+    ViewData["HideNavSearch"] = true;
 }
 
-<h2>Płatność została anulowana</h2>
-
-<p>
-    Jeśli to pomyłka – możesz spróbować ponownie.
-</p>
-
-<a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
-    Wróć
-</a>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card card-md">
+            <div class="card-body">
+                <div class="empty">
+                    <div class="empty-icon"><i class="bi bi-x-circle fs-1 text-warning"></i></div>
+                    <p class="empty-title">Płatność została anulowana</p>
+                    <p class="empty-subtitle text-secondary">Jeśli to pomyłka – możesz spróbować ponownie.</p>
+                    <div class="empty-action">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Wróć</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

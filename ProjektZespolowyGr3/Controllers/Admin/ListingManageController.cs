@@ -41,50 +41,77 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 }
             }
 
-            object? model = await GetFilteredListingsAsync(searchString, pageSize, pageNumber, tagFilter, userId, isAdmin, showArchived);
-            int totalClients = await GetListingsCountAsync(searchString, tagFilter, userId, isAdmin, showArchived);
+            object? model = await GetFilteredListingsAsync(searchString, pageSize, tagFilter, userId, isAdmin, showArchived);
 
             ViewBag.CurrentFilter = searchString;
             ViewBag.CurrentPageSize = pageSize;
-            ViewBag.CurrentPage = pageNumber;
             ViewBag.CurrentTag = tagFilter;
             ViewBag.ShowArchived = showArchived;
-            ViewBag.TotalPages = (int)Math.Ceiling(totalClients / (double)pageSize);
+            ViewBag.AllTags = await _context.Tags
+                .OrderBy(t => t.Name)
+                .Select(t => t.Name)
+                .ToListAsync();
 
             return View(model);
         }
 
-        private async Task<List<BrowseListingsViewModel>> GetFilteredListingsAsync(string? searchString, int pageSize, int pageNumber, string? tagFilter, int userId, bool isAdmin, bool showArchived = false)
+        private IQueryable<Listing> BuildListingManageQuery(string? searchString, string? tagFilter, int userId, bool isAdmin, bool showArchived)
         {
             var listings = _context.Listings
-                        .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
-                        .Include(l => l.Reviews)
-                        .Include(l => l.Seller)
-                        .Include(l => l.Tags).ThenInclude(lt => lt.Tag)
-                        .Where(l => l.IsArchived == showArchived)
-                        .AsQueryable();
+                .IgnoreQueryFilters()
+                .Include(l => l.Photos).ThenInclude(lp => lp.Upload)
+                .Include(l => l.Reviews)
+                .Include(l => l.Seller)
+                .Include(l => l.Tags).ThenInclude(lt => lt.Tag)
+                .AsQueryable();
+
+            listings = showArchived
+                ? listings.Where(l => l.IsArchived || l.IsDeleted || l.IsSold || l.StockQuantity <= 0)
+                : listings.Where(l => !l.IsArchived && !l.IsDeleted && !l.IsSold && l.StockQuantity > 0);
 
             if (!isAdmin)
             {
                 listings = listings.Where(l => l.SellerId == userId);
             }
-            var tags = _context.ListingTags.AsQueryable();
 
-            if (!string.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrWhiteSpace(searchString))
             {
-                listings = listings.Where(c =>
-                    c.Id.ToString().Contains(searchString) ||
-                    c.Title.Contains(searchString)); //Dodać ewnetualnie szuaknie po nazwach sprzedawców
+                var term = searchString.Trim();
+                if (UsesNpgsqlProvider())
+                {
+                    listings = listings.Where(l =>
+                        l.Id.ToString().Contains(term) ||
+                        EF.Functions.ILike(l.Title, $"%{term}%") ||
+                        (l.Seller != null && EF.Functions.ILike(l.Seller.Username, $"%{term}%")));
+                }
+                else
+                {
+                    var loweredTerm = term.ToLower();
+                    listings = listings.Where(l =>
+                        l.Id.ToString().Contains(term) ||
+                        l.Title.ToLower().Contains(loweredTerm) ||
+                        (l.Seller != null && l.Seller.Username.ToLower().Contains(loweredTerm)));
+                }
             }
 
-            if (!string.IsNullOrEmpty(tagFilter))
+            if (!string.IsNullOrWhiteSpace(tagFilter))
             {
                 listings = listings.Where(l => l.Tags
                     .Any(lt => lt.Tag.Name == tagFilter));
             }
 
-            return await listings
-                .Skip((pageNumber - 1) * pageSize)
+            return listings;
+        }
+
+        private bool UsesNpgsqlProvider()
+        {
+            return _context.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true;
+        }
+
+        private async Task<List<BrowseListingsViewModel>> GetFilteredListingsAsync(string? searchString, int pageSize, string? tagFilter, int userId, bool isAdmin, bool showArchived = false)
+        {
+            return await BuildListingManageQuery(searchString, tagFilter, userId, isAdmin, showArchived)
+                .OrderBy(l => l.Id)
                 .Take(pageSize)
                 .Select(l => new BrowseListingsViewModel
                 {
@@ -103,34 +130,9 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 })
                 .ToListAsync();
         }
-        private async Task<int> GetListingsCountAsync(string? searchString, string? tagFilter, int userId, bool isAdmin, bool showArchived = false)
-        {
-            var listings = _context.Listings
-                .Where(l => l.IsArchived == showArchived)
-                .AsQueryable();
-
-            if (!isAdmin)
-            {
-                listings = listings.Where(l => l.SellerId == userId);
-            }
-
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                listings = listings.Where(c =>
-                    c.Id.ToString().Contains(searchString) ||
-                    c.Title.Contains(searchString)); //Dodać ewnetualnie szuaknie po nazwach sprzedawców
-            }
-
-            if (!string.IsNullOrEmpty(tagFilter))
-            {
-                listings = listings.Where(l => l.Tags
-                    .Any(lt => lt.Tag.Name == tagFilter));
-            }
-            return await listings.CountAsync();
-        }
 
         [HttpGet]
-        public IActionResult EditListing(int id)
+        public IActionResult EditListing(int id, string? returnUrl = null)
         {
             int userId = 0;
             var isAdmin = User.IsInRole("Admin");
@@ -186,13 +188,15 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             };
 
             ViewBag.ModelId = id;
+            ViewBag.ReturnUrl = LocalReturnUrlOrNull(returnUrl);
 
             return View(vm);
         }
 
 
         [HttpPost]
-        public async Task<IActionResult> EditListing(int id, EditListingViewModel vm)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditListing(int id, EditListingViewModel vm, string? returnUrl = null)
         {
             int userId = 0;
             var isAdmin = User.IsInRole("Admin");
@@ -223,9 +227,11 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             foreach (var (field, message) in _fileService.ValidateImages(vm.PhotoFiles))
                 ModelState.AddModelError(field, message);
 
+            AddEmptyPhotoFileErrors(vm.PhotoFiles, nameof(EditListingViewModel.PhotoFiles));
+
             if (!ModelState.IsValid)
             {
-                vm.Photos = listing.Photos;
+                PopulateEditListingForm(vm, listing, id, returnUrl);
                 ViewBag.ModelId = id;
                 return View(vm);
             }
@@ -236,8 +242,10 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             listing.Price = vm.Price;
             listing.NotExchangeable = vm.NotExchangeable;
             listing.IsPrivate = vm.IsPrivate;
-            listing.MinExchangeValue = vm.MinExchangeValue;
-            listing.ExchangeDescription = string.IsNullOrWhiteSpace(vm.ExchangeDescription) ? null : vm.ExchangeDescription.Trim();
+            listing.MinExchangeValue = vm.NotExchangeable ? null : vm.MinExchangeValue;
+            listing.ExchangeDescription = vm.NotExchangeable || string.IsNullOrWhiteSpace(vm.ExchangeDescription)
+                ? null
+                : vm.ExchangeDescription.Trim();
             listing.StockQuantity = vm.StockQuantity;
             listing.IsFeatured = vm.IsFeatured;
             ListingStockHelper.SyncSoldFlag(listing);
@@ -256,7 +264,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             }
 
             listing.ExchangeAcceptedTags.Clear();
-            if (vm.SelectedExchangeAcceptedTagIds != null)
+            if (!vm.NotExchangeable && vm.SelectedExchangeAcceptedTagIds != null)
             {
                 foreach (var tagId in vm.SelectedExchangeAcceptedTagIds.Distinct())
                 {
@@ -300,6 +308,9 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             {
                 foreach (var file in vm.PhotoFiles)
                 {
+                    if (file == null || file.Length == 0)
+                        continue;
+
                     var upload = await _fileService.SaveFileAsync(file, listing.SellerId);
                     listing.Photos.Add(new ListingPhoto
                     {
@@ -314,11 +325,12 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index");
+            return RedirectAfterListingMutation(returnUrl);
         }
 
 
         [HttpPost]
+<<<<<<< HEAD
         public async Task<IActionResult> ToggleFeature(int id)
         {
             if (!User.IsInRole("Admin"))
@@ -336,6 +348,10 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
         [HttpPost]
         public async Task<IActionResult> ArchiveListing(int id)
+=======
+        [ValidateAntiForgeryToken]
+        public IActionResult RestoreListing(int id)
+>>>>>>> origin/main
         {
             int userId = 0;
             var isAdmin = User.IsInRole("Admin");
@@ -347,12 +363,28 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                     int.TryParse(userIdClaim, out userId);
             }
 
+<<<<<<< HEAD
             var listing = await _context.Listings.FindAsync(id);
+=======
+            var listing = _context.Listings
+                .IgnoreQueryFilters()
+                .FirstOrDefault(l => l.Id == id);
+>>>>>>> origin/main
             if (listing == null) return NotFound();
             if (!isAdmin && listing.SellerId != userId) return Forbid();
 
+<<<<<<< HEAD
             listing.IsArchived = !listing.IsArchived;
             listing.ArchivedAt = listing.IsArchived ? DateTime.UtcNow : null;
+=======
+            if (!isAdmin && listing.SellerId != userId)
+                return Forbid();
+
+            if (!CanRestoreListing(listing))
+                return BadRequest();
+
+            listing.IsArchived = false;
+>>>>>>> origin/main
             listing.UpdatedAt = DateTime.UtcNow;
 
             var relatedTickets = await _context.Tickets
@@ -372,8 +404,14 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             return RedirectToAction("Index");
         }
 
+        private static bool CanRestoreListing(Listing listing)
+        {
+            return listing.IsArchived && !listing.IsDeleted && !listing.IsSold && listing.StockQuantity > 0;
+        }
+
         [HttpPost]
-        public IActionResult DeleteListing(int id)
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteListing(int id, string? returnUrl = null)
         {
             int userId = 0;
             var isAdmin = User.IsInRole("Admin");
@@ -421,7 +459,59 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
             _context.SaveChanges();
 
-            return RedirectToAction("Index");
+            return RedirectAfterListingMutation(returnUrl);
+        }
+
+        private void PopulateEditListingForm(EditListingViewModel vm, Listing listing, int id, string? returnUrl)
+        {
+            vm.Photos = listing.Photos;
+            vm.AvailableTags = _context.Tags
+                .OrderBy(t => t.Name)
+                .Select(t => new SelectListItem
+                {
+                    Value = t.Id.ToString(),
+                    Text = t.Name
+                })
+                .ToList();
+            ViewBag.ModelId = id;
+            ViewBag.ReturnUrl = LocalReturnUrlOrNull(returnUrl);
+        }
+
+        private void AddEmptyPhotoFileErrors(IList<IFormFile>? files, string field)
+        {
+            if (files == null)
+                return;
+
+            foreach (var file in files)
+            {
+                if (file == null || file.Length == 0)
+                {
+                    ModelState.AddModelError(field, "Wybrane zdjęcie jest niedostępne. Wybierz plik ponownie.");
+                }
+            }
+        }
+
+        private IActionResult RedirectAfterListingMutation(string? returnUrl)
+        {
+            return IsLocalReturnUrl(returnUrl)
+                ? LocalRedirect(returnUrl!)
+                : RedirectToAction("Index");
+        }
+
+        private static string? LocalReturnUrlOrNull(string? returnUrl)
+        {
+            return IsLocalReturnUrl(returnUrl) ? returnUrl : null;
+        }
+
+        private static bool IsLocalReturnUrl(string? returnUrl)
+        {
+            if (string.IsNullOrEmpty(returnUrl))
+                return false;
+
+            if (returnUrl[0] == '/')
+                return returnUrl.Length == 1 || (returnUrl[1] != '/' && returnUrl[1] != '\\');
+
+            return returnUrl.Length > 1 && returnUrl[0] == '~' && returnUrl[1] == '/';
         }
     }
 }

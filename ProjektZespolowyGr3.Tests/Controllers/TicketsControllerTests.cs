@@ -211,6 +211,53 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             model.ReportedListingId.Should().Be(listing.Id);
         }
 
+        [Fact]
+        public async Task ReportReview_ShouldReturnView_WithReviewContext()
+        {
+            // Arrange
+            var seller = new User { Username = "seller", Email = "seller@test.com", CreatedAt = DateTime.UtcNow };
+            var reviewer = new User { Username = "reviewer", Email = "reviewer@test.com", CreatedAt = DateTime.UtcNow };
+            var reporter = new User { Username = "reporter", Email = "reporter@test.com", CreatedAt = DateTime.UtcNow };
+            _context.Users.AddRange(seller, reviewer, reporter);
+            await _context.SaveChangesAsync();
+
+            var listing = new Listing
+            {
+                Title = "Test Listing",
+                Description = "Description",
+                SellerId = seller.Id,
+                Price = 100,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.Listings.Add(listing);
+            await _context.SaveChangesAsync();
+
+            var review = new Review
+            {
+                ListingId = listing.Id,
+                ReviewerId = reviewer.Id,
+                Rating = 1,
+                Description = "Problematic review",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Reviews.Add(review);
+            await _context.SaveChangesAsync();
+            SetupAuthenticatedUser(reporter.Id);
+
+            // Act
+            var result = await _controller.ReportReview(review.Id);
+
+            // Assert
+            result.Should().BeOfType<ViewResult>();
+            var viewResult = (ViewResult)result;
+            var model = viewResult.Model.Should().BeOfType<CreateTicketViewModel>().Subject;
+            model.Category.Should().Be(TicketCategory.Review_Report);
+            model.ReportedListingId.Should().Be(listing.Id);
+            model.Subject.Should().Contain(review.Id.ToString());
+            model.Description.Should().Contain("Problematic review");
+        }
+
         public void Dispose()
         {
             _context.Dispose();

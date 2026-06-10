@@ -1,16 +1,21 @@
-﻿@{
+@{
     ViewData["Title"] = "Potwierdzenie rejestracji";
+    ViewData["HideNavSearch"] = true;
 }
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body text-center">
-                    <h2 class="mb-4">Dziękujemy za rejestrację!</h2>
-                    <p class="lead">Wysłaliśmy link aktywacyjny na Twój adres email.</p>
-                    <p>Kliknij w link w wiadomości, aby aktywować swoje konto.</p>
-                    <a asp-action="Index" class="btn btn-primary mt-3">Powrót do strony głównej</a>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card card-md">
+            <div class="card-body">
+                <div class="empty">
+                    <div class="empty-icon"><i class="bi bi-envelope-check fs-1 text-success"></i></div>
+                    <p class="empty-title">Dziękujemy za rejestrację!</p>
+                    <p class="empty-subtitle text-secondary">
+                        Wysłaliśmy link aktywacyjny na Twój adres email. Kliknij w link w wiadomości, aby aktywować konto.
+                    </p>
+                    <div class="empty-action">
+                        <a asp-action="Index" class="btn btn-primary">Powrót do strony głównej</a>
+                    </div>
                 </div>
             </div>
         </div>

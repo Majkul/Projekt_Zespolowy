@@ -12,68 +12,79 @@
     var maxDistanceKm = ViewBag.MaxDistanceKm as int?;
     var userLat = ViewBag.UserLat as double?;
     var userLng = ViewBag.UserLng as double?;
+    var pageSize = ViewBag.PageSize as int? ?? 24;
     var tagSelectId = ViewData["TagSelectId"] as string ?? "tagSelectFilter";
+    var allTypeId = $"{tagSelectId}-type-all";
+    var saleTypeId = $"{tagSelectId}-type-sale";
+    var tradeTypeId = $"{tagSelectId}-type-trade";
+    var locationButtonId = $"{tagSelectId}-location-button";
+    var locationFeedbackId = $"{tagSelectId}-location-feedback";
 }
 
 <form method="get">
-    <div class="card shadow-sm">
-        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-            Filtry
+    <div class="card filter-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <div class="text-uppercase small text-muted fw-bold">Dopasuj wyniki</div>
+                <div class="fw-semibold">Filtry</div>
+            </div>
             <a href="@Url.Action("Index", "Listings")" class="btn btn-link btn-sm p-0 text-secondary">Wyczyść</a>
         </div>
         <div class="card-body">
             <input type="hidden" name="searchString" value="@searchString" />
+            <input type="hidden" name="pageSize" value="@pageSize" />
 
-            @* Typ oferty *@
-            <div class="mb-3">
+            <div class="mb-4">
                 <label class="form-label fw-semibold small text-uppercase text-muted">Typ oferty</label>
-                <div class="d-flex flex-column gap-1">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="listingType"
-                               value="" @(listingType == "" ? "checked" : "") />
-                        <label class="form-check-label">Wszystkie</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="listingType"
-                               value="sale" @(listingType == "sale" ? "checked" : "") />
-                        <label class="form-check-label">Sprzedaż</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="listingType"
-                               value="trade" @(listingType == "trade" ? "checked" : "") />
-                        <label class="form-check-label">Wymiana</label>
-                    </div>
+                <div class="filter-chip-group">
+                    <input class="btn-check" id="@allTypeId" type="radio" name="listingType"
+                           value="" @(listingType == "" ? "checked" : "") />
+                    <label class="filter-chip" for="@allTypeId">
+                        <span>Wszystkie</span>
+                        <i class="bi bi-grid"></i>
+                    </label>
+
+                    <input class="btn-check" id="@saleTypeId" type="radio" name="listingType"
+                           value="sale" @(listingType == "sale" ? "checked" : "") />
+                    <label class="filter-chip" for="@saleTypeId">
+                        <span>Sprzedaż</span>
+                        <i class="bi bi-cash-coin"></i>
+                    </label>
+
+                    <input class="btn-check" id="@tradeTypeId" type="radio" name="listingType"
+                           value="trade" @(listingType == "trade" ? "checked" : "") />
+                    <label class="filter-chip" for="@tradeTypeId">
+                        <span>Wymiana</span>
+                        <i class="bi bi-arrow-left-right"></i>
+                    </label>
                 </div>
             </div>
 
-            <hr class="my-2" />
-
-            @* Zakres cen *@
-            <div class="mb-3">
+            <div class="mb-4">
                 <label class="form-label fw-semibold small text-uppercase text-muted">Cena</label>
-                <div class="d-flex gap-2 align-items-center">
-                    <div class="input-group input-group-sm">
-                        <input type="number" name="minPrice" class="form-control"
-                               placeholder="Od" min="0" step="0.01"
-                               value="@(minPrice.HasValue ? minPrice.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : "")" />
-                        <span class="input-group-text">PLN</span>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="minPrice" class="form-control"
+                                   placeholder="Od" min="0" step="0.01"
+                                   value="@(minPrice.HasValue ? minPrice.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : "")" />
+                            <span class="input-group-text">PLN</span>
+                        </div>
                     </div>
-                    <span class="text-muted">-</span>
-                    <div class="input-group input-group-sm">
-                        <input type="number" name="maxPrice" class="form-control"
-                               placeholder="Do" min="0" step="0.01"
-                               value="@(maxPrice.HasValue ? maxPrice.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : "")" />
-                        <span class="input-group-text">PLN</span>
+                    <div class="col-6">
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="maxPrice" class="form-control"
+                                   placeholder="Do" min="0" step="0.01"
+                                   value="@(maxPrice.HasValue ? maxPrice.Value.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : "")" />
+                            <span class="input-group-text">PLN</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <hr class="my-2" />
-
-            @* Tagi *@
             @if (allTags.Any())
             {
-                <div class="mb-3">
+                <div class="mb-4">
                     <label for="@tagSelectId" class="form-label fw-semibold small text-uppercase text-muted">Kategorie</label>
                     <select name="tagIds" id="@tagSelectId" multiple class="form-select form-select-sm">
                         @foreach (var tag in allTags)
@@ -82,12 +93,9 @@
                         }
                     </select>
                 </div>
-
-                <hr class="my-2" />
             }
 
-            @* Sortowanie *@
-            <div class="mb-3">
+            <div class="mb-4">
                 <label class="form-label fw-semibold small text-uppercase text-muted">Sortuj</label>
                 <select name="sortBy" class="form-select form-select-sm">
                     <option value="newest" selected="@(sortBy == "newest" ? "selected" : null)">Najnowsze</option>
@@ -98,10 +106,7 @@
                 </select>
             </div>
 
-            <hr class="my-2" />
-
-            @* Odległość *@
-            <div class="mb-3">
+            <div class="mb-4">
                 <label class="form-label fw-semibold small text-uppercase text-muted">
                     Maksymalna odległość (km)
                 </label>
@@ -114,12 +119,22 @@
                        placeholder="np. 25"
                        value="@(maxDistanceKm.HasValue ? maxDistanceKm.Value.ToString() : "")" />
 
-                @if (maxDistanceKm.HasValue && (!userLat.HasValue || !userLng.HasValue))
-                {
-                    <div class="mt-1 text-sm text-danger">
-                        Nie można określić lokalizacji.
-                    </div>
-                }
+                <button type="button"
+                        id="@locationButtonId"
+                        class="btn btn-outline-secondary btn-sm w-100 mt-2">
+                    <i class="bi bi-geo-alt me-1"></i> Użyj mojej lokalizacji
+                </button>
+
+                <div id="@locationFeedbackId" class="location-feedback mt-2 small text-muted">
+                    @if (userLat.HasValue && userLng.HasValue)
+                    {
+                        <text>Lokalizacja jest ustawiona.</text>
+                    }
+                    else
+                    {
+                        <text>Najpierw użyj swojej lokalizacji, aby filtrować po odległości.</text>
+                    }
+                </div>
             </div>
 
             <input type="hidden" name="userLat"
@@ -131,3 +146,45 @@
         </div>
     </div>
 </form>
+
+<script>
+    (() => {
+        const form = document.getElementById('@locationButtonId')?.closest('form');
+        const button = document.getElementById('@locationButtonId');
+        const feedback = document.getElementById('@locationFeedbackId');
+        const distanceInput = form?.querySelector('input[name="maxDistanceKm"]');
+        const latInput = form?.querySelector('input[name="userLat"]');
+        const lngInput = form?.querySelector('input[name="userLng"]');
+
+        function setFeedback(message, isError = false) {
+            if (!feedback) return;
+            feedback.textContent = message;
+            feedback.classList.toggle('text-danger', isError);
+            feedback.classList.toggle('text-muted', !isError);
+        }
+
+        button?.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                setFeedback('Nie można określić lokalizacji.', true);
+                return;
+            }
+
+            setFeedback('Pobieram lokalizację...');
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    if (latInput) latInput.value = position.coords.latitude.toString();
+                    if (lngInput) lngInput.value = position.coords.longitude.toString();
+                    setFeedback('Lokalizacja jest ustawiona.');
+                },
+                () => setFeedback('Nie można określić lokalizacji.', true)
+            );
+        });
+
+        form?.addEventListener('submit', event => {
+            if (distanceInput?.value && (!latInput?.value || !lngInput?.value)) {
+                event.preventDefault();
+                setFeedback('Najpierw użyj swojej lokalizacji, aby filtrować po odległości.', false);
+            }
+        });
+    })();
+</script>

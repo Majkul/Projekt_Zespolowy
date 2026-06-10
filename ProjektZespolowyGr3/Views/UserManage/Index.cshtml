@@ -1,5 +1,7 @@
-﻿@{
+@{
+    ViewData["Title"] = "Zarządzanie użytkownikami";
     var selectedTab = ViewBag.SelectedTab as string ?? "Users";
+    var tabLabels = new Dictionary<string, string> { ["Users"] = "Użytkownicy", ["Admins"] = "Administratorzy" };
 
     List<T> GetModelList<T>()
     {
@@ -9,33 +11,38 @@
     }
 }
 
-<h2>Zarządzanie użytkownikami</h2>
+<div class="page-header mb-4">
+    <h2 class="page-title">Zarządzanie użytkownikami</h2>
+</div>
 
-<ul class="nav nav-tabs" role="tablist">
-    @foreach (var tab in new[] { "Users", "Admins" })
-    {
-        var isActive = (selectedTab == tab) ? "active" : "";
-        <li class="nav-item" role="presentation">
-            <a class="nav-link @isActive" href="@Url.Action("Index", new { tab })" role="tab" aria-selected="@(isActive == "active")">@tab</a>
-        </li>
-    }
-</ul>
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            @foreach (var tab in new[] { "Users", "Admins" })
+            {
+                var isActive = (selectedTab == tab) ? "active" : "";
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link @isActive" href="@Url.Action("Index", new { tab })" role="tab" aria-selected="@(isActive == "active")">@tabLabels[tab]</a>
+                </li>
+            }
+        </ul>
+    </div>
+    <div class="card-body">
+        @switch (selectedTab)
+        {
+            case "Users":
+                var users = GetModelList<ProjektZespolowyGr3.Models.DbModels.User>();
+                <partial name="_Users" model="users" />
+                break;
 
-<div class="tab-content mt-3">
-    @switch (selectedTab)
-    {
-        case "Users":
-            var users = GetModelList<ProjektZespolowyGr3.Models.DbModels.User>();
-            <partial name="_Users" model="users" />
-            break;
+            case "Admins":
+                var admins = GetModelList<ProjektZespolowyGr3.Models.DbModels.User>();
+                <partial name="_Admins" model="admins" />
+                break;
 
-        case "Admins":
-            var admins = GetModelList<ProjektZespolowyGr3.Models.DbModels.User>();
-            <partial name="_Admins" model="admins" />
-            break;
-
-        default:
-            <div class="alert alert-warning">Nieprawidłowa zakładka.</div>
-            break;
-    }
+            default:
+                <div class="alert alert-warning mb-0">Nieprawidłowa zakładka.</div>
+                break;
+        }
+    </div>
 </div>

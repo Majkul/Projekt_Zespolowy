@@ -9,6 +9,7 @@ using ProjektZespolowyGr3.Models;
 using ProjektZespolowyGr3.Models.DbModels;
 using ProjektZespolowyGr3.Models.System;
 using Moq;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace ProjektZespolowyGr3.Tests.Controllers
 {
@@ -39,11 +40,11 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             var principal = new ClaimsPrincipal(identity);
             _controller.ControllerContext = new Microsoft.AspNetCore.Mvc.ControllerContext
             {
-                HttpContext = new DefaultHttpContext
-                {
-                    User = principal
-                }
+                HttpContext = new DefaultHttpContext { User = principal }
             };
+            _controller.TempData = new TempDataDictionary(
+                _controller.ControllerContext.HttpContext,
+                Mock.Of<ITempDataProvider>());
         }
 
         [Fact]
@@ -150,6 +151,27 @@ namespace ProjektZespolowyGr3.Tests.Controllers
 
             // Assert
             result.Should().BeOfType<RedirectToActionResult>();
+        }
+
+        [Fact]
+        public async Task Send_ShouldRejectContentLongerThanMessageLimit()
+        {
+            // Arrange
+            var user1 = new User { Username = "user1", Email = "user1@test.com", CreatedAt = DateTime.UtcNow };
+            var user2 = new User { Username = "user2", Email = "user2@test.com", CreatedAt = DateTime.UtcNow };
+            _context.Users.AddRange(user1, user2);
+            _context.SaveChanges();
+
+            SetupAuthenticatedUser(user1.Id);
+            var content = new string('a', MarketplaceLimits.MaxMessageLength + 1);
+
+            // Act
+            var result = await _controller.Send(user2.Id, content, null, null);
+
+            // Assert
+            result.Should().BeOfType<RedirectToActionResult>();
+            _context.Messages.Should().BeEmpty();
+            _controller.TempData["MessageError"].Should().Be("Wiadomość może mieć maksymalnie 2000 znaków.");
         }
 
         public void Dispose()

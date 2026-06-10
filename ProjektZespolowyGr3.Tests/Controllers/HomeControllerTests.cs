@@ -91,6 +91,74 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         }
 
         [Fact]
+        public async Task Index_ShouldExcludePurchasedClosedPrivateSoldAndOutOfStockListings()
+        {
+            var seller = new User
+            {
+                Username = "seller2",
+                Email = "seller2@test.com",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Users.Add(seller);
+            await _context.SaveChangesAsync();
+
+            var activeSale = CreateListing(seller, "Active sale", price: 100m, createdAt: DateTime.UtcNow);
+            var activeTrade = CreateListing(seller, "Active trade", price: null, notExchangeable: false, createdAt: DateTime.UtcNow.AddMinutes(-1));
+            var purchased = CreateListing(seller, "Purchased", price: 50m, createdAt: DateTime.UtcNow.AddMinutes(-2));
+            ListingStockHelper.ApplySale(purchased, 1);
+
+            _context.Listings.AddRange(
+                activeSale,
+                activeTrade,
+                purchased,
+                CreateListing(seller, "Closed", price: 25m, isArchived: true, createdAt: DateTime.UtcNow.AddMinutes(-3)),
+                CreateListing(seller, "Sold with stock", price: 35m, isSold: true, createdAt: DateTime.UtcNow.AddMinutes(-4)),
+                CreateListing(seller, "Private", price: 45m, isPrivate: true, createdAt: DateTime.UtcNow.AddMinutes(-5)),
+                CreateListing(seller, "Out of stock", price: 55m, stockQuantity: 0, createdAt: DateTime.UtcNow.AddMinutes(-6)));
+            await _context.SaveChangesAsync();
+
+            var result = await _controller.Index();
+
+            result.Should().BeOfType<ViewResult>();
+            var viewResult = result as ViewResult;
+            var latestListings = viewResult!.ViewData["LatestListings"] as List<Listing>;
+            latestListings.Should().NotBeNull();
+            latestListings!.Select(l => l.Title).Should().BeEquivalentTo(new[]
+            {
+                "Active sale",
+                "Active trade"
+            });
+        }
+
+        private static Listing CreateListing(
+            User seller,
+            string title,
+            decimal? price,
+            DateTime createdAt,
+            bool notExchangeable = true,
+            int stockQuantity = 1,
+            bool isArchived = false,
+            bool isSold = false,
+            bool isPrivate = false)
+        {
+            return new Listing
+            {
+                Title = title,
+                Description = title,
+                SellerId = seller.Id,
+                Seller = seller,
+                Price = price,
+                NotExchangeable = notExchangeable,
+                StockQuantity = stockQuantity,
+                IsArchived = isArchived,
+                IsSold = isSold,
+                IsPrivate = isPrivate,
+                CreatedAt = createdAt,
+                UpdatedAt = createdAt
+            };
+        }
+
+        [Fact]
         public void Privacy_ShouldReturnView()
         {
             // Act

@@ -1,39 +1,69 @@
-﻿@model List<ProjektZespolowyGr3.Models.DbModels.User>
+@model List<ProjektZespolowyGr3.Models.DbModels.User>
 
-<h2 class="mb-4">Administratorzy</h2>
-<table class="table table-striped table-bordered table-hover align-middle">
-    <thead class="table-dark">
-        <tr>
-            <th scope="col">Id</th>
-            <th scope="col">Login</th>
-            <th scope="col">Email</th>
-            <th scope="col">Zbanowany</th>
-            <th scope="col">Utworzono</th>
-            <th scope="col" style="width: 140px;">Akcje</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Id</td>
-                <td>
-                    <a asp-controller="UserProfile" asp-action="Details" asp-route-username="@item.Username" class="text-decoration-none">
-                        @item.Username
-                    </a>
-                </td>
-                <td>@item.Email</td>
-                <td>@item.IsBanned</td>
-                <td>@item.CreatedAt</td>
-                <td>
-                    <a asp-action="EditUser" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-2">Edytuj</a>
-                    <form asp-action="DeleteUser" asp-route-id="@item.Id" method="post" style="display:inline;" onsubmit="return confirm('Czy na pewno chcesz usunąć tego administratora?');">
-                        <button type="submit" class="btn btn-sm btn-danger">Usuń</button>
-                    </form>
-                </td>
-            </tr>
+<form asp-action="Index" method="get" class="row g-2 align-items-center mb-3">
+    <input type="hidden" name="tab" value="Admins" />
+
+    <div class="col-12 col-md">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" name="searchString" class="form-control"
+                   placeholder="Szukaj administratora..." value="@ViewBag.CurrentFilter" />
+            <button type="submit" class="btn btn-primary">Szukaj</button>
+        </div>
+    </div>
+
+    <div class="col-auto">
+        <label for="pageSize" class="form-label mb-0 small text-secondary">Limit wyników</label>
+    </div>
+    <div class="col-auto">
+        @{
+            int currentPageSize = ViewBag.CurrentPageSize ?? 25;
+            int[] sizes = new[] { 25, 50, 100, 500, 1000 };
         }
-    </tbody>
-</table>
+        <select id="pageSize" name="pageSize" class="form-select" style="width: 90px;" onchange="this.form.submit()">
+            @foreach (var size in sizes)
+            {
+                <option value="@size" selected="@(size == currentPageSize ? "selected" : null)">@size</option>
+            }
+        </select>
+    </div>
+</form>
 
-<a class="btn btn-primary mt-3" asp-controller="UserManage" asp-action="AddAdmin">Dodaj nowego</a>
+<div class="table-responsive">
+    <table class="table table-vcenter card-table">
+        <thead>
+            <tr>
+                <th>Login</th>
+                <th>Email</th>
+                <th>Zbanowany</th>
+                <th>Utworzono</th>
+                <th class="w-1">Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="text-break-anywhere">
+                        <a asp-controller="UserProfile" asp-action="Details" asp-route-username="@item.Username" class="text-decoration-none fw-bold">
+                            @item.Username
+                        </a>
+                    </td>
+                    <td class="text-secondary text-break-anywhere">@item.Email</td>
+                    <td><span class="badge @(item.IsBanned ? "bg-red-lt" : "bg-green-lt")">@(item.IsBanned ? "Tak" : "Nie")</span></td>
+                    <td class="text-secondary">@item.CreatedAt.ToString("dd.MM.yyyy")</td>
+                    <td>
+                        <div class="btn-list flex-nowrap">
+                            <a asp-action="EditUser" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edytuj</a>
+                            <form asp-action="DeleteUser" asp-route-id="@item.Id" method="post" asp-antiforgery="true" onsubmit="return confirm('Czy na pewno chcesz usunąć tego administratora?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Usuń</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<a class="btn btn-primary mt-3" asp-controller="UserManage" asp-action="AddAdmin"><i class="bi bi-plus-circle me-1"></i> Dodaj nowego</a>

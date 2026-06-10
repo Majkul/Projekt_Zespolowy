@@ -8,85 +8,90 @@
     var adminSelectItems = ViewBag.Admins as List<SelectListItem> ?? new List<SelectListItem>();
 }
 
-<div class="container mt-4">
-    <h2>Zarządzanie ticketami</h2>
-    <hr />
+<div class="page-header mb-4">
+    <h2 class="page-title">Zarządzanie ticketami</h2>
+</div>
 
-    <form method="get" class="mb-4">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <input type="text" name="searchString" class="form-control" placeholder="Szukaj..." value="@ViewBag.CurrentFilter">
+<div class="card">
+    <div class="card-body border-bottom py-3">
+        <form method="get">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <input type="text" name="searchString" class="form-control" placeholder="Szukaj..." value="@ViewBag.CurrentFilter">
+                </div>
+                <div class="col-md-2">
+                    <select name="statusFilter" class="form-select">
+                        <option value="">Wszystkie statusy</option>
+                        @foreach (var status in statusSelectItems)
+                        {
+                            <option value="@status.Value" selected="@status.Selected">@status.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="categoryFilter" class="form-select">
+                        <option value="">Wszystkie kategorie</option>
+                        @foreach (var category in categorySelectItems)
+                        {
+                            <option value="@category.Value" selected="@category.Selected">@category.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="assigneeFilter" class="form-select">
+                        <option value="">Wszyscy</option>
+                        @foreach (var admin in adminSelectItems)
+                        {
+                            <option value="@admin.Value" selected="@admin.Selected">@admin.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary">Filtruj</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Wyczyść</a>
+                </div>
             </div>
-            <div class="col-md-2">
-                <select name="statusFilter" class="form-select">
-                    <option value="">Wszystkie statusy</option>
-                    @foreach (var status in statusSelectItems)
-                    {
-                        <option value="@status.Value" selected="@status.Selected">@status.Text</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="categoryFilter" class="form-select">
-                    <option value="">Wszystkie kategorie</option>
-                    @foreach (var category in categorySelectItems)
-                    {
-                        <option value="@category.Value" selected="@category.Selected">@category.Text</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="assigneeFilter" class="form-select">
-                    <option value="">Wszyscy</option>
-                    @foreach (var admin in adminSelectItems)
-                    {
-                        <option value="@admin.Value" selected="@admin.Selected">@admin.Text</option>
-                    }
-                </select>
-            </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-primary">Filtruj</button>
-                <a asp-action="Index" class="btn btn-secondary">Wyczyść</a>
-            </div>
-        </div>
-    </form>
+        </form>
+    </div>
 
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Temat</th>
-                <th>Kategoria</th>
-                <th>Status</th>
-                <th>Użytkownik</th>
-                <th>Przypisany do</th>
-                <th>Data utworzenia</th>
-                <th>Akcje</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var ticket in Model)
-            {
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
                 <tr>
-                    <td>@ticket.Id</td>
-                    <td>@ticket.Subject</td>
-                    <td><span class="badge bg-info">@ticket.Category</span></td>
-                    <td><span class="badge bg-@(ticket.Status == TicketStatus.Open ? "warning" : ticket.Status == TicketStatus.Resolved ? "success" : "secondary")">@ticket.Status</span></td>
-                    <td>@ticket.User.Username</td>
-                    <td>@(ticket.Assignee?.Username ?? "Nieprzypisany")</td>
-                    <td>@ticket.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
-                    <td>
-                        <a asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(ticket.Subject)" asp-route-id="@ticket.Id" class="btn btn-sm btn-primary">Szczegóły</a>
-                    </td>
+                    <th>ID</th>
+                    <th>Temat</th>
+                    <th>Kategoria</th>
+                    <th>Status</th>
+                    <th>Użytkownik</th>
+                    <th>Przypisany do</th>
+                    <th>Data utworzenia</th>
+                    <th class="w-1">Akcje</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var ticket in Model)
+                {
+                    <tr>
+                        <td class="text-secondary">@ticket.Id</td>
+                        <td class="fw-bold">@ticket.Subject</td>
+                        <td><span class="badge bg-azure-lt">@ticket.Category</span></td>
+                        <td><span class="badge bg-@(ticket.Status == TicketStatus.Open ? "yellow-lt" : ticket.Status == TicketStatus.Resolved ? "green-lt" : "secondary-lt")">@ticket.Status</span></td>
+                        <td>@ticket.User.Username</td>
+                        <td class="text-secondary">@(ticket.Assignee?.Username ?? "Nieprzypisany")</td>
+                        <td class="text-secondary">@ticket.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>
+                            <a asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(ticket.Subject)" asp-route-id="@ticket.Id" class="btn btn-sm btn-outline-primary">Szczegóły</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
     @if (ViewBag.TotalPages > 1)
     {
-        <nav>
-            <ul class="pagination">
+        <div class="card-footer d-flex justify-content-center">
+            <ul class="pagination m-0">
                 @for (int i = 1; i <= ViewBag.TotalPages; i++)
                 {
                     <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
@@ -94,7 +99,6 @@
                     </li>
                 }
             </ul>
-        </nav>
+        </div>
     }
 </div>
-

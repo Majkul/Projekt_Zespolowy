@@ -176,7 +176,41 @@ namespace ProjektZespolowyGr3.Controllers.User
             };
             return View("Create", vm);
         }
+<<<<<<< HEAD
         [Authorize]
+=======
+
+        [HttpGet]
+        public async Task<IActionResult> ReportReview(int reviewId)
+        {
+            var review = await _context.Reviews
+                .Include(r => r.Listing)
+                .Include(r => r.Reviewer)
+                .FirstOrDefaultAsync(r => r.Id == reviewId);
+
+            if (review == null)
+            {
+                return NotFound("Review not found.");
+            }
+
+            if (review.ReviewerId == GetCurrentUserId())
+            {
+                return BadRequest("Nie możesz zgłosić własnej opinii.");
+            }
+
+            var vm = new CreateTicketViewModel
+            {
+                Category = TicketCategory.Review_Report,
+                ReportedListingId = review.ListingId,
+                ReportedListingTitle = review.Listing?.Title,
+                Subject = $"Zgłoszenie opinii #{review.Id}",
+                Description = $"Zgłaszana opinia użytkownika {review.Reviewer?.Username ?? "nieznany użytkownik"} przy ogłoszeniu \"{review.Listing?.Title ?? "nieznane ogłoszenie"}\".\n\nTreść opinii: {review.Description ?? "Brak treści."}\n\nOpisz, co jest nie tak z tą opinią:"
+            };
+
+            return View("Create", vm);
+        }
+
+>>>>>>> origin/main
         // GET: Tickets/Create
         public IActionResult Create()
         {

@@ -63,6 +63,7 @@ public class HomeController : Controller
     [Route("Account/[action]")]
     public async Task<IActionResult> Login(string login, string password, string? returnUrl = null)
     {
+        ViewBag.ReturnUrl = returnUrl;
         if (Request.Method == "GET")
         {
             ViewBag.ReturnUrl = returnUrl;
@@ -131,19 +132,19 @@ public class HomeController : Controller
 
         if (model.Password != model.ConfirmPassword)
         {
-            ViewBag.Alert = "Passwords do not match";
+            ModelState.AddModelError(nameof(model.ConfirmPassword), "Hasła nie są takie same.");
             return View(model);
         }
 
         if (_authService.UserExists(model.Login))
         {
-            ViewBag.Alert = "User already exists";
+            ModelState.AddModelError(nameof(model.Login), "Ten login jest już zajęty.");
             return View(model);
         }
 
         if (_authService.EmailTaken(model.Email))
         {
-            TempData["AlertError"] = "User with this email already exists";
+            ModelState.AddModelError(nameof(model.Email), "Ten email jest już zajęty.");
             return View(model);
         }
 
@@ -181,10 +182,94 @@ public class HomeController : Controller
         <p>Please click the link below to confirm your email address:</p>
         <p><a href='{verifyUrl}'>Confirm your email address</a></p>";
 
-        await _emailService.SendEmailAsync(user.Email, "Confirm your email address", body);
-
+        _ = Task.Run(() => _emailService.SendEmailAsync(user.Email, "Confirm your email address", body));
 
         return RedirectToAction("RegisterConfirmation");
+    }
+
+    [Route("Account/[action]")]
+    public IActionResult ForgotPassword()
+    {
+        return View(new ForgotPasswordViewModel());
+    }
+
+    [HttpPost]
+    [Route("Account/[action]")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+        if (user != null)
+        {
+            var auth = await _context.UserAuths.FirstOrDefaultAsync(a => a.UserId == user.Id);
+            if (auth != null)
+            {
+                auth.PasswordResetToken = Guid.NewGuid().ToString("N");
+                auth.PasswordResetTokenExpiresAt = DateTime.UtcNow.AddHours(1);
+                await _context.SaveChangesAsync();
+
+                var resetUrl = Url.Action("ResetPassword", "Account", new { email = user.Email, token = auth.PasswordResetToken }, Request.Scheme);
+                var body = $@"<p>Otrzymaliśmy prośbę o reset hasła.</p><p><a href='{resetUrl}'>Ustaw nowe hasło</a></p>";
+                _ = Task.Run(() => _emailService.SendEmailAsync(user.Email, "Reset hasła", body));
+            }
+        }
+
+        TempData["AlertSuccess"] = "Jeśli konto istnieje, wysłaliśmy link do resetu hasła.";
+        return RedirectToAction(nameof(Login));
+    }
+
+    [Route("Account/[action]")]
+    public IActionResult ResetPassword(string email, string token)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
+        {
+            return BadRequest("Nieprawidłowy link resetu hasła.");
+        }
+
+        return View(new ResetPasswordViewModel { Email = email, Token = token });
+    }
+
+    [HttpPost]
+    [Route("Account/[action]")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+        if (user == null)
+        {
+            ModelState.AddModelError(string.Empty, "Nieprawidłowy link resetu hasła.");
+            return View(model);
+        }
+
+        var auth = await _context.UserAuths.FirstOrDefaultAsync(a => a.UserId == user.Id);
+        if (auth == null ||
+            auth.PasswordResetToken != model.Token ||
+            auth.PasswordResetTokenExpiresAt == null ||
+            auth.PasswordResetTokenExpiresAt < DateTime.UtcNow)
+        {
+            ModelState.AddModelError(string.Empty, "Link resetu hasła wygasł albo jest nieprawidłowy.");
+            return View(model);
+        }
+
+        var salt = _authService.GenerateSalt();
+        auth.PasswordSalt = salt;
+        auth.Password = _authService.HashPassword(model.Password, salt);
+        auth.PasswordResetToken = null;
+        auth.PasswordResetTokenExpiresAt = null;
+        await _context.SaveChangesAsync();
+
+        TempData["AlertSuccess"] = "Hasło zostało zmienione. Możesz się zalogować.";
+        return RedirectToAction(nameof(Login));
     }
 
     [Route("Account/[action]")]

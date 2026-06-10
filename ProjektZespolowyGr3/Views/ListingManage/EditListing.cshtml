@@ -1,11 +1,15 @@
 @model ProjektZespolowyGr3.Models.ViewModels.EditListingViewModel
 @{
-    ViewBag.Title = "Edytuj ofertę";
+    ViewData["Title"] = "Edytuj ofertę";
     var modelId = ViewBag.ModelId;
+    var returnUrl = ViewBag.ReturnUrl as string;
 }
 
-<h2 class="mb-4">Edytuj ofertę</h2>
+<div class="page-header mb-4">
+    <h2 class="page-title">Edytuj ofertę</h2>
+</div>
 
+<<<<<<< HEAD
 @if (!ViewData.ModelState.IsValid)
 {
     <div class="alert alert-danger">
@@ -108,74 +112,212 @@
     <h4 class="mt-4">Aktualne zdjęcia</h4>
     <div class="row">
         @if (Model.Photos != null && Model.Photos.Any())
+=======
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        @if (!ViewData.ModelState.IsValid)
+>>>>>>> origin/main
         {
-            foreach (var photo in Model.Photos)
-            {
-                <div class="col-3 text-center mb-4">
-                    <img src="@photo.Upload.Url" class="img-fluid rounded mb-2" style="max-height: 150px;" />
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                </ul>
+            </div>
+        }
 
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" name="PhotosToDelete" value="@photo.Id" />
-                        <label class="form-check-label">Usuń</label>
+        <div class="card">
+            <div class="card-body">
+                <form id="edit-listing-form" asp-action="EditListing" asp-route-id="@modelId" method="post" enctype="multipart/form-data" asp-antiforgery="true">
+                    @if (!string.IsNullOrEmpty(returnUrl))
+                    {
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                    }
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label" id="label-Title">Tytuł</label>
+                        <input asp-for="Title" class="form-control" id="input-Title" />
                     </div>
-                </div>
-            }
-        }
-        else
-        {
-            <p class="text-muted">Brak zdjęć.</p>
-        }
-    </div>
 
-    <div class="mb-3 mt-4">
-        <label class="form-label">Dodaj nowe zdjęcia</label>
-        <div class="image-upload-container">
-            <input asp-for="PhotoFiles" type="file" class="form-control image-upload-input" multiple accept=".jpg,.jpeg,.png" />
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label" id="label-Description">Opis</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" id="input-Description"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Price" class="form-label" id="label-Price">Cena (PLN)</label>
+                            <input asp-for="Price" type="number" class="form-control" step="0.01" min="0" max="1000000" id="input-Price" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StockQuantity" class="form-label" id="label-StockQuantity">Liczba sztuk</label>
+                            <input asp-for="StockQuantity" type="number" min="0" class="form-control" id="input-StockQuantity" />
+                            <small class="form-hint">0 = wyprzedane (ogłoszenie oznaczone jako sprzedane).</small>
+                            <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" id="label-SelectedTagIds" for="tagSelectEdit">Tagi</label>
+                        <select asp-for="SelectedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tagSelectEdit"></select>
+                    </div>
+
+                    <div class="card card-sm mb-3 border-info" id="exchange-fields">
+                        <div class="card-header bg-info-lt">Wymiana</div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label asp-for="MinExchangeValue" class="form-label" id="label-MinExchangeValue">Minimalna wartość oferty kupującego (PLN)</label>
+                                <input asp-for="MinExchangeValue" type="number" step="0.01" min="0" max="1000000" class="form-control" id="input-MinExchangeValue" />
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="ExchangeDescription" class="form-label" id="label-ExchangeDescription">Czego szukasz w zamian</label>
+                                <textarea asp-for="ExchangeDescription" class="form-control" rows="3" id="input-ExchangeDescription"></textarea>
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label" id="label-SelectedExchangeAcceptedTagIds" for="tagSelectEditExchange">Akceptowane tagi przy wymianie</label>
+                                <select asp-for="SelectedExchangeAcceptedTagIds" asp-items="Model.AvailableTags" multiple class="form-select" id="tagSelectEditExchange"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-check">
+                            <input asp-for="NotExchangeable" class="form-check-input" id="input-NotExchangeable" />
+                            <span class="form-check-label" id="label-NotExchangeable">Nie do wymiany</span>
+                        </label>
+                    </div>
+
+                    <h3 class="h4 mt-4">Aktualne zdjęcia</h3>
+                    <div class="row">
+                        @if (Model.Photos != null && Model.Photos.Any())
+                        {
+                            foreach (var photo in Model.Photos)
+                            {
+                                <div class="col-4 col-md-3 text-center mb-4">
+                                    <img src="@photo.Upload.Url" class="img-fluid rounded mb-2" style="max-height: 150px;" />
+                                    <label class="form-check justify-content-center">
+                                        <input type="checkbox" class="form-check-input" name="PhotosToDelete" value="@photo.Id" />
+                                        <span class="form-check-label">Usuń</span>
+                                    </label>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-secondary">Brak zdjęć.</p>
+                        }
+                    </div>
+
+                    <div class="mb-3 mt-2">
+                        <label class="form-label">Dodaj nowe zdjęcia</label>
+                        <div class="image-upload-container">
+                            <input asp-for="PhotoFiles" type="file" class="form-control image-upload-input" multiple accept=".jpg,.jpeg,.png" />
+                        </div>
+                        <small class="form-hint">Maks. 5 zdjęć, tylko .jpg/.jpeg/.png</small>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-check">
+                            <input asp-for="IsFeatured" class="form-check-input" id="input-IsFeatured" />
+                            <span class="form-check-label" id="label-IsFeatured">Wyróżnij na profilu</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-check">
+                            <input asp-for="IsPrivate" class="form-check-input" id="input-IsPrivate" />
+                            <span class="form-check-label" id="label-IsPrivate">Ogłoszenie prywatne</span>
+                        </label>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Zapisz</button>
+                        @if (!string.IsNullOrEmpty(returnUrl))
+                        {
+                            <a class="btn btn-outline-secondary" href="@returnUrl">Anuluj</a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-outline-secondary" asp-action="Index">Anuluj</a>
+                        }
+                    </div>
+                </form>
+            </div>
         </div>
-        <small class="text-muted">Maks. 5 zdjęć, tylko .jpg/.jpeg/.png</small>
     </div>
-
-    <div class="form-check mb-3">
-        <label asp-for="IsFeatured" class="form-check-label" id="label-IsFeatured">Wyróżnij na profilu</label>
-        <input asp-for="IsFeatured" class="form-check-input" id="input-IsFeatured" />
-    </div>
-
-    <div class="form-check mb-3">
-        <input asp-for="IsPrivate" class="form-check-input" id="input-IsPrivate" />
-        <label asp-for="IsPrivate" class="form-check-label" id="label-IsPrivate">Ogłoszenie prywatne</label>
-    </div>
-
-    <div class="d-flex gap-2 mt-4">
-        <button type="submit" class="btn btn-primary">Zapisz</button>
-        <a class="btn btn-danger" asp-action="Index">Anuluj</a>
-    </div>
-</form>
+</div>
 
 <script>
     const notExchangeableSelect = document.getElementById('input-NotExchangeable');
     const priceLabel = document.getElementById('label-Price');
+    const exchangeFields = document.getElementById('exchange-fields');
+    const exchangeFieldNames = ['MinExchangeValue', 'ExchangeDescription', 'SelectedExchangeAcceptedTagIds'];
 
     const priceLabelText = "Cena (PLN)";
 
     function toggleIsPriceRequired() {
         priceLabel.textContent = priceLabelText + (notExchangeableSelect.checked ? " *" : "");
     }
-    notExchangeableSelect.addEventListener('change', toggleIsPriceRequired);
-    toggleIsPriceRequired();
+
+    function toggleExchangeFields() {
+        const disabled = notExchangeableSelect.checked;
+        exchangeFields.classList.toggle('d-none', disabled);
+        exchangeFields.querySelectorAll('input, textarea, select').forEach(function (input) {
+            input.disabled = disabled;
+            if (disabled) {
+                if (input.multiple) {
+                    Array.from(input.options).forEach(option => option.selected = false);
+                } else {
+                    input.value = '';
+                }
+            }
+        });
+    }
+
+    function normalizeText(value) {
+        return (value || '').trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    }
+
+    function selectedValues(input) {
+        return Array.from(input.selectedOptions)
+            .map(option => option.value)
+            .sort((a, b) => Number(a) - Number(b))
+            .join(',');
+    }
+
+    function isExchangeField(field) {
+        return exchangeFieldNames.includes(field);
+    }
 
     const initialValues = {
-        Title: '@(Model.Title ?? "")',
-        Description: '@(Model.Description ?? "")',
+        Title: normalizeText(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Title ?? ""))),
+        Description: normalizeText(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Description ?? ""))),
         Price: '@(Model.Price.HasValue ? Model.Price.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")',
         SelectedTagIds: '@string.Join(",", (Model.SelectedTagIds ?? new List<int>()).OrderBy(id => id))',
         StockQuantity: '@Model.StockQuantity',
         NotExchangeable: '@Model.NotExchangeable.ToString().ToLower()',
-        MinExchangeValue: '@(Model.MinExchangeValue.HasValue ? Model.MinExchangeValue.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")',
-        ExchangeDescription: '@(Model.ExchangeDescription ?? "")',
-        SelectedExchangeAcceptedTagIds: '@string.Join(",", (Model.SelectedExchangeAcceptedTagIds ?? new List<int>()).OrderBy(id => id))',
+        MinExchangeValue: '@(!Model.NotExchangeable && Model.MinExchangeValue.HasValue ? Model.MinExchangeValue.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")',
+        ExchangeDescription: normalizeText(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.NotExchangeable ? "" : Model.ExchangeDescription ?? ""))),
+        SelectedExchangeAcceptedTagIds: '@(!Model.NotExchangeable ? string.Join(",", (Model.SelectedExchangeAcceptedTagIds ?? new List<int>()).OrderBy(id => id)) : "")',
         IsFeatured: '@Model.IsFeatured.ToString().ToLower()',
         IsPrivate: '@Model.IsPrivate.ToString().ToLower()'
     };
+
+    function currentValue(field, input) {
+        if (isExchangeField(field) && notExchangeableSelect.checked) {
+            return '';
+        }
+
+        if (input.type === "checkbox") {
+            return input.checked.toString();
+        }
+
+        if (input.multiple) {
+            return selectedValues(input);
+        }
+
+        return normalizeText(input.value);
+    }
 
     function updateLabel(field, value) {
         const label = document.getElementById('label-' + field);
@@ -192,20 +334,32 @@
             if (input) {
                 if (input.type === "checkbox") {
                     input.addEventListener('change', function () {
-                        updateLabel(field, input.checked.toString());
+                        updateLabel(field, currentValue(field, input));
                     });
                 } else if (input.multiple) {
                     input.addEventListener('change', function () {
-                        const selectedValues = Array.from(input.selectedOptions).map(option => option.value).join(",");
-                        updateLabel(field, selectedValues);
+                        updateLabel(field, currentValue(field, input));
                     });
                 } else {
                     input.addEventListener('input', function () {
-                        updateLabel(field, input.value);
+                        updateLabel(field, currentValue(field, input));
                     });
                 }
             }
         });
+
+        notExchangeableSelect.addEventListener('change', function () {
+            toggleIsPriceRequired();
+            toggleExchangeFields();
+            fields.forEach(function (field) {
+                const input = document.getElementById(getInputId(field));
+                if (input) {
+                    updateLabel(field, currentValue(field, input));
+                }
+            });
+        });
+        toggleIsPriceRequired();
+        toggleExchangeFields();
 
         const form = document.getElementById('edit-listing-form');
         form.addEventListener('submit', function (e) {
@@ -214,13 +368,7 @@
                 const input = document.getElementById(getInputId(field));
                 let value;
                 if (input) {
-                    if (input.type === "checkbox") {
-                        value = input.checked.toString();
-                    } else if (input.multiple) {
-                        value = Array.from(input.selectedOptions).map(option => option.value).join(",");
-                    } else {
-                        value = input.value;
-                    }
+                    value = currentValue(field, input);
                     if (value != initialValues[field]) {
                         changedFields.push(field);
                     }
