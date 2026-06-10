@@ -54,6 +54,7 @@ public class HomeController : Controller
     [Route("Account/[action]")]
     public async Task<IActionResult> Login(string login, string password, string? returnUrl = null)
     {
+        ViewBag.ReturnUrl = returnUrl;
         if (Request.Method == "GET")
         {
             ViewBag.ReturnUrl = returnUrl;
@@ -172,8 +173,7 @@ public class HomeController : Controller
         <p>Please click the link below to confirm your email address:</p>
         <p><a href='{verifyUrl}'>Confirm your email address</a></p>";
 
-        await _emailService.SendEmailAsync(user.Email, "Confirm your email address", body);
-
+        _ = Task.Run(() => _emailService.SendEmailAsync(user.Email, "Confirm your email address", body));
 
         return RedirectToAction("RegisterConfirmation");
     }
@@ -206,7 +206,7 @@ public class HomeController : Controller
 
                 var resetUrl = Url.Action("ResetPassword", "Account", new { email = user.Email, token = auth.PasswordResetToken }, Request.Scheme);
                 var body = $@"<p>Otrzymaliśmy prośbę o reset hasła.</p><p><a href='{resetUrl}'>Ustaw nowe hasło</a></p>";
-                await _emailService.SendEmailAsync(user.Email, "Reset hasła", body);
+                _ = Task.Run(() => _emailService.SendEmailAsync(user.Email, "Reset hasła", body));
             }
         }
 
