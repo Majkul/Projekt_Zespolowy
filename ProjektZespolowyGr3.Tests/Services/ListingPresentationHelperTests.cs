@@ -51,5 +51,44 @@ namespace ProjektZespolowyGr3.Tests.Services
                 new ListingBadge("Wymiana", "bg-green-lt")
             }, options => options.WithStrictOrdering());
         }
+
+        [Fact]
+        public void GetListingBadges_ShouldAddNewBadge_WhenListingIsSevenDaysOldOrNewer()
+        {
+            var now = new DateTime(2026, 6, 10, 12, 0, 0, DateTimeKind.Utc);
+            var listing = new Listing
+            {
+                CreatedAt = now.AddDays(-7),
+                Price = 100m,
+                NotExchangeable = true
+            };
+
+            var result = ListingPresentationHelper.GetListingBadges(listing, now);
+
+            result.Should().BeEquivalentTo(new[]
+            {
+                new ListingBadge("Nowe", "bg-yellow-lt"),
+                new ListingBadge("Sprzedaż", "bg-primary-lt")
+            }, options => options.WithStrictOrdering());
+        }
+
+        [Fact]
+        public void GetListingBadges_ShouldNotAddNewBadge_WhenListingIsOlderThanSevenDays()
+        {
+            var now = new DateTime(2026, 6, 10, 12, 0, 0, DateTimeKind.Utc);
+            var listing = new Listing
+            {
+                CreatedAt = now.AddDays(-7).AddTicks(-1),
+                Price = 100m,
+                NotExchangeable = true
+            };
+
+            var result = ListingPresentationHelper.GetListingBadges(listing, now);
+
+            result.Should().BeEquivalentTo(new[]
+            {
+                new ListingBadge("Sprzedaż", "bg-primary-lt")
+            }, options => options.WithStrictOrdering());
+        }
     }
 }

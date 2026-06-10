@@ -75,7 +75,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                         .ThenInclude(sl => sl.Reviews)
                 .Include(l => l.Tags)
                     .ThenInclude(lt => lt.Tag)
-                .Where(l => l.IsArchived == false && l.IsPrivate == false && l.StockQuantity > 0);
+                .Where(l => l.IsArchived == false && l.IsPrivate == false && !l.IsSold && l.StockQuantity > 0);
 
             if (!string.IsNullOrWhiteSpace(searchString))
             {

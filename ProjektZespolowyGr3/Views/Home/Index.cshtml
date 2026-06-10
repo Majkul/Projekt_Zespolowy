@@ -4,7 +4,6 @@
     var latestListings = ViewBag.LatestListings as List<Listing> ?? new List<Listing>();
     var saleCount = latestListings.Count(l => l.Price.HasValue);
     var tradeCount = latestListings.Count(l => !l.NotExchangeable);
-    var newListingsLabel = ListingPresentationHelper.FormatNewListingsCount(latestListings.Count).Substring(latestListings.Count.ToString().Length).TrimStart();
     var saleListingsLabel = ListingPresentationHelper.FormatSaleListingsCount(saleCount).Substring(saleCount.ToString().Length).TrimStart();
     var tradeListingsLabel = ListingPresentationHelper.FormatTradeListingsCount(tradeCount).Substring(tradeCount.ToString().Length).TrimStart();
 }
@@ -12,7 +11,6 @@
 <section class="market-hero mb-5">
     <div class="row align-items-center g-4">
         <div class="col-lg-7">
-            <span class="badge bg-white text-primary mb-3">Lokalny marketplace</span>
             <h1 class="display-4 fw-bold mb-3">Kupuj, sprzedawaj i wymieniaj bez kombinowania</h1>
             <p class="lead mb-0">
                 Przeglądaj ogłoszenia z okolicy, znajdź coś w dobrej cenie albo zaproponuj wymianę zamiast klasycznej sprzedaży.
@@ -46,10 +44,6 @@
                     <i class="bi bi-bag-check market-hero-panel-icon text-warning"></i>
                 </div>
                 <div class="market-stat-grid">
-                    <div class="market-stat">
-                        <div class="market-stat-value">@latestListings.Count</div>
-                        <div class="market-stat-label">@newListingsLabel</div>
-                    </div>
                     <div class="market-stat">
                         <div class="market-stat-value">@saleCount</div>
                         <div class="market-stat-label">@saleListingsLabel</div>

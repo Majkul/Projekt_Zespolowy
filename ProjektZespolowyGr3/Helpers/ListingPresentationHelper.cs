@@ -6,9 +6,16 @@ namespace ProjektZespolowyGr3.Helpers
 
     public static class ListingPresentationHelper
     {
-        public static IReadOnlyList<ListingBadge> GetListingBadges(Listing listing)
+        public const int NewListingDays = 7;
+
+        public static IReadOnlyList<ListingBadge> GetListingBadges(Listing listing, DateTime? now = null)
         {
             var badges = new List<ListingBadge>();
+
+            if (IsNewListing(listing, now))
+            {
+                badges.Add(new ListingBadge("Nowe", "bg-yellow-lt"));
+            }
 
             if (listing.Price.HasValue)
             {
@@ -21,6 +28,12 @@ namespace ProjektZespolowyGr3.Helpers
             }
 
             return badges;
+        }
+
+        public static bool IsNewListing(Listing listing, DateTime? now = null)
+        {
+            var referenceTime = now ?? DateTime.UtcNow;
+            return listing.CreatedAt >= referenceTime.AddDays(-NewListingDays);
         }
 
         public static string FormatNewListingsCount(int count)
