@@ -158,44 +158,37 @@
         @if (!isForTrade)
         {
             <text>
-        const notExchangeableSelect = document.getElementById('not-exchangable-select');
-        const priceLabel = document.getElementById('price-label');
-        const tradeGroup = document.getElementById('trade-group');
+                const notExchangeableSelect = document.getElementById('not-exchangable-select');
+                const priceLabel = document.getElementById('price-label');
+                const tradeGroup = document.getElementById('trade-group');
 
-        function toggleIsPriceRequired() {
-            priceLabel.textContent = "Cena (PLN)" + (notExchangeableSelect.checked ? " *" : "");
-        }
-        function toggleTradeGroup() {
-            const disabled = notExchangeableSelect.checked;
-            tradeGroup.style.display = disabled ? 'none' : 'block';
-            tradeGroup.querySelectorAll('input, textarea, select').forEach(function (input) {
-                input.disabled = disabled;
-                if (disabled) {
-                    if (input.multiple) {
-                        Array.from(input.options).forEach(option => option.selected = false);
-                    } else {
-                        input.value = '';
-                    }
+                function toggleIsPriceRequired() {
+                    priceLabel.textContent = "Cena (PLN)" + (notExchangeableSelect.checked ? " *" : "");
                 }
-            });
-        }
-        notExchangeableSelect.addEventListener('change', toggleIsPriceRequired);
-        notExchangeableSelect.addEventListener('change', toggleTradeGroup);
-        toggleIsPriceRequired();
-        toggleTradeGroup();
+                function toggleTradeGroup() {
+                    const disabled = notExchangeableSelect.checked;
+                    tradeGroup.style.display = disabled ? 'none' : 'block';
+                    tradeGroup.querySelectorAll('input, textarea, select').forEach(function (input) {
+                        input.disabled = disabled;
+                    });
+                }
+                notExchangeableSelect.addEventListener('change', toggleIsPriceRequired);
+                notExchangeableSelect.addEventListener('change', toggleTradeGroup);
+                toggleIsPriceRequired();
+                toggleTradeGroup();
             </text>
         }
 
         @if (isForTrade && forTradeAcceptedTagIds.Any())
         {
             <text>
-            var requiredTagIds = @Html.Raw("[" + string.Join(",", forTradeAcceptedTagIds) + "]");
-            document.querySelectorAll('#tagSelectCreate option').forEach(function(opt) {
-                if (requiredTagIds.includes(parseInt(opt.value))) {
-                    opt.style.fontWeight = 'bold';
-                    opt.textContent = opt.textContent + ' *';
-                }
-            });
+                var requiredTagIds = @Html.Raw("[" + string.Join(",", forTradeAcceptedTagIds) + "]");
+                document.querySelectorAll('#tagSelectCreate option').forEach(function(opt) {
+                    if (requiredTagIds.includes(parseInt(opt.value))) {
+                        opt.style.fontWeight = 'bold';
+                        opt.textContent = opt.textContent + ' *';
+                    }
+                });
             </text>
         }
     </script>

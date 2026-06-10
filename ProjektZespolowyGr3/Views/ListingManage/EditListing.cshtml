@@ -159,13 +159,6 @@
         exchangeFields.classList.toggle('d-none', disabled);
         exchangeFields.querySelectorAll('input, textarea, select').forEach(function (input) {
             input.disabled = disabled;
-            if (disabled) {
-                if (input.multiple) {
-                    Array.from(input.options).forEach(option => option.selected = false);
-                } else {
-                    input.value = '';
-                }
-            }
         });
     }
 
