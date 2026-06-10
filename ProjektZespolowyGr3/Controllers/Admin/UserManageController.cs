@@ -66,9 +66,10 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
         private async Task<List<User>> GetFilteredUsersAsync(string? searchString, int pageSize, string roleFilter)
         {
+            // Stronicowanie odbywa się po stronie przeglądarki (admin-pagination.js),
+            // dlatego z bazy pobieramy wszystkie pasujące rekordy.
             return await BuildUserManageQuery(searchString, roleFilter)
                 .OrderBy(u => u.Id)
-                .Take(pageSize)
                 .ToListAsync();
         }
         private async Task<int> GetUsersCountAsync(string? searchString, string tab, string roleFilter)

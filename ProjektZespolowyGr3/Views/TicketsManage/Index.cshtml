@@ -80,7 +80,7 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-vcenter card-table">
+        <table class="table table-vcenter card-table" data-paginate="true" data-page-size="@(ViewBag.CurrentPageSize ?? 25)">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -117,17 +117,8 @@
         </table>
     </div>
 
-    @if (ViewBag.TotalPages > 1)
-    {
-        <div class="card-footer d-flex justify-content-center">
-            <ul class="pagination m-0">
-                @for (int i = 1; i <= ViewBag.TotalPages; i++)
-                {
-                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                        <a class="page-link" href="?pageNumber=@i&searchString=@ViewBag.CurrentFilter&statusFilter=@ViewBag.StatusFilter&categoryFilter=@ViewBag.CategoryFilter&assigneeFilter=@ViewBag.AssigneeFilter">@i</a>
-                    </li>
-                }
-            </ul>
-        </div>
-    }
 </div>
+
+@section Scripts {
+    <script src="~/js/admin-pagination.js" asp-append-version="true"></script>
+}

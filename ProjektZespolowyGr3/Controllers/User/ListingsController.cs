@@ -498,7 +498,7 @@ namespace ProjektZespolowyGr3.Controllers.User
                 TempData["ListingFeeWarning"] = $"Ogłoszenie wystawione, ale nie pobrano opłaty: {feeError}";
 
             if (forTradeListingId.HasValue)
-                return RedirectToAction("Compose", "TradeProposals", new { listingId = forTradeListingId.Value });
+                return RedirectToAction("Compose", "TradeProposals", new { listingId = forTradeListingId.Value, preselectListingId = listing.Id });
 
             return RedirectToAction("Details", new { slug = SlugHelper.GenerateSlug(listing.Title), id = listing.Id });
         }

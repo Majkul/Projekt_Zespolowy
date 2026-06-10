@@ -110,9 +110,10 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
 
         private async Task<List<BrowseListingsViewModel>> GetFilteredListingsAsync(string? searchString, int pageSize, string? tagFilter, int userId, bool isAdmin, bool showArchived = false)
         {
+            // Stronicowanie odbywa się po stronie przeglądarki (admin-pagination.js),
+            // dlatego z bazy pobieramy wszystkie pasujące rekordy.
             return await BuildListingManageQuery(searchString, tagFilter, userId, isAdmin, showArchived)
                 .OrderBy(l => l.Id)
-                .Take(pageSize)
                 .Select(l => new BrowseListingsViewModel
                 {
                     Listing = l,

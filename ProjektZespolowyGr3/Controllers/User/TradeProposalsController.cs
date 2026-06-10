@@ -125,7 +125,7 @@ namespace ProjektZespolowyGr3.Controllers.User
         }
 
         [HttpGet]
-        public async Task<IActionResult> Compose(int listingId, int? editTradeProposalId, int? parentTradeProposalId)
+        public async Task<IActionResult> Compose(int listingId, int? editTradeProposalId, int? parentTradeProposalId, int? preselectListingId = null)
         {
             var userId = GetCurrentUserId();
             var subject = await _context.Listings
@@ -263,6 +263,14 @@ namespace ProjektZespolowyGr3.Controllers.User
             {
                 vm.SelectedReceiverListingIds = new List<int> { subject.Id };
                 vm.ReceiverQuantities[subject.Id] = 1;
+            }
+
+            if (preselectListingId.HasValue && initiatorPool.Any(l => l.Id == preselectListingId.Value))
+            {
+                if (!vm.SelectedInitiatorListingIds.Contains(preselectListingId.Value))
+                    vm.SelectedInitiatorListingIds.Add(preselectListingId.Value);
+                if (!vm.InitiatorQuantities.ContainsKey(preselectListingId.Value))
+                    vm.InitiatorQuantities[preselectListingId.Value] = 1;
             }
 
             return View(vm);
