@@ -158,6 +158,13 @@
         const disabled = notExchangeableSelect.checked;
         exchangeFields.classList.toggle('d-none', disabled);
         exchangeFields.querySelectorAll('input, textarea, select').forEach(function (input) {
+            if (input.class.classList.contains(disabled)) {
+                input.classList.remove('disabled');
+                input.classList.remove('locked');
+            } else {
+                input.classList.add('disabled');
+                input.classList.add('locked');
+            }
             input.disabled = disabled;
         });
     }

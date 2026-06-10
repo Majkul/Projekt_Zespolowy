@@ -165,11 +165,19 @@
                 function toggleIsPriceRequired() {
                     priceLabel.textContent = "Cena (PLN)" + (notExchangeableSelect.checked ? " *" : "");
                 }
+
                 function toggleTradeGroup() {
-                    const disabled = notExchangeableSelect.checked;
-                    tradeGroup.style.display = disabled ? 'none' : 'block';
-                    tradeGroup.querySelectorAll('input, textarea, select').forEach(function (input) {
-                        input.disabled = disabled;
+                    var isDisabled = notExchangeableSelect.checked;
+                        tradeGroup.style.display = isDisabled ? 'none' : 'block';
+                    tradeGroup.querySelectorAll('input, div, textarea, select').forEach(function (input) {
+                        if (input.class.classList.contains(disabled)) {
+                            input.classList.remove('disabled');
+                            input.classList.remove('locked');
+                        } else {
+                            input.classList.add('disabled');
+                            input.classList.add('locked');
+                        }
+                        input.disabled = isDisabled;
                     });
                 }
                 notExchangeableSelect.addEventListener('change', toggleIsPriceRequired);
