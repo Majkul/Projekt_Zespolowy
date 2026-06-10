@@ -42,38 +42,40 @@
         overflow-x: hidden;
     }
 
-    /* Prawa grupa (konto, powiadomienia, panel) w wąskim widoku tworzy
-       poziomy, wyśrodkowany rząd ikon zamiast pionowej kolumny przy lewej */
+    /* Prawa grupa (konto, powiadomienia, panel) w wąskim widoku układa się
+       w zawijanym rzędzie po 3 elementy w linii, wyśrodkowane */
     .app-navbar .navbar-nav.ms-auto {
         flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
+        width: 100%;
+        margin-top: 0.5rem;
+        row-gap: 0.5rem;
     }
 
-    .app-navbar .navbar-nav .nav-link {
+    /* Domyślnie (zwykły klient – 3 ikony): 2 w rzędzie, rozwijana (konto)
+       trafia samotnie do kolejnego rzędu i jest wyśrodkowana */
+    .app-navbar .navbar-nav.ms-auto > .nav-item {
+        flex: 0 0 50%;
+        max-width: 50%;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Admin (4 ikony – grupa zawiera 4. element): 3 w rzędzie,
+       a panel/konto wyśrodkowane w kolejnym rzędzie */
+    .app-navbar .navbar-nav.ms-auto:has(> .nav-item:nth-child(4)) > .nav-item {
+        flex: 0 0 33.3333%;
+        max-width: 33.3333%;
+    }
+
+    .app-navbar .navbar-nav.ms-auto .nav-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
         padding-left: 0.25rem;
         padding-right: 0.25rem;
-    }
-
-    /* Rozwijane menu w zwiniętym navbarze: zamiast pozycjonowania
-       absolutnego (które ucieka poza ekran) renderuj je w przepływie,
-       na całą szerokość, bez strzałki i nadmiarowego cienia */
-    .app-navbar .navbar-collapse .dropdown-menu {
-        position: static !important;
-        float: none;
-        width: 100%;
-        margin-top: 0.25rem;
-        border: 0;
-        box-shadow: none;
-        background-color: rgba(15, 23, 42, 0.03);
-        border-radius: var(--tblr-border-radius, 6px);
-    }
-
-    .app-navbar .navbar-collapse .dropdown-menu-arrow::before {
-        display: none;
     }
 
     /* Formularz wyszukiwania zajmuje pełną szerokość pod menu */
