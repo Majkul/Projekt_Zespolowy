@@ -126,6 +126,7 @@
                 {
                     @foreach (var review in Model.Reviews)
                     {
+                        bool isReviewAuthor = isUserAuthenticated && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == review.ReviewerId.ToString();
                         <div class="border-bottom pb-3 mb-3">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div>
@@ -156,7 +157,7 @@
                                     }
                                 </div>
                             }
-                            @if (isUserAuthenticated && !isUserSeller)
+                            @if (isUserAuthenticated && !isUserSeller && !isReviewAuthor)
                             {
                                 <div class="mt-2">
                                     <a asp-controller="Tickets" asp-action="ReportReview" asp-route-reviewId="@review.Id" class="btn btn-link btn-sm text-danger px-0">
