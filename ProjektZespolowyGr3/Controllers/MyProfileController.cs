@@ -38,11 +38,12 @@ namespace ProjektZespolowyGr3.Controllers
 
             var model = new EditMyProfileViewModel
             {
-                FirstName = user.FirstName,
-                LastName = user.LastName,
+                FirstName = user.FirstName ?? string.Empty,
+                LastName = user.LastName ?? string.Empty,
                 Address = user.Address,
                 PhoneNumber = user.PhoneNumber,
-                Email = user.Email
+                Email = user.Email,
+                ProfileDescription = user.ProfileDescription
             };
 
             return View(model);
@@ -106,6 +107,7 @@ namespace ProjektZespolowyGr3.Controllers
 
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
+            user.ProfileDescription = string.IsNullOrWhiteSpace(model.ProfileDescription) ? null : model.ProfileDescription.Trim();
             user.PhoneNumber = model.PhoneNumber;
 
             await _context.SaveChangesAsync();

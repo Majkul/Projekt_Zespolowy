@@ -1,72 +1,97 @@
-﻿@model DomPogrzebowyProjekt.Models.ViewModels.EditUserViewModel
+@model DomPogrzebowyProjekt.Models.ViewModels.EditUserViewModel
 @{
-    ViewBag.Title = "Edytuj użytkownika";
+    ViewData["Title"] = "Edytuj użytkownika";
     var modelId = ViewBag.ModelId;
 }
 
-<h2 class="mb-4">Edytuj użytkownika</h2>
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert alert-danger">
-        <ul>
-            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-            {
-                <li>@error.ErrorMessage</li>
-            }
-        </ul>
-    </div>
-}
-<form id="edit-user-form" asp-action="EditUser" asp-route-id="@modelId" method="post" enctype="multipart/form-data" class="w-50">
-    <div class="mb-3">
-        <label asp-for="Username" class="form-label" id="label-Username">Login</label>
-        <input asp-for="Username" class="form-control" id="input-Username" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="FirstName" class="form-label" id="label-FirstName">Imię</label>
-        <input asp-for="FirstName" class="form-control" id="input-FirstName" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="LastName" class="form-label" id="label-LastName">Nazwisko</label>
-        <input asp-for="LastName" class="form-control" id="input-LastName" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="Email" class="form-label" id="label-Email">Email</label>
-        <input asp-for="Email" class="form-control" id="input-Email" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="Address" class="form-label" id="label-Address">Adres</label>
-        <input asp-for="Address" class="form-control" id="input-Address" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="Latitude" class="form-label" id="label-Latitude">Szerokość geograficzna</label>
-        <input asp-for="Latitude" class="form-control" id="input-Latitude" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="Longitude" class="form-label" id="label-Longitude">Długość geograficzna</label>
-        <input asp-for="Longitude" class="form-control" id="input-Longitude" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="PhoneNumber" class="form-label" id="label-PhoneNumber">Numer telefonu</label>
-        <input asp-for="PhoneNumber" class="form-control" id="input-PhoneNumber" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="IsAdmin" class="form-check-label" id="label-IsAdmin">Administrator</label>
-        <input asp-for="IsAdmin" type="checkbox" class="form-check-input" id="input-IsAdmin" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="IsBanned" class="form-check-label" id="label-IsBanned">Zbanowany</label>
-        <input asp-for="IsBanned" type="checkbox" class="form-check-input" id="input-IsBanned" />
-    </div>
-    <div class="mb-3">
-        <label asp-for="IsDeleted" class="form-check-label" id="label-IsDeleted">Usunięty</label>
-        <input asp-for="IsDeleted" type="checkbox" class="form-check-input" id="input-IsDeleted" />
-    </div>
+<div class="page-header mb-4">
+    <h2 class="page-title">Edytuj użytkownika</h2>
+</div>
 
-    <div class="d-flex gap-2 mt-3">
-        <button type="submit" class="btn btn-primary">Zapisz</button>
-        <a class="btn btn-danger" asp-action="Index">Anuluj</a>
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <div class="card">
+            <div class="card-body">
+                <form id="edit-user-form" asp-action="EditUser" asp-route-id="@modelId" method="post" enctype="multipart/form-data" asp-antiforgery="true">
+                    <div class="mb-3">
+                        <label asp-for="Username" class="form-label" id="label-Username">Login</label>
+                        <input asp-for="Username" class="form-control" id="input-Username" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="FirstName" class="form-label" id="label-FirstName">Imię</label>
+                        <input asp-for="FirstName" class="form-control" id="input-FirstName" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="LastName" class="form-label" id="label-LastName">Nazwisko</label>
+                        <input asp-for="LastName" class="form-control" id="input-LastName" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label" id="label-Email">Email</label>
+                        <input asp-for="Email" class="form-control" id="input-Email" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ProfileDescription" class="form-label" id="label-ProfileDescription">Opis profilu</label>
+                        <textarea asp-for="ProfileDescription" class="form-control" id="input-ProfileDescription" rows="4" maxlength="@ProjektZespolowyGr3.Models.MarketplaceLimits.MaxProfileDescriptionLength"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Address" class="form-label" id="label-Address">Adres</label>
+                        <input asp-for="Address" class="form-control" id="input-Address" />
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Latitude" class="form-label" id="label-Latitude">Szerokość geograficzna</label>
+                            <input asp-for="Latitude" class="form-control" id="input-Latitude" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Longitude" class="form-label" id="label-Longitude">Długość geograficzna</label>
+                            <input asp-for="Longitude" class="form-control" id="input-Longitude" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label" id="label-PhoneNumber">Numer telefonu</label>
+                        <input asp-for="PhoneNumber" class="form-control" id="input-PhoneNumber" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-check">
+                            <input asp-for="IsAdmin" type="checkbox" class="form-check-input" id="input-IsAdmin" />
+                            <span class="form-check-label" id="label-IsAdmin">Administrator</span>
+                        </label>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-check">
+                            <input asp-for="IsBanned" type="checkbox" class="form-check-input" id="input-IsBanned" />
+                            <span class="form-check-label" id="label-IsBanned">Zbanowany</span>
+                        </label>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-check">
+                            <input asp-for="IsDeleted" type="checkbox" class="form-check-input" id="input-IsDeleted" />
+                            <span class="form-check-label" id="label-IsDeleted">Usunięty</span>
+                        </label>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">Zapisz</button>
+                        <a class="btn btn-outline-secondary" asp-action="Index">Anuluj</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-</form>
+</div>
 
 <script>
     const initialValues = {
@@ -74,6 +99,7 @@
         FirstName: '@(Model.FirstName ?? "")',
         LastName: '@(Model.LastName ?? "")',
         Email: '@(Model.Email ?? "")',
+        ProfileDescription: '@(Model.ProfileDescription ?? "")',
         Address: '@(Model.Address ?? "")',
         Latitude: '@(Model.Latitude.ToString() ?? "")',
         Longitude: '@(Model.Longitude.ToString() ?? "")',
@@ -91,7 +117,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        ['Username', 'FirstName', 'LastName', 'Email', 'Address', "Longitude", "Latitude", 'PhoneNumber'].forEach(function (field) {
+        ['Username', 'FirstName', 'LastName', 'Email', 'ProfileDescription', 'Address', "Longitude", "Latitude", 'PhoneNumber'].forEach(function (field) {
             const input = document.getElementById('input-' + field);
             if (input) {
                 input.addEventListener('input', function () {
@@ -109,7 +135,7 @@
             }
         });
 
-        const fields = ['Username', 'FirstName', 'LastName', 'Email', 'Address', "Longitude", "Latitude", 'PhoneNumber', 'IsAdmin', 'IsBanned']
+        const fields = ['Username', 'FirstName', 'LastName', 'Email', 'ProfileDescription', 'Address', "Longitude", "Latitude", 'PhoneNumber', 'IsAdmin', 'IsBanned']
 
         const form = document.getElementById('edit-user-form');
         form.addEventListener('submit', function (e) {

@@ -11,121 +11,149 @@
     bool isProfileOwner = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.Id.ToString();
 }
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h3 class="card-title">@Model.Username</h3>
-                    @if (!string.IsNullOrEmpty(Model.FirstName) || !string.IsNullOrEmpty(Model.LastName))
-                    {
-                        <p class="text-muted">
-                            @Model.FirstName @Model.LastName
-                        </p>
-                    }
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="avatar avatar-lg me-3" style="background-image: url(/Images/Icons/user-icon.png)"></span>
+                    <div>
+                        <h3 class="m-0 text-break-anywhere">@Model.Username</h3>
+                        @if (!string.IsNullOrEmpty(Model.FirstName) || !string.IsNullOrEmpty(Model.LastName))
+                        {
+                            <div class="text-secondary">@Model.FirstName @Model.LastName</div>
+                        }
+                    </div>
+                </div>
 
-                    <hr />
+                @if (!string.IsNullOrWhiteSpace(Model.ProfileDescription))
+                {
+                    <h4 class="text-secondary text-uppercase small fw-bold mt-4">O mnie</h4>
+                    <p class="mb-0 text-break-anywhere">@Model.ProfileDescription</p>
+                }
 
-                    <h5>Statystyki</h5>
-                    <p>
-                        <strong>Średnia ocena:</strong> 
+                <h4 class="text-secondary text-uppercase small fw-bold mt-4">Statystyki</h4>
+                <dl class="row mb-0">
+                    <dt class="col-6 text-secondary fw-normal">Średnia ocena</dt>
+                    <dd class="col-6 text-end">
                         @if (averageRating > 0)
                         {
-                            <span class="badge bg-success">@averageRating.ToString("F2") ⭐</span>
+                            <span class="badge bg-green-lt"><i class="bi bi-star-fill me-1"></i>@averageRating.ToString("F2")</span>
                         }
                         else
                         {
-                            <span class="text-muted">Brak ocen</span>
+                            <span class="text-secondary">Brak ocen</span>
                         }
-                    </p>
-                    <p><strong>Liczba opinii:</strong> @reviewCount</p>
-                    <p><strong>Aktywne oferty:</strong> @activeListings.Count</p>
-                    <p><strong>Członek od:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy")</p>
+                    </dd>
+                    <dt class="col-6 text-secondary fw-normal">Liczba opinii</dt>
+                    <dd class="col-6 text-end">@reviewCount</dd>
+                    <dt class="col-6 text-secondary fw-normal">Aktywne oferty</dt>
+                    <dd class="col-6 text-end">@activeListings.Count</dd>
+                    <dt class="col-6 text-secondary fw-normal">Członek od</dt>
+                    <dd class="col-6 text-end">@Model.CreatedAt.ToString("dd.MM.yyyy")</dd>
+                </dl>
 
-                    <hr />
-
-                    <h5>Dane kontaktowe</h5>
-                    @if (!string.IsNullOrEmpty(Model.Email))
-                    {
-                        <p><strong>Email:</strong> @Model.Email</p>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.PhoneNumber))
-                    {
-                        <p><strong>Telefon:</strong> @Model.PhoneNumber</p>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.Address))
-                    {
-                        <p><strong>Adres:</strong> @Model.Address</p>
-                    }
-
-                    @if (!isProfileOwner)
-                    {
-                        <hr />
-                        <a asp-controller="Messages"
-                        asp-action="Conversation"
-                        asp-route-userId="@Model.Id"
-                        class="btn btn-outline-primary w-100">
-                            Napisz wiadomość
-                        </a>
-
-                        <hr />
-                        <a asp-controller="Tickets"
-                        asp-action="ReportUser"
-                        asp-route-userId="@Model.Id"
-                        class="btn btn-danger w-100">
-                            Zgłoś użytkownika
-                        </a>
-                    }
-                    else
-                    {
-                        <div class="card-footer text-center">
-                            <a asp-controller="MyProfile" asp-action="Edit" class="btn btn-secondary w-100">Edytuj profil</a>
-                        </div>
-                    }
-                </div>
+                @if (!string.IsNullOrEmpty(Model.Email) || !string.IsNullOrEmpty(Model.PhoneNumber) || !string.IsNullOrEmpty(Model.Address))
+                {
+                    <h4 class="text-secondary text-uppercase small fw-bold mt-4">Dane kontaktowe</h4>
+                    <dl class="row mb-0">
+                        @if (!string.IsNullOrEmpty(Model.Email))
+                        {
+                            <dt class="col-4 text-secondary fw-normal">Email</dt>
+                            <dd class="col-8 text-end text-truncate">@Model.Email</dd>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                        {
+                            <dt class="col-4 text-secondary fw-normal">Telefon</dt>
+                            <dd class="col-8 text-end">@Model.PhoneNumber</dd>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Address))
+                        {
+                            <dt class="col-4 text-secondary fw-normal">Adres</dt>
+                            <dd class="col-8 text-end">@Model.Address</dd>
+                        }
+                    </dl>
+                }
             </div>
-        </div>
 
-        <div class="col-md-8">
-            <h4>Aktywne oferty</h4>
-            <hr />
-            @if (activeListings.Any())
+            @if (!isProfileOwner)
             {
-                <div class="row">
-                    @foreach (var listing in activeListings)
-                    {
-                        <div class="col-md-6 mb-3">
-                            <div class="card">
-                                @if (listing.Photos != null && listing.Photos.Any())
-                                {
-                                    var featuredPhoto = listing.Photos.FirstOrDefault(p => p.IsFeatured) ?? listing.Photos.First();
-                                    <img src="@featuredPhoto.Upload.Url" class="card-img-top" alt="@listing.Title" style="height: 200px; object-fit: cover;">
-                                }
-                                <div class="card-body">
-                                    <h5 class="card-title d-flex justify-content-between align-items-center">
-                                        <span>@listing.Title</span>
-                                        @if (listing.IsFeatured)
-                                        {
-                                            <span title="Wyróżniona oferta" style="color: goldenrod; font-size: 1.2em;">★</span>
-                                        }
-                                    </h5>
-                                    
-                                    @if (listing.Price.HasValue)
-                                    {
-                                        <p class="card-text"><strong>@listing.Price.FormatPricePLN()</strong></p>
-                                    }
-                                    <a asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(listing.Title)" asp-route-id="@listing.Id" class="btn btn-primary btn-sm">Zobacz szczegóły</a>
-                                </div>
-                            </div>
-                        </div>
-                    }
+                <div class="card-footer d-grid gap-2">
+                    <a asp-controller="Messages" asp-action="Conversation" asp-route-userId="@Model.Id" class="btn btn-outline-primary">
+                        <i class="bi bi-envelope me-1"></i> Napisz wiadomość
+                    </a>
+                    <a asp-controller="Tickets" asp-action="ReportUser" asp-route-userId="@Model.Id" class="btn btn-outline-danger">
+                        <i class="bi bi-flag me-1"></i> Zgłoś użytkownika
+                    </a>
                 </div>
             }
             else
             {
-                <p class="text-muted">Brak aktywnych ofert.</p>
+                <div class="card-footer d-grid">
+                    <a asp-controller="MyProfile" asp-action="Edit" class="btn btn-outline-secondary">Edytuj profil</a>
+                </div>
             }
         </div>
     </div>
-</div>
 
+    <div class="col-lg-8">
+        <div class="section-heading">
+            <h3 class="mb-0">Aktywne oferty</h3>
+        </div>
+
+        @if (activeListings.Any())
+        {
+            <div class="row listing-grid">
+                @foreach (var listing in activeListings)
+                {
+                    <div class="col-sm-6">
+                        <article class="card listing-card h-100">
+                            <div class="ratio ratio-4x3 listing-card-media">
+                                @if (listing.IsFeatured)
+                                {
+                                    <span class="badge bg-yellow-lt listing-badge"><i class="bi bi-star-fill me-1"></i>Wyróżniona</span>
+                                }
+                                @if (listing.Photos != null && listing.Photos.Any())
+                                {
+                                    var featuredPhoto = listing.Photos.FirstOrDefault(p => p.IsFeatured) ?? listing.Photos.First();
+                                    <img src="@featuredPhoto.Upload.Url" class="listing-card-img" alt="@listing.Title">
+                                }
+                                else
+                                {
+                                    <div class="listing-card-placeholder d-flex align-items-center justify-content-center">
+                                        <span>Brak zdjęcia</span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <h4 class="h5 card-title mb-2 text-break-anywhere">@listing.Title</h4>
+                                <div class="mt-auto">
+                                    @if (listing.Price.HasValue)
+                                    {
+                                        <div class="listing-price mb-3">@listing.Price.FormatPricePLN()</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="mb-3"><span class="badge bg-green-lt">Otwarta wymiana</span></div>
+                                    }
+                                    <a asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(listing.Title)" asp-route-id="@listing.Id" class="btn btn-primary w-100">Zobacz szczegóły</a>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="card card-md">
+                <div class="card-body">
+                    <div class="empty">
+                        <div class="empty-icon"><i class="bi bi-bag fs-1 text-secondary"></i></div>
+                        <p class="empty-title">Brak aktywnych ofert</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

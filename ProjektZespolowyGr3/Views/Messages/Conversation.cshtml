@@ -3,159 +3,166 @@
 
 @{
     ViewData["Title"] = "Wiadomości";
+    ViewData["HideNavSearch"] = true;
     var currentUserIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
     int.TryParse(currentUserIdString, out var currentUserId);
     var otherUser = ViewBag.OtherUser as ProjektZespolowyGr3.Models.DbModels.User;
     int? listingId = ViewBag.ListingId as int?;
     int? ticketId = ViewBag.TicketId as int?;
+    var listingContext = ViewBag.ListingContext as ProjektZespolowyGr3.Models.DbModels.Listing;
+    const int maxMessageLength = ProjektZespolowyGr3.Models.MarketplaceLimits.MaxMessageLength;
 }
 
 <div id="photoLightbox"
-    class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-    style="background:rgba(0,0,0,.75); z-index:2000; cursor:zoom-out;"
-    onclick="this.classList.add('d-none')">
+     class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+     style="background:rgba(0,0,0,.75); z-index:2000; cursor:zoom-out;"
+     onclick="this.classList.add('d-none')">
     <img id="lightboxImg" src="" alt="" style="max-width:90vw; max-height:90vh; border-radius:.5rem;" />
 </div>
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="avatar" style="background-image: url(/Images/Icons/user-icon.png)"></span>
                     <div>
-                        <h5 class="mb-0">Rozmowa z @otherUser?.Username</h5>
+                        <h3 class="card-title mb-0">Rozmowa z @otherUser?.Username</h3>
                         @if (listingId.HasValue)
                         {
-                            <small class="text-muted">Dotyczy ogłoszenia</small>
+                            <small class="text-secondary">
+                                Dotyczy ogłoszenia:
+                                @if (listingContext != null && !listingContext.IsDeleted)
+                                {
+                                    <a asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(listingContext.Title)" asp-route-id="@listingContext.Id">
+                                        @listingContext.Title
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>ogłoszenie niedostępne</span>
+                                }
+                            </small>
                         }
                         else if (ticketId.HasValue)
                         {
-                            <small class="text-muted">Dotyczy zgłoszenia</small>
+                            <small class="text-secondary">Dotyczy zgłoszenia</small>
                         }
                     </div>
-                    <a asp-controller="Tickets"
-                       asp-action="ReportUser"
-                       asp-route-userId="@otherUser?.Id"
-                       asp-route-listingId="@listingId"
-                       class="btn btn-sm btn-outline-danger"
-                       title="Tworzy zgłoszenie kategorii „Zgłoszenie użytkownika” z uzupełnionym kontekstem rozmowy">
-                        Zgłoś użytkownika
-                    </a>
                 </div>
-                <div class="card-body" id="messageList" style="max-height: 480px; overflow-y: auto;">
-                    @if (TempData["TradeError"] != null)
-                    {
-                        <div class="alert alert-warning small">@TempData["TradeError"]</div>
-                    }
-                    @if (TempData["Error_Photos"] != null)
-                    {
-                        <div class="alert alert-danger small">@TempData["Error_Photos"]</div>
-                    }
+                <a asp-controller="Tickets" asp-action="ReportUser"
+                   asp-route-userId="@otherUser?.Id" asp-route-listingId="@listingId"
+                   class="btn btn-sm btn-outline-danger"
+                   title="Tworzy zgłoszenie kategorii „Zgłoszenie użytkownika” z uzupełnionym kontekstem rozmowy">
+                    <i class="bi bi-flag me-1"></i>Zgłoś użytkownika
+                </a>
+            </div>
+            <div class="card-body" id="messageList" style="max-height: 480px; overflow-y: auto;">
+                @if (TempData["TradeError"] != null)
+                {
+                    <div class="alert alert-warning small">@TempData["TradeError"]</div>
+                }
+                @if (TempData["Error_Photos"] != null)
+                {
+                    <div class="alert alert-danger small">@TempData["Error_Photos"]</div>
+                }
+                @if (TempData["MessageError"] != null)
+                {
+                    <div class="alert alert-danger small">@TempData["MessageError"]</div>
+                }
 
-                    @if (Model != null && Model.Any())
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var msg in Model)
                     {
-                        foreach (var msg in Model)
+                        var isDeleted = msg.IsDeleted || msg.IsArchived;
+                        if (msg.TradeProposalId != null && msg.TradeProposal != null && !isDeleted)
                         {
-                            var isDeleted = msg.IsDeleted || msg.IsArchived;
-                            if (msg.TradeProposalId != null && msg.TradeProposal != null && !isDeleted)
-                            {
-                                ViewBag.CurrentUserId = currentUserId;
-                                await Html.RenderPartialAsync("_TradeProposalMessage", msg);
-                                continue;
-                            }
+                            ViewBag.CurrentUserId = currentUserId;
+                            await Html.RenderPartialAsync("_TradeProposalMessage", msg);
+                            continue;
+                        }
 
-                            var isMine = msg.SenderId == currentUserId;
-                            <div class="d-flex mb-2 @(isMine ? "justify-content-end" : "justify-content-start")">
-                                <div class="p-2 rounded @(isMine ? "bg-primary text-white" : "bg-light")" style="max-width: 70%;">
-                                    <div class="small d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>@(isMine ? "Ty" : msg.Sender?.Username ?? "Nieznany")</strong>
-                                            <span class="@(isMine ? "text-light-gray" : "text-muted") ms-2">
-                                                @(msg.SentAt != DateTime.MinValue ? msg.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") : "")
-                                            </span>
-                                        </div>
-                                        @if (!isMine && !isDeleted)
-                                        {
-                                            <form asp-controller="Tickets"
-                                                  asp-action="ReportUser"
-                                                  method="get"
-                                                  class="ms-2">
-                                                <input type="hidden" name="userId" value="@msg.SenderId" />
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        title="Zgłoś wulgarną wiadomość">
-                                                    Zgłoś
-                                                </button>
-                                            </form>
-                                        }
+                        var isMine = msg.SenderId == currentUserId;
+                        <div class="d-flex mb-2 @(isMine ? "justify-content-end" : "justify-content-start")">
+                            <div class="chat-bubble @(isMine ? "chat-bubble-out" : "chat-bubble-in")">
+                                <div class="small d-flex justify-content-between align-items-center gap-2">
+                                    <div>
+                                        <strong>@(isMine ? "Ty" : msg.Sender?.Username ?? "Nieznany")</strong>
+                                        <span class="@(isMine ? "text-light-gray" : "text-secondary") ms-2">
+                                            @(msg.SentAt != DateTime.MinValue ? msg.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") : "")
+                                        </span>
                                     </div>
-
-                                    @if (!string.IsNullOrWhiteSpace(msg.Content) || isDeleted)
+                                    @if (!isMine && !isDeleted)
                                     {
-                                        <div class="mt-1">
-                                            @if (isDeleted)
-                                            {
-                                                <em class="text-muted small">[Wiadomość usunięta]</em>
-                                            }
-                                            else
-                                            {
-                                                @msg.Content
-                                            }
-                                        </div>
-                                    }
-
-                                    @if (!isDeleted && msg.Photos != null && msg.Photos.Any())
-                                    {
-                                        <div class="mt-2 d-flex flex-wrap gap-1">
-                                            @foreach (var photo in msg.Photos)
-                                            {
-                                                <img src="@photo.Upload.Url"
-                                                     alt="zdjęcie"
-                                                     class="rounded msg-photo"
-                                                     style="height:90px; width:90px; object-fit:cover; cursor:zoom-in;"
-                                                     onclick="openLightbox('@photo.Upload.Url')" />
-                                            }
-                                        </div>
+                                        <form asp-controller="Tickets" asp-action="ReportUser" method="get" class="ms-2">
+                                            <input type="hidden" name="userId" value="@msg.SenderId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1" title="Zgłoś wulgarną wiadomość">
+                                                Zgłoś
+                                            </button>
+                                        </form>
                                     }
                                 </div>
+
+                                @if (!string.IsNullOrWhiteSpace(msg.Content) || isDeleted)
+                                {
+                                    <div class="mt-1">
+                                        @if (isDeleted)
+                                        {
+                                            <em class="small">[Wiadomość usunięta]</em>
+                                        }
+                                        else
+                                        {
+                                            @msg.Content
+                                        }
+                                    </div>
+                                }
+
+                                @if (!isDeleted && msg.Photos != null && msg.Photos.Any())
+                                {
+                                    <div class="mt-2 d-flex flex-wrap gap-1">
+                                        @foreach (var photo in msg.Photos)
+                                        {
+                                            <img src="@photo.Upload.Url" alt="zdjęcie"
+                                                 class="rounded msg-photo"
+                                                 style="height:90px; width:90px; object-fit:cover; cursor:zoom-in;"
+                                                 onclick="openLightbox('@photo.Upload.Url')" />
+                                        }
+                                    </div>
+                                }
                             </div>
-                        }
+                        </div>
                     }
-                    else
+                }
+                else
+                {
+                    <p class="text-secondary">Brak wiadomości. Napisz pierwszą wiadomość.</p>
+                }
+            </div>
+            <div class="card-footer">
+                <form asp-controller="Messages" asp-action="Send" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="receiverId" value="@otherUser?.Id" />
+                    @if (listingId.HasValue)
                     {
-                        <p class="text-muted">Brak wiadomości. Napisz pierwszą wiadomość.</p>
+                        <input type="hidden" name="listingId" value="@listingId" />
                     }
-                </div>
-                <div class="card-footer">
-                    <form asp-controller="Messages" asp-action="Send" method="post" class="d-flex gap-2" enctype="multipart/form-data">
-                        <input type="hidden" name="receiverId" value="@otherUser?.Id" />
-                        @if (listingId.HasValue)
-                        {
-                            <input type="hidden" name="listingId" value="@listingId" />
-                        }
-                        @if (ticketId.HasValue)
-                        {
-                            <input type="hidden" name="ticketId" value="@ticketId" />
-                        }
+                    @if (ticketId.HasValue)
+                    {
+                        <input type="hidden" name="ticketId" value="@ticketId" />
+                    }
 
-                        <textarea id="message-text-area" name="content" class="form-control" rows="2" placeholder="Napisz wiadomość..."></textarea>
-                        
-                        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                            <div class="image-upload-container flex-grow-1">
-                                <input type="file"
-                                       name="photos"
-                                       id="photoInput"
-                                       accept=".jpg,.jpeg,.png"
-                                       multiple
-                                       class="image-upload-input" />
-                            </div>
-                        </div>
+                    <textarea id="message-text-area" name="content" class="form-control mb-1" rows="2" maxlength="@maxMessageLength" placeholder="Napisz wiadomość..."></textarea>
+                    <div class="form-hint mb-2 text-end">
+                        <span id="messageLength">0</span>/@maxMessageLength znaków
+                    </div>
 
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary" id="sendBtn">Wyślij</button>
+                    <div class="d-flex align-items-end gap-2 flex-wrap">
+                        <div class="image-upload-container flex-grow-1">
+                            <input type="file" name="photos" id="photoInput" accept=".jpg,.jpeg,.png" multiple class="image-upload-input" />
                         </div>
-                    </form>
-                </div>
+                        <button type="submit" class="btn btn-primary" id="sendBtn"><i class="bi bi-send me-1"></i>Wyślij</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -176,11 +183,15 @@
         const sendBtn = document.getElementById('sendBtn');
         const textarea = document.getElementById('message-text-area');
         const photoInput = document.getElementById('photoInput');
+        const messageLength = document.getElementById('messageLength');
 
         function updateSendButton() {
             const hasText = textarea.value.trim().length > 0;
             const hasPhotos = photoInput.files.length > 0;
             sendBtn.disabled = !hasText && !hasPhotos;
+            if (messageLength) {
+                messageLength.textContent = textarea.value.length;
+            }
         }
 
         textarea.addEventListener('input', updateSendButton);

@@ -49,7 +49,52 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         }
 
         [Fact]
-        public void Create_GET_WithListingId_ShouldReturnView()
+        public void Create_GET_WithListingId_ShouldReturnView_WhenUserBoughtListing()
+        {
+            // Arrange
+            var seller = new User { Username = "seller", Email = "seller@test.com", CreatedAt = DateTime.UtcNow };
+            var reviewer = new User { Username = "reviewer", Email = "rev@test.com", CreatedAt = DateTime.UtcNow };
+            _context.Users.AddRange(seller, reviewer);
+            _context.SaveChanges();
+
+            var listing = new Listing
+            {
+                Title = "Test Listing",
+                Description = "Description",
+                SellerId = seller.Id,
+                Price = 100,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.Listings.Add(listing);
+            _context.SaveChanges();
+            _context.Orders.Add(new Order
+            {
+                ListingId = listing.Id,
+                BuyerId = reviewer.Id,
+                SellerId = seller.Id,
+                Amount = 100,
+                Status = OrderStatus.Paid,
+                CreatedAt = DateTime.UtcNow,
+                PayUOrderId = "paid-order"
+            });
+            _context.SaveChanges();
+
+            SetupAuthenticatedUser(reviewer.Id);
+
+            // Act
+            var result = _controller.Create(listing.Id);
+
+            // Assert
+            result.Should().BeOfType<ViewResult>();
+            var viewResult = result as ViewResult;
+            var model = viewResult!.Model as CreateReviewViewModel;
+            model.Should().NotBeNull();
+            model!.ListingId.Should().Be(listing.Id);
+        }
+
+        [Fact]
+        public void Create_GET_WithListingId_ShouldReturnBadRequest_WhenUserDidNotBuyListing()
         {
             // Arrange
             var seller = new User { Username = "seller", Email = "seller@test.com", CreatedAt = DateTime.UtcNow };
@@ -75,15 +120,60 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             var result = _controller.Create(listing.Id);
 
             // Assert
-            result.Should().BeOfType<ViewResult>();
-            var viewResult = result as ViewResult;
-            var model = viewResult!.Model as CreateReviewViewModel;
-            model.Should().NotBeNull();
-            model!.ListingId.Should().Be(listing.Id);
+            result.Should().BeOfType<BadRequestObjectResult>();
         }
 
         [Fact]
-        public async Task Create_POST_ShouldCreateReview_WhenModelIsValid()
+        public async Task Create_POST_ShouldCreateReview_WhenModelIsValidAndUserBoughtListing()
+        {
+            // Arrange
+            var seller = new User { Username = "seller", Email = "seller@test.com", CreatedAt = DateTime.UtcNow };
+            var reviewer = new User { Username = "reviewer", Email = "reviewer@test.com", CreatedAt = DateTime.UtcNow };
+            _context.Users.AddRange(seller, reviewer);
+            _context.SaveChanges();
+
+            var listing = new Listing
+            {
+                Title = "Test Listing",
+                Description = "Description",
+                SellerId = seller.Id,
+                Price = 100,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.Listings.Add(listing);
+            _context.SaveChanges();
+            _context.Orders.Add(new Order
+            {
+                ListingId = listing.Id,
+                BuyerId = reviewer.Id,
+                SellerId = seller.Id,
+                Amount = 100,
+                Status = OrderStatus.Paid,
+                CreatedAt = DateTime.UtcNow,
+                PayUOrderId = "paid-order"
+            });
+            _context.SaveChanges();
+
+            SetupAuthenticatedUser(reviewer.Id);
+
+            var model = new CreateReviewViewModel
+            {
+                ListingId = listing.Id,
+                Rating = 5,
+                Description = "Great product!"
+            };
+
+            // Act
+            var result = await _controller.Create(model);
+
+            // Assert
+            result.Should().BeOfType<RedirectToActionResult>();
+            _context.Reviews.Any(r => r.Description == "Great product!").Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Create_POST_ShouldReturnView_WhenUserDidNotBuyListing()
         {
             // Arrange
             var seller = new User { Username = "seller", Email = "seller@test.com", CreatedAt = DateTime.UtcNow };
@@ -109,15 +199,15 @@ namespace ProjektZespolowyGr3.Tests.Controllers
             {
                 ListingId = listing.Id,
                 Rating = 5,
-                Description = "Great product!"
+                Description = "Trying to review without purchase"
             };
 
             // Act
             var result = await _controller.Create(model);
 
             // Assert
-            result.Should().BeOfType<RedirectToActionResult>();
-            _context.Reviews.Any(r => r.Description == "Great product!").Should().BeTrue();
+            result.Should().BeOfType<ViewResult>();
+            _context.Reviews.Any(r => r.Description == "Trying to review without purchase").Should().BeFalse();
         }
 
         [Fact]

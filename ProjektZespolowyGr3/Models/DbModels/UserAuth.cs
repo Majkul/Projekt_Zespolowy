@@ -19,5 +19,7 @@ namespace ProjektZespolowyGr3.Models
         public DateTime? LockedUntil { get; set; }
         public bool EmailVerified { get; set; } = false;
         public string? EmailVerificationToken { get; set; }
+        public string? PasswordResetToken { get; set; }
+        public DateTime? PasswordResetTokenExpiresAt { get; set; }
     }
 }

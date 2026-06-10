@@ -1,17 +1,14 @@
 using System.ComponentModel.DataAnnotations;
-using ProjektZespolowyGr3.Models;
 
 namespace ProjektZespolowyGr3.Models.ViewModels
 {
-    public class RegisterViewModel
+    public class ResetPasswordViewModel
     {
-        [Required(ErrorMessage = "Login jest wymagany.")]
-        public string Login { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Email jest wymagany.")]
-        [StringLength(MarketplaceLimits.MaxEmailLength, ErrorMessage = "Email może mieć maksymalnie 254 znaki.")]
-        [EmailAddress(ErrorMessage = "Nieprawidłowy adres email.")]
+        [Required]
         public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string Token { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Hasło jest wymagane.")]
         [MinLength(8, ErrorMessage = "Hasło musi mieć co najmniej 8 znaków.")]
@@ -19,6 +16,7 @@ namespace ProjektZespolowyGr3.Models.ViewModels
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Potwierdzenie hasła jest wymagane.")]
+        [Compare(nameof(Password), ErrorMessage = "Hasła nie są takie same.")]
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

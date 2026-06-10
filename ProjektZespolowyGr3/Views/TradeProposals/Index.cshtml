@@ -5,15 +5,25 @@
     ViewBag.ShowListingColumn = true;
 }
 
-<h2 class="mb-3">Moje wymiany</h2>
+<div class="page-header mb-4">
+    <h2 class="page-title">Moje wymiany</h2>
+</div>
 
 @if (Model.ActiveOnePerListing.Count == 0 && Model.ArchivedOnePerListing.Count == 0)
 {
-    <p class="text-muted">Nie masz jeszcze żadnych propozycji wymiany.</p>
+    <div class="card card-md">
+        <div class="card-body">
+            <div class="empty">
+                <div class="empty-icon"><i class="bi bi-arrow-left-right fs-1 text-secondary"></i></div>
+                <p class="empty-title">Brak wymian</p>
+                <p class="empty-subtitle text-secondary">Nie masz jeszcze żadnych propozycji wymiany.</p>
+            </div>
+        </div>
+    </div>
 }
 else
 {
-    <p class="text-muted small mb-4">
+    <p class="text-secondary small mb-4">
         Na liście jest <strong>jedna wymiana na ogłoszenie</strong>. Pełny wątek (kontroferty, historia) zobaczysz po wejściu w <strong>Szczegóły</strong>.
     </p>
 
@@ -21,7 +31,7 @@ else
         <h3 class="h4 mb-3">Obecne wymiany</h3>
         @if (Model.ActiveOnePerListing.Count == 0)
         {
-            <p class="text-muted small mb-0">Brak trwających negocjacji.</p>
+            <p class="text-secondary small mb-0">Brak trwających negocjacji.</p>
         }
         else
         {
@@ -33,7 +43,7 @@ else
         <h3 class="h4 mb-3">Zarchiwizowane wymiany</h3>
         @if (Model.ArchivedOnePerListing.Count == 0)
         {
-            <p class="text-muted small mb-0">Brak zarchiwizowanych wymian (lub masz nadal otwartą negocjację przy danym ogłoszeniu).</p>
+            <p class="text-secondary small mb-0">Brak zarchiwizowanych wymian (lub masz nadal otwartą negocjację przy danym ogłoszeniu).</p>
         }
         else
         {

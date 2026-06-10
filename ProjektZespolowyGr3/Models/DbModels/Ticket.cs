@@ -57,6 +57,9 @@ public enum TicketCategory
     [Display(Name = "Zgłoszenie oferty")]
     Listing_Report,
 
+    [Display(Name = "Zgłoszenie opinii")]
+    Review_Report,
+
     [Display(Name = "Problem techniczny")]
     Technical_Issue,
 

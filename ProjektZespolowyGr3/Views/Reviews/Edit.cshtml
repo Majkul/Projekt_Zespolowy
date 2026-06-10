@@ -1,62 +1,65 @@
-﻿@model ProjektZespolowyGr3.Models.DbModels.Review
+@model ProjektZespolowyGr3.Models.DbModels.Review
 
 @{
-    ViewData["Title"] = "Edytuj";
+    ViewData["Title"] = "Edytuj recenzję";
 }
 
-<h1>Edytuj</h1>
-
-<h4>Recenzja</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="ListingId" class="control-label"></label>
-                <select asp-for="ListingId" class="form-control" asp-items="ViewBag.ListingId"></select>
-                <span asp-validation-for="ListingId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Rating" class="control-label"></label>
-                <input asp-for="Rating" class="form-control" />
-                <span asp-validation-for="Rating" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ReviewerId" class="control-label"></label>
-                <select asp-for="ReviewerId" class="form-control" asp-items="ViewBag.ReviewerId"></select>
-                <span asp-validation-for="ReviewerId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Upvotes" class="control-label"></label>
-                <input asp-for="Upvotes" class="form-control" />
-                <span asp-validation-for="Upvotes" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Downvotes" class="control-label"></label>
-                <input asp-for="Downvotes" class="form-control" />
-                <span asp-validation-for="Downvotes" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Zapisz" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+<div class="page-header mb-4">
+    <h2 class="page-title">Edytuj recenzję</h2>
 </div>
 
-<div>
-    <a asp-action="Index">Powrót do listy</a>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-3">
+                        <label asp-for="ListingId" class="form-label"></label>
+                        <select asp-for="ListingId" class="form-select" asp-items="ViewBag.ListingId"></select>
+                        <span asp-validation-for="ListingId" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Rating" class="form-label"></label>
+                        <input asp-for="Rating" class="form-control" />
+                        <span asp-validation-for="Rating" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ReviewerId" class="form-label"></label>
+                        <select asp-for="ReviewerId" class="form-select" asp-items="ViewBag.ReviewerId"></select>
+                        <span asp-validation-for="ReviewerId" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <input asp-for="Description" class="form-control" />
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="CreatedAt" class="form-label"></label>
+                        <input asp-for="CreatedAt" class="form-control" />
+                        <span asp-validation-for="CreatedAt" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Upvotes" class="form-label"></label>
+                        <input asp-for="Upvotes" class="form-control" />
+                        <span asp-validation-for="Upvotes" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Downvotes" class="form-label"></label>
+                        <input asp-for="Downvotes" class="form-control" />
+                        <span asp-validation-for="Downvotes" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">Zapisz</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Powrót do listy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {

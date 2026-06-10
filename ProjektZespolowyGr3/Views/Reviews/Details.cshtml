@@ -1,60 +1,44 @@
-﻿@model ProjektZespolowyGr3.Models.DbModels.Review
+@model ProjektZespolowyGr3.Models.DbModels.Review
 
 @{
-    ViewData["Title"] = "Szczegóły";
+    ViewData["Title"] = "Szczegóły recenzji";
 }
 
-<h1>Szczegóły</h1>
-
-<div>
-    <h4>Recenzja</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Listing)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Listing.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Rating)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Rating)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Reviewer)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Reviewer.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Upvotes)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Upvotes)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Downvotes)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Downvotes)
-        </dd>
-    </dl>
+<div class="page-header mb-4">
+    <h2 class="page-title">Szczegóły recenzji</h2>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edytuj</a> |
-    <a asp-action="Index">Powrót do listy</a>
+
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Listing)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Listing.Id)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Rating)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Rating)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Reviewer)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Reviewer.Id)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Description)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Description)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.CreatedAt)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Upvotes)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Upvotes)</dd>
+
+                    <dt class="col-sm-3 text-secondary">@Html.DisplayNameFor(model => model.Downvotes)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Downvotes)</dd>
+                </dl>
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-outline-primary">Edytuj</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">Powrót do listy</a>
+            </div>
+        </div>
+    </div>
 </div>

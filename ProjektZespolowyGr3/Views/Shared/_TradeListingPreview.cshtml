@@ -26,7 +26,7 @@
                 <p class="small text-muted mb-2 mb-md-2">
                     @if (ViewBag.ProposedTradeQuantity is int propQty && propQty >= 1)
                     {
-                        <span class="badge bg-info text-dark me-1">W ofercie: @propQty szt.</span>
+                        <span class="badge bg-azure-lt me-1">W ofercie: @propQty szt.</span>
                     }
                     @if (Model.Price.HasValue)
                     {
@@ -54,7 +54,7 @@
                     <div class="mt-2">
                         @foreach (var lt in Model.Tags)
                         {
-                            <span class="badge bg-light text-dark border me-1 mb-1">@lt.Tag.Name</span>
+                            <span class="badge bg-blue-lt me-1 mb-1">@lt.Tag.Name</span>
                         }
                     </div>
                 }

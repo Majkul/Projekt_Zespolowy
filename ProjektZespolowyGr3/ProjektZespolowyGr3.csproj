@@ -7,6 +7,7 @@
     <NoWarn>$(NoWarn);CS8981</NoWarn>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>7a16b429-5f81-4ad9-b92b-89c52ad5abf6</UserSecretsId>
+    <DefaultItemExcludes>$(DefaultItemExcludes);artifacts\**;artifacts\**\*</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,59 +1,60 @@
-﻿@model ProjektZespolowyGr3.Models.ViewModels.RegisterViewModel
+@model ProjektZespolowyGr3.Models.ViewModels.RegisterViewModel
 
 @{
     ViewData["Title"] = "Rejestracja";
+    ViewData["HideNavSearch"] = true;
 }
 
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <h2 class="mb-4 text-center">Rejestracja</h2>
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-9 col-md-7 col-lg-5">
+        <div class="text-center mb-4">
+            <h2 class="h2">Załóż konto</h2>
+            <p class="text-secondary mb-0">Dołącz do HandlujZTym i zacznij handlować</p>
+        </div>
 
-            <form asp-action="Register" method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="card card-md">
+            <div class="card-body">
+                <form asp-action="Register" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                <div class="mb-3">
-                    <label asp-for="Login" class="form-label">Login</label>
-                    <input asp-for="Login" class="form-control" />
-                    <span asp-validation-for="Login" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label">Email</label>
-                    <input asp-for="Email" class="form-control" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="Password" class="form-label">Hasło</label>
-                    <input asp-for="Password" type="password" class="form-control" />
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="ConfirmPassword" class="form-label">Powtórz hasło</label>
-                    <input asp-for="ConfirmPassword" type="password" class="form-control" />
-                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <a asp-action="Index" class="btn btn-outline-secondary">Powrót</a>
-                    <input type="submit" value="Zarejestruj się" class="btn btn-primary" />
-                </div>
-            </form>
+                    <div class="mb-3">
+                        <label asp-for="Login" class="form-label">Login</label>
+                        <input asp-for="Login" class="form-control" />
+                        <span asp-validation-for="Login" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">Hasło</label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label">Powtórz hasło</label>
+                        <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
 
-            @if (TempData["AlertError"] != null)
-            {
-                <div class="alert alert-danger mt-3">
-                    @TempData["AlertError"]
-                </div>
-            }
+                    @if (TempData["AlertError"] != null)
+                    {
+                        <div class="alert alert-danger" role="alert">@TempData["AlertError"]</div>
+                    }
+
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary w-100">Zarejestruj się</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center text-secondary mt-3">
+            Masz już konto? <a asp-action="Login">Zaloguj się</a>
         </div>
     </div>
 </div>
-
-@if (TempData["AlertError"] != null)
-{
-    <div class="alert alert-danger">
-        @TempData["AlertError"]
-    </div>
-}
 
 @section Scripts {
     @{

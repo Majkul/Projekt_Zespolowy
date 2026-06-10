@@ -1,39 +1,330 @@
-html {
-  font-size: 14px;
+/* =========================================================================
+   HandlujZTym - motyw marketplace na bazie Tabler (Bootstrap 5.3).
+   Zasada: NIE nadpisujemy bazowych komponentów Tablera (.btn, .card,
+   .form-control, typografia). Dodajemy tylko elementy, których Tabler nie
+   dostarcza: logo, karty ofert, panel filtrów, hero strony głównej.
+   Kolory akcentów korzystają z tokenów Tablera (--tblr-*).
+   ========================================================================= */
+
+/* --- Pasek nawigacji --------------------------------------------------- */
+.app-navbar {
+    background-color: #fff;
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+.brand-mark {
+    display: inline-flex;
+    width: 2.1rem;
+    height: 2.1rem;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.1rem;
+    border-radius: var(--tblr-border-radius, 6px);
+    background: linear-gradient(135deg, #0f766e 0%, var(--tblr-primary, #0054a6) 100%);
+    box-shadow: 0 6px 14px rgba(15, 118, 110, 0.25);
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.navbar-search .input-group-text {
+    background-color: #fff;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
 }
 
-body {
-  margin-bottom: 60px;
+/* --- Nagłówki sekcji wewnątrz strony ----------------------------------- */
+.section-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+@media (max-width: 575.98px) {
+    .section-heading {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* --- Hero strony głównej ----------------------------------------------- */
+.market-hero {
+    overflow: hidden;
+    padding: clamp(1.75rem, 5vw, 3.5rem);
+    color: #fff;
+    border-radius: var(--tblr-border-radius-lg, 8px);
+    background: linear-gradient(135deg, #0f766e 0%, var(--tblr-primary, #0054a6) 58%, #11243f 100%);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+}
+
+.market-hero .form-control {
+    border: 0;
+}
+
+.market-hero .lead {
+    color: rgba(255, 255, 255, 0.86);
+}
+
+.market-hero .text-white-50 {
+    color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.market-hero-panel {
+    padding: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: var(--tblr-border-radius, 6px);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.market-hero-summary {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.market-hero-panel-icon {
+    flex: 0 0 auto;
+    font-size: 1.65rem;
+    line-height: 1;
+}
+
+.market-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.market-stat {
+    display: flex;
+    min-height: 4.75rem;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.8rem 0.65rem;
+    border-radius: var(--tblr-border-radius, 6px);
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.market-stat-value {
+    margin-bottom: 0.15rem;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #fff;
+}
+
+.market-stat-label {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.7rem;
+    line-height: 1.2;
+    overflow-wrap: normal;
+    white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    .market-hero {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .market-hero .display-4 {
+        font-size: 2.35rem;
+        line-height: 1.14;
+        overflow-wrap: break-word;
+    }
+
+    .market-hero .lead {
+        font-size: 1rem;
+    }
+
+    .market-hero .row {
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .market-hero .row > * {
+        min-width: 0;
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    .market-hero .input-group-lg {
+        width: 100%;
+        flex-wrap: nowrap;
+    }
+
+    .market-hero .input-group-lg > .form-control,
+    .market-hero .input-group-lg > .btn {
+        min-width: 0;
+        font-size: 0.95rem;
+    }
+
+    .market-hero .input-group-lg > .btn {
+        flex: 0 0 3rem;
+        width: 3rem;
+        padding-right: 0.9rem;
+        padding-left: 0.9rem;
+        font-size: 0;
+    }
+
+    .market-hero .input-group-lg > .btn .bi {
+        margin-right: 0 !important;
+        font-size: 1rem;
+    }
+
+    .market-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .market-stat:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .market-stat-label {
+        white-space: normal;
+    }
+}
+
+/* --- Karty ofert ------------------------------------------------------- */
+.listing-grid {
+    row-gap: 1.25rem;
+}
+
+.listing-card {
+    overflow: hidden;
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.listing-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(var(--tblr-primary-rgb, 0, 84, 166), 0.35);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+}
+
+.listing-card-media {
+    position: relative;
+    background: #e9eef5;
+}
+
+.listing-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.listing-card-placeholder {
+    display: flex;
+    min-height: 180px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    color: var(--tblr-secondary, #667382);
+    background:
+        radial-gradient(circle at 30% 20%, rgba(var(--tblr-primary-rgb, 0, 84, 166), 0.08), transparent 28%),
+        var(--tblr-bg-surface-secondary, #f4f6fa);
+}
+
+.listing-card-placeholder .bi {
+    font-size: 2rem;
+    color: rgba(var(--tblr-primary-rgb, 0, 84, 166), 0.42);
+}
+
+.listing-statuses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.listing-price {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--tblr-primary, #0054a6);
+}
+
+.listing-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--tblr-secondary, #667382);
+}
+
+/* --- Panel filtrów ----------------------------------------------------- */
+.filter-card {
+    position: sticky;
+    top: 5.5rem;
+}
+
+.filter-chip-group {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.filter-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0;
+    padding: 0.6rem 0.8rem;
+    color: var(--tblr-body-color, #232b35);
+    border: 1px solid var(--tblr-border-color, #dbe0e6);
+    border-radius: var(--tblr-border-radius, 6px);
+    background: #fff;
+    cursor: pointer;
+}
+
+.btn-check:checked + .filter-chip {
+    color: #fff;
+    border-color: var(--tblr-primary, #0054a6);
+    background: var(--tblr-primary, #0054a6);
+}
+
+.filter-card .ts-wrapper {
+    position: relative;
+}
+
+.filter-card .ts-wrapper.dropdown-active {
+    z-index: 1055;
+}
+
+.filter-card .ts-dropdown {
+    z-index: 1056;
+    background: #fff;
+    border-color: var(--tblr-border-color, #dbe0e6);
+    box-shadow: 0 0.5rem 1rem rgba(15, 23, 42, 0.14);
+}
+
+/* --- Czat (Messages) --------------------------------------------------- */
+.chat-bubble {
+    max-width: 75%;
+    padding: 0.55rem 0.85rem;
+    border-radius: var(--tblr-border-radius-lg, 10px);
+    word-break: break-word;
+}
+
+.chat-bubble-in {
+    background: var(--tblr-bg-surface-secondary, #f1f5f9);
+    color: var(--tblr-body-color, #232b35);
+}
+
+.chat-bubble-out {
+    background: var(--tblr-primary, #0054a6);
+    color: #fff;
+}
+
+/* --- Drobne ------------------------------------------------------------ */
+.text-break-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .text-light-gray {
     color: #bfbfbf;
-}
-
-@media (max-width: 991.98px) {
-  .navbar-collapse {
-    overflow-y: auto;
-    max-height: 80vh;
-  }
-}
-
-@media (min-width: 992px) {
-  .navbar-search {
-    width: 41.66666667% !important;
-  }
 }

@@ -4,67 +4,84 @@
     ViewData["Title"] = "Wiadomości";
     var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }
-<div class="container mt-4">
-    <h2 class="mb-4">Skrzynka odbiorcza</h2>
-    <p class="text-muted">Lista rozmów, w których bierzesz udział.</p>
-    @if (Model != null && Model.Any())
-    {
-        <div class="list-group">
+
+<div class="page-header mb-4">
+    <h2 class="page-title">Skrzynka odbiorcza</h2>
+    <div class="text-secondary mt-1">Lista rozmów, w których bierzesz udział.</div>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    <div class="card">
+        <div class="list-group list-group-flush">
             @foreach (var msg in Model)
             {
                 var isListing = msg.ListingId.HasValue;
                 var isTicket = msg.TicketId.HasValue;
                 var otherUser = msg.SenderId == currentUserId ? msg.Receiver : msg.Sender;
-                <a class="list-group-item list-group-item-action @(msg.IsArchived ? "list-group-item-secondary" : "")"
+                <a class="list-group-item list-group-item-action @(msg.IsArchived ? "bg-light" : "")"
                    asp-controller="Messages"
                    asp-action="Conversation"
                    asp-route-userId="@(otherUser?.Id ?? 0)"
                    asp-route-listingId="@(msg.ListingId)"
                    asp-route-ticketId="@(msg.TicketId)">
-                    <div class="d-flex w-100 justify-content-between align-items-center">
-                        <h5 class="mb-1 @(msg.IsArchived ? "text-muted" : "")">
-                            @(otherUser?.Username ?? "Konwersacja")
-                            @if (msg.IsArchived)
-                            {
-                                <span class="badge bg-secondary ms-2">Zarchiwizowana</span>
-                            }
-                        </h5>
-                        <small class="text-muted">
-                            @(msg.SentAt != DateTime.MinValue ? msg.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") : "")
-                        </small>
+                    <div class="row align-items-center g-2">
+                        <div class="col-auto">
+                            <span class="avatar" style="background-image: url(/Images/Icons/user-icon.png)"></span>
+                        </div>
+                        <div class="col text-truncate">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold @(msg.IsArchived ? "text-secondary" : "")">
+                                    @(otherUser?.Username ?? "Konwersacja")
+                                    @if (msg.IsArchived)
+                                    {
+                                        <span class="badge bg-secondary-lt ms-1">Zarchiwizowana</span>
+                                    }
+                                </span>
+                                <small class="text-secondary">
+                                    @(msg.SentAt != DateTime.MinValue ? msg.SentAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") : "")
+                                </small>
+                            </div>
+                            <div class="text-truncate text-secondary @(msg.IsArchived ? "fst-italic" : "")">
+                                @if (msg.IsArchived)
+                                {
+                                    <em>Wiadomość została usunięta.</em>
+                                }
+                                else
+                                {
+                                    @msg.Content
+                                }
+                            </div>
+                            <small class="text-secondary">
+                                @if (isListing && msg.Listing != null)
+                                {
+                                    <i class="bi bi-tag me-1"></i>@:Ogłoszenie: @msg.Listing.Title
+                                }
+                                else if (isTicket && msg.Ticket != null)
+                                {
+                                    <i class="bi bi-ticket-perforated me-1"></i>@:Zgłoszenie: @msg.Ticket.Subject
+                                }
+                                else
+                                {
+                                    <i class="bi bi-chat-dots me-1"></i>@:Rozmowa ogólna
+                                }
+                            </small>
+                        </div>
                     </div>
-                    <p class="mb-1 text-truncate @(msg.IsArchived ? "text-muted fst-italic" : "")">
-                        @if (msg.IsArchived)
-                        {
-                            <em>Wiadomość została usunięta.</em>
-                        }
-                        else
-                        {
-                            @msg.Content
-                        }
-                    </p>
-                    <small class="text-muted">
-                        @if (isListing && msg.Listing != null)
-                        {
-                            @:Ogłoszenie: @msg.Listing.Title
-                        }
-                        else if (isTicket && msg.Ticket != null)
-                        {
-                            @:Zgłoszenie: @msg.Ticket.Subject
-                        }
-                        else
-                        {
-                            @:Rozmowa ogólna
-                        }
-                    </small>
                 </a>
             }
         </div>
-    }
-    else
-    {
-        <div class="alert alert-info">
-            Nie masz jeszcze żadnych rozmów.
+    </div>
+}
+else
+{
+    <div class="card card-md">
+        <div class="card-body">
+            <div class="empty">
+                <div class="empty-icon"><i class="bi bi-inbox fs-1 text-secondary"></i></div>
+                <p class="empty-title">Brak rozmów</p>
+                <p class="empty-subtitle text-secondary">Nie masz jeszcze żadnych rozmów.</p>
+            </div>
         </div>
-    }
-</div>
+    </div>
+}

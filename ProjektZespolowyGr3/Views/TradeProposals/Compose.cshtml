@@ -6,9 +6,13 @@
     var subject = Model.SubjectListing;
 }
 
-<div class="container mt-4 mb-5">
-    <h2 class="mb-1">@(Model.ParentTradeProposalId.HasValue ? "Kontroferta" : "Propozycja wymiany")</h2>
-    <p class="text-muted mb-3">Ogłoszenie: <strong>@subject.Title</strong></p>
+<div class="mb-5">
+    <div class="page-header mb-3">
+        <div>
+            <h2 class="page-title">@(Model.ParentTradeProposalId.HasValue ? "Kontroferta" : "Propozycja wymiany")</h2>
+            <div class="text-secondary mt-1">Ogłoszenie: <strong>@subject.Title</strong></div>
+        </div>
+    </div>
 
     @if (!subject.NotExchangeable && (subject.MinExchangeValue.HasValue || (subject.ExchangeAcceptedTags != null && subject.ExchangeAcceptedTags.Any()) || !string.IsNullOrWhiteSpace(subject.ExchangeDescription)))
     {
@@ -158,7 +162,7 @@
         }
 
         <div class="col-12">
-            <button type="submit" class="btn btn-primary btn-lg">@(Model.EditTradeProposalId.HasValue ? "Zapisz zmiany" : Model.ParentTradeProposalId.HasValue ? "Wyślij kontrofertę" : "Wyślij propozycję")</button>
+            <button type="submit" class="btn btn-primary btn-lg" id="trade-submit">@(Model.EditTradeProposalId.HasValue ? "Zapisz zmiany" : Model.ParentTradeProposalId.HasValue ? "Wyślij kontrofertę" : "Wyślij propozycję")</button>
             <a asp-controller="Listings" asp-action="Details" asp-route-slug="@SlugHelper.GenerateSlug(Model.SubjectListing.Title)" asp-route-id="@Model.SubjectListingId" class="btn btn-outline-secondary">Anuluj</a>
         </div>
     </form>
@@ -198,6 +202,8 @@
                 sumSide('initiatorListingIds', document.getElementById('initiatorCash'), document.getElementById('sum-initiator'));
                 sumSide('receiverListingIds', document.getElementById('receiverCash'), document.getElementById('sum-receiver'));
                 var hint = document.getElementById('buyer-min-hint');
+                var submit = document.getElementById('trade-submit');
+                var canSubmit = true;
                 if (hint != null && minBuyerThreshold != null) {
                     var bi = sumSideRaw('initiatorListingIds', document.getElementById('initiatorCash'));
                     var br = sumSideRaw('receiverListingIds', document.getElementById('receiverCash'));
@@ -205,10 +211,14 @@
                     if (buyerSum < minBuyerThreshold) {
                         hint.className = 'alert alert-warning small py-2 mb-0';
                         hint.innerHTML = 'Twoja strona: <strong>' + fmt(buyerSum) + '</strong> - wymagane minimum: <strong>' + fmt(minBuyerThreshold) + '</strong>';
+                        canSubmit = false;
                     } else {
                         hint.className = 'alert alert-success small py-2 mb-0';
                         hint.textContent = 'Twoja strona spełnia wymagane minimum (' + fmt(buyerSum) + ').';
                     }
+                }
+                if (submit) {
+                    submit.disabled = !canSubmit;
                 }
             }
             document.querySelectorAll('#trade-compose-form input[name="initiatorListingIds"], #trade-compose-form input[name="receiverListingIds"], #initiatorCash, #receiverCash').forEach(function (el) {

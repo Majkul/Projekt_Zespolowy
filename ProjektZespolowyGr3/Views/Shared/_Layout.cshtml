@@ -4,135 +4,155 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - HandlujZTym</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/core@@1.4.0/dist/css/tabler.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ProjektZespolowyGr3.styles.css" asp-append-version="true" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">HandlujZTym</a>
-                
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain"
-                        aria-expanded="false" aria-label="Toggle navigation">
+    <div class="page">
+        <header class="navbar navbar-expand-lg navbar-light d-print-none sticky-top app-navbar">
+            <div class="container-xl">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
+                        aria-controls="navbarMain" aria-expanded="false" aria-label="Przełącz nawigację">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                
-                <div id="navbarMain" class="collapse navbar-collapse">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Listings" asp-action="Index">Oferty</a>
-                        </li>
-                    </ul>
 
-                    @if (ViewData["HideNavSearch"] as bool? != true)
-                    {
-                        <form class="d-flex w-100 my-2 my-lg-0 mx-lg-auto navbar-search" asp-controller="Listings" asp-action="Index" method="get">
-                            <div class="input-group">
-                                <input class="form-control" type="text" name="searchString" placeholder="Szukaj ofert..." aria-label="Szukaj ofert"/>
-                                <button class="btn btn-outline-primary" type="submit">
-                                    <i class="bi bi-search"></i> Szukaj
-                                </button>
-                            </div>
-                        </form>
-                    }
+                <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3 mb-0">
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none">
+                        <span class="brand-mark"><i class="bi bi-arrow-left-right"></i></span>
+                        <span class="fw-bold">HandlujZTym</span>
+                    </a>
+                </h1>
 
-                    <ul class="navbar-nav ms-auto align-items-center">
-                        @if (User.Identity?.IsAuthenticated == true)
+                <div class="collapse navbar-collapse" id="navbarMain">
+                    <div class="d-flex flex-column flex-lg-row flex-fill align-items-stretch align-items-lg-center gap-2 gap-lg-0">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Listings" asp-action="Index">
+                                    <span class="nav-link-icon d-lg-inline-block"><i class="bi bi-grid"></i></span>
+                                    <span class="nav-link-title">Oferty</span>
+                                </a>
+                            </li>
+                        </ul>
+
+                        @if (ViewData["HideNavSearch"] as bool? != true)
                         {
-                            @if (User.IsInRole("Admin"))
+                            <form class="d-flex w-100 my-2 my-lg-0 flex-fill mx-lg-auto navbar-search" style="max-width: 32rem;"
+                                  asp-controller="Listings" asp-action="Index" method="get">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input class="form-control" type="text" name="searchString" placeholder="Szukaj ofert..." aria-label="Szukaj ofert"/>
+                                    <button class="btn btn-primary" type="submit">Szukaj</button>
+                                </div>
+                            </form>
+                        }
+
+                        <ul class="navbar-nav ms-auto align-items-center">
+                            @if (User.Identity?.IsAuthenticated == true)
                             {
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle text-dark" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Admin
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <li class="nav-item dropdown">
+                                        <a href="#" class="nav-link px-2" data-bs-toggle="dropdown" tabindex="-1"
+                                           aria-label="Panel administracyjny" title="Panel administracyjny">
+                                            <i class="bi bi-shield-lock fs-3"></i>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                                            <h6 class="dropdown-header">Administracja</h6>
+                                            <a class="dropdown-item" asp-controller="UserManage" asp-action="Index"><i class="bi bi-people me-2"></i>Użytkownicy</a>
+                                            <a class="dropdown-item" asp-controller="ListingManage" asp-action="Index"><i class="bi bi-card-list me-2"></i>Oferty</a>
+                                            <a class="dropdown-item" asp-controller="TicketsManage" asp-action="Index"><i class="bi bi-ticket-perforated me-2"></i>Zgłoszenia</a>
+                                        </div>
+                                    </li>
+                                }
+
+                                <li class="nav-item">
+                                    @await Component.InvokeAsync("UnreadNotifications")
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link px-2" asp-area="" asp-controller="Messages" asp-action="Index" title="Wiadomości">
+                                        <i class="bi bi-envelope fs-3"></i>
                                     </a>
-                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
-                                        <li><a class="dropdown-item" asp-controller="UserManage" asp-action="Index">Użytkownicy</a></li>
-                                        <li><a class="dropdown-item" asp-controller="ListingManage" asp-action="Index">Oferty</a></li>
-                                        <li><a class="dropdown-item" asp-controller="TicketsManage" asp-action="Index">Zgłoszenia</a></li>
-                                    </ul>
                                 </li>
                             }
 
-                            <li class="nav-item">
-                                @await Component.InvokeAsync("UnreadNotifications")
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Messages" asp-action="Index" title="Wiadomości">
-                                    <i class="bi bi-envelope fs-5"></i>
+                            <li class="nav-item dropdown">
+                                <a id="userDropdown" href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Menu konta">
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <span class="avatar avatar-sm" style="background-image: url(/Images/Icons/user-icon.png)"></span>
+                                        <div class="d-none d-xl-block ps-2">
+                                            <div class="fw-bold">@User.Identity.Name</div>
+                                            <div class="mt-1 small text-secondary">Moje konto</div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-person-circle fs-2"></i>
+                                        <span class="d-none d-xl-block ps-2 fw-bold align-self-center">Zaloguj się</span>
+                                    }
                                 </a>
-                            </li>
-                        }
+                                <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <h6 class="dropdown-header">Tworzenie</h6>
+                                        <a class="dropdown-item" asp-area="" asp-controller="Listings" asp-action="Create"><i class="bi bi-plus-circle me-2"></i>Stwórz ofertę</a>
+                                        <a class="dropdown-item" asp-area="" asp-controller="Tickets" asp-action="Create"><i class="bi bi-ticket me-2"></i>Stwórz zgłoszenie</a>
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-dark fw-bold d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                @if (User.Identity?.IsAuthenticated == true)
-                                {
-                                    <img src="/Images/Icons/user-icon.png" alt="User" class="rounded-circle me-2" width="24" height="24" />
-                                    <span>Witaj, @User.Identity.Name!</span>
-                                }
-                                else
-                                {
-                                    <i class="bi bi-person-circle fs-5 me-2"></i>
-                                    <span>Zaloguj się</span>
-                                }
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                @if (User.Identity?.IsAuthenticated == true)
-                                {
-                                    <li><h6 class="dropdown-header">Tworzenie</h6></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Listings" asp-action="Create"><i class="bi bi-plus-circle me-2"></i>Stwórz ofertę</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Tickets" asp-action="Create"><i class="bi bi-ticket me-2"></i>Stwórz zgłoszenie</a></li>
-                                    
-                                    <li><hr class="dropdown-divider"/></li>
-                                    <li><h6 class="dropdown-header">Moje konto</h6></li>
-                                    <li><a class="dropdown-item" asp-controller="MyProfile" asp-action="Details">Mój profil</a></li>
-                                    <li><a class="dropdown-item" asp-controller="ListingManage" asp-action="Index">Moje oferty</a></li>
-                                    <li><a class="dropdown-item" asp-controller="TradeProposals" asp-action="Index">Moje wymiany</a></li>
-                                    <li><a class="dropdown-item" asp-controller="Tickets" asp-action="Index">Moje zgłoszenia</a></li>
-                                    
-                                    <li><hr class="dropdown-divider"/></li>
-                                    <li>
+                                        <div class="dropdown-divider"></div>
+                                        <h6 class="dropdown-header">Moje konto</h6>
+                                        <a class="dropdown-item" asp-controller="MyProfile" asp-action="Details"><i class="bi bi-person me-2"></i>Mój profil</a>
+                                        <a class="dropdown-item" asp-controller="ListingManage" asp-action="Index"><i class="bi bi-card-list me-2"></i>Moje oferty</a>
+                                        <a class="dropdown-item" asp-controller="TradeProposals" asp-action="Index"><i class="bi bi-arrow-left-right me-2"></i>Moje wymiany</a>
+                                        <a class="dropdown-item" asp-controller="Tickets" asp-action="Index"><i class="bi bi-ticket-perforated me-2"></i>Moje zgłoszenia</a>
+
+                                        <div class="dropdown-divider"></div>
                                         <form asp-controller="Account" asp-action="Logout" method="post">
                                             @Html.AntiForgeryToken()
-                                            <button class="dropdown-item text-danger w-100 text-start" type="submit">
+                                            <button class="dropdown-item text-danger" type="submit">
                                                 <i class="bi bi-box-arrow-right me-2"></i>Wyloguj
                                             </button>
                                         </form>
-                                    </li>
-                                }
-                                else
-                                {
-                                    <li><a class="dropdown-item fw-bold" asp-area="" asp-controller="Home" asp-action="Login">Zaloguj się</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Register">Zarejestruj się</a></li>
-                                    <li><hr class="dropdown-divider"/></li>
-                                    <li><span class="dropdown-item-text text-muted">Zaloguj się, aby tworzyć oferty i zgłoszenia.</span></li>
-                                }
-                            </ul>
-                        </li>
-                    </ul>
+                                    }
+                                    else
+                                    {
+                                        <a class="dropdown-item fw-bold" asp-area="" asp-controller="Home" asp-action="Login"><i class="bi bi-box-arrow-in-right me-2"></i>Zaloguj się</a>
+                                        <a class="dropdown-item" asp-area="" asp-controller="Home" asp-action="Register"><i class="bi bi-person-plus me-2"></i>Zarejestruj się</a>
+                                        <div class="dropdown-divider"></div>
+                                        <span class="dropdown-item-text text-secondary small">Zaloguj się, aby tworzyć oferty i zgłoszenia.</span>
+                                    }
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        </header>
+
+        <div class="page-wrapper">
+            <div class="page-body">
+                <div class="container-xl">
+                    @RenderBody()
+                </div>
+            </div>
+
+            <footer class="footer footer-transparent d-print-none">
+                <div class="container-xl">
+                    <div class="row text-center align-items-center flex-row-reverse">
+                        <div class="col-12 mt-2 mt-lg-0">
+                            <span class="text-secondary">&copy; 2025 - HandlujZTym - Wszystkie prawa zastrzeżone</span>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted mt-5 py-4">
-        <div class="container text-center">
-            &copy; 2025 - HandlujZTym - Wszystkie prawa zastrzeżone
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@@tabler/core@@1.4.0/dist/js/tabler.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/imageUploader.js"></script>

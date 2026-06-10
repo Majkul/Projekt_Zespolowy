@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using System.ComponentModel.DataAnnotations;
 using Moq;
 using ProjektZespolowyGr3.Controllers;
 using ProjektZespolowyGr3.Models;
@@ -181,6 +182,20 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         }
 
         [Fact]
+        public void EditMyProfileViewModel_ShouldRequireFirstAndLastName()
+        {
+            var model = new EditMyProfileViewModel
+            {
+                Email = "test@test.com"
+            };
+
+            var validationResults = ValidateModel(model);
+
+            validationResults.Should().Contain(v => v.MemberNames.Contains(nameof(EditMyProfileViewModel.FirstName)));
+            validationResults.Should().Contain(v => v.MemberNames.Contains(nameof(EditMyProfileViewModel.LastName)));
+        }
+
+        [Fact]
         public async Task Details_ShouldRedirectToUserProfileByUsername()
         {
             // Arrange
@@ -209,6 +224,14 @@ namespace ProjektZespolowyGr3.Tests.Controllers
         public void Dispose()
         {
             _context.Dispose();
+        }
+
+        private static IList<ValidationResult> ValidateModel(object model)
+        {
+            var validationResults = new List<ValidationResult>();
+            var context = new ValidationContext(model, null, null);
+            Validator.TryValidateObject(model, context, validationResults, true);
+            return validationResults;
         }
     }
 }

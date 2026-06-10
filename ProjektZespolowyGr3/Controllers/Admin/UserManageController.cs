@@ -23,44 +23,29 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
         }
         public async Task<IActionResult> Index(string tab = "Users", string? searchString = null, int pageSize = 25, int pageNumber = 1)
         {
-            object? model;
-            int totalClients = 0;
-            switch (tab)
-            {
-                case "Users":
-                    model = await GetFilteredUsersAsync(searchString, pageSize, pageNumber, "User");
-                    totalClients = await GetUsersCountAsync(searchString, "Users", "User");
-                    break;
-                case "Admins":
-                    model = await GetFilteredUsersAsync(searchString, pageSize, pageNumber, "Admin");
-                    totalClients = await GetUsersCountAsync(searchString, "Admin", "Admin");
-                    break;
-                default:
-                    model = null;
-                    break;
-            };
+            var selectedTab = tab == "Admins" ? "Admins" : "Users";
+            var roleFilter = selectedTab == "Admins" ? "Admin" : "User";
+            object? model = await GetFilteredUsersAsync(searchString, pageSize, roleFilter);
 
-
-
-            ViewBag.SelectedTab = tab;
+            ViewBag.SelectedTab = selectedTab;
             ViewBag.CurrentFilter = searchString;
             ViewBag.CurrentPageSize = pageSize;
-            ViewBag.CurrentPage = pageNumber;
-            ViewBag.TotalPages = (int)Math.Ceiling(totalClients / (double)pageSize);
 
             return View(model);
         }
 
-        private async Task<List<User>> GetFilteredUsersAsync(string? searchString, int pageSize, int pageNumber, string roleFilter)
+        private IQueryable<User> BuildUserManageQuery(string? searchString, string roleFilter)
         {
             var users = _context.Users.AsQueryable();
 
-            if (!string.IsNullOrEmpty(searchString))
+            if (!string.IsNullOrWhiteSpace(searchString))
             {
-                users = users.Where(c =>
-                    c.Id.ToString().Contains(searchString) ||
-                    c.Username.Contains(searchString) ||
-                    c.Email.Contains(searchString));
+                var term = searchString.Trim();
+                var loweredTerm = term.ToLower();
+                users = users.Where(u =>
+                    u.Id.ToString().Contains(term) ||
+                    u.Username.ToLower().Contains(loweredTerm) ||
+                    u.Email.ToLower().Contains(loweredTerm));
             }
 
             if (!string.IsNullOrEmpty(roleFilter))
@@ -75,36 +60,20 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                         break;
                 }
             }
-            return await users
-                .Skip((pageNumber - 1) * pageSize)
+
+            return users;
+        }
+
+        private async Task<List<User>> GetFilteredUsersAsync(string? searchString, int pageSize, string roleFilter)
+        {
+            return await BuildUserManageQuery(searchString, roleFilter)
+                .OrderBy(u => u.Id)
                 .Take(pageSize)
                 .ToListAsync();
         }
         private async Task<int> GetUsersCountAsync(string? searchString, string tab, string roleFilter)
         {
-            var users = _context.Users.AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                users = users.Where(c =>
-                    c.Id.ToString().Contains(searchString) ||
-                    c.Username.Contains(searchString) ||
-                    c.Email.Contains(searchString));
-            }
-
-            if (!string.IsNullOrEmpty(roleFilter))
-            {
-                switch (roleFilter)
-                {
-                    case "User":
-                        users = users.Where(u => u.IsAdmin == false);
-                        break;
-                    case "Admin":
-                        users = users.Where(u => u.IsAdmin == true);
-                        break;
-                }
-            }
-            return await users.CountAsync();
+            return await BuildUserManageQuery(searchString, roleFilter).CountAsync();
         }
 
         //---User---
@@ -117,8 +86,8 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
             var viewModel = new EditUserViewModel
             {
                 Username = user.Username,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
+                FirstName = user.FirstName ?? string.Empty,
+                LastName = user.LastName ?? string.Empty,
                 Email = user.Email,
                 Address = user.Address,
                 Longitude = user.Longitude,
@@ -126,7 +95,8 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 IsBanned = user.IsBanned,
                 IsAdmin = user.IsAdmin,
                 IsDeleted = user.IsDeleted,
-                PhoneNumber = user.PhoneNumber
+                PhoneNumber = user.PhoneNumber,
+                ProfileDescription = user.ProfileDescription
             };
 
             ViewBag.ModelId = id;
@@ -136,6 +106,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditUser(int id, EditUserViewModel u)
         {
             var user = await _context.Users.FindAsync(id);
@@ -163,6 +134,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
                 user.Latitude = u.Latitude;
             if (u.PhoneNumber != null)
                 user.PhoneNumber = u.PhoneNumber;
+            user.ProfileDescription = string.IsNullOrWhiteSpace(u.ProfileDescription) ? null : u.ProfileDescription.Trim();
 
             user.IsBanned = u.IsBanned;
             user.IsAdmin = u.IsAdmin;
@@ -173,6 +145,7 @@ namespace DomPogrzebowyProjekt.Controllers.Admin
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult DeleteUser(int id)
         {
             var user = _context.Users.Find(id);

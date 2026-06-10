@@ -4,6 +4,18 @@
     ViewData["Title"] = "Oferty";
     var searchString = ViewBag.SearchString as string ?? "";
     var noResultsMsg = ViewBag.NoResultsMessage as string;
+    var selectedTags = ViewBag.TagIds as List<int> ?? new List<int>();
+    var minPrice = ViewBag.MinPrice as decimal?;
+    var maxPrice = ViewBag.MaxPrice as decimal?;
+    var listingType = ViewBag.ListingType as string ?? "";
+    var sortBy = ViewBag.SortBy as string ?? "newest";
+    var maxDistanceKm = ViewBag.MaxDistanceKm as int?;
+    var userLat = ViewBag.UserLat as double?;
+    var userLng = ViewBag.UserLng as double?;
+    var currentPage = ViewBag.CurrentPage as int? ?? 1;
+    var totalPages = ViewBag.TotalPages as int? ?? 1;
+    var totalCount = ViewBag.TotalCount as int? ?? Model.Count();
+    var pageSize = ViewBag.PageSize as int? ?? 24;
     var mobileFilterViewData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData)
     {
         ["TagSelectId"] = "tagSelectFilterMobile"
@@ -12,141 +24,291 @@
     {
         ["TagSelectId"] = "tagSelectFilterDesktop"
     };
+
+    string? FormatQueryValue(object? value)
+    {
+        return value switch
+        {
+            null => null,
+            decimal decimalValue => decimalValue.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            double doubleValue => doubleValue.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            _ => value.ToString()
+        };
+    }
+
+    void AddQueryValue(List<KeyValuePair<string, string?>> query, string key, object? value)
+    {
+        var formattedValue = FormatQueryValue(value);
+        if (!string.IsNullOrWhiteSpace(formattedValue))
+        {
+            query.Add(new KeyValuePair<string, string?>(key, formattedValue));
+        }
+    }
+
+    string PageUrl(int pageNumber)
+    {
+        var query = new List<KeyValuePair<string, string?>>
+        {
+            new("page", pageNumber.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+            new("pageSize", pageSize.ToString(System.Globalization.CultureInfo.InvariantCulture))
+        };
+
+        AddQueryValue(query, "searchString", searchString);
+        foreach (var tagId in selectedTags)
+        {
+            query.Add(new KeyValuePair<string, string?>("tagIds", tagId.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        }
+        AddQueryValue(query, "minPrice", minPrice);
+        AddQueryValue(query, "maxPrice", maxPrice);
+        AddQueryValue(query, "listingType", listingType);
+        AddQueryValue(query, "sortBy", sortBy);
+        AddQueryValue(query, "maxDistanceKm", maxDistanceKm);
+        AddQueryValue(query, "userLat", userLat);
+        AddQueryValue(query, "userLng", userLng);
+
+        return Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(
+            Url.Action("Index", "Listings") ?? "",
+            query);
+    }
 }
 
-<div class="container mt-4">
-    <h2 class="mb-3">Oferty</h2>
-
-    @* ===== PASEK WYSZUKIWANIA ===== *@
-    <form method="get">
-        <div class="input-group mb-4">
-            <input type="text" name="searchString" class="form-control"
-                   placeholder="Szukaj ofert po tytule lub opisie..."
-                   value="@searchString" />
-            <button class="btn btn-primary" type="submit">Szukaj</button>
+<div class="page-header d-print-none mb-4">
+    <div class="row g-3 align-items-center">
+        <div class="col-lg-5">
+            <div class="page-pretitle">Marketplace</div>
+            <h2 class="page-title">Oferty</h2>
+            <div class="text-secondary mt-1">Szukaj rzeczy do kupienia albo ofert gotowych na wymianę.</div>
         </div>
-    </form>
-
-    @* ===== MOBILNY PANEL FILTRÓW ===== *@
-    <div class="offcanvas offcanvas-start" tabindex="-1"
-         id="filterOffcanvas" aria-labelledby="filterOffcanvasLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="filterOffcanvasLabel">
-                Filtruj ogłoszenia
-            </h5>
-            <button type="button" class="btn-close"
-                    data-bs-dismiss="offcanvas"></button>
-        </div>
-        <div class="offcanvas-body">
-            @await Html.PartialAsync("_FilterForm", Model, mobileFilterViewData)
+        <div class="col-lg-7">
+            <form method="get">
+                <input type="hidden" name="pageSize" value="@pageSize" />
+                @foreach (var tagId in selectedTags)
+                {
+                    <input type="hidden" name="tagIds" value="@tagId" />
+                }
+                @if (minPrice.HasValue)
+                {
+                    <input type="hidden" name="minPrice" value="@minPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                }
+                @if (maxPrice.HasValue)
+                {
+                    <input type="hidden" name="maxPrice" value="@maxPrice.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                }
+                @if (!string.IsNullOrWhiteSpace(listingType))
+                {
+                    <input type="hidden" name="listingType" value="@listingType" />
+                }
+                @if (!string.IsNullOrWhiteSpace(sortBy) && sortBy != "newest")
+                {
+                    <input type="hidden" name="sortBy" value="@sortBy" />
+                }
+                @if (maxDistanceKm.HasValue)
+                {
+                    <input type="hidden" name="maxDistanceKm" value="@maxDistanceKm.Value" />
+                }
+                @if (userLat.HasValue)
+                {
+                    <input type="hidden" name="userLat" value="@userLat.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                }
+                @if (userLng.HasValue)
+                {
+                    <input type="hidden" name="userLng" value="@userLng.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+                }
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="searchString" class="form-control"
+                           placeholder="Szukaj ofert po tytule lub opisie..."
+                           value="@searchString" />
+                    <button class="btn btn-primary" type="submit">Szukaj</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <div class="row g-4">
+<div class="offcanvas offcanvas-start" tabindex="-1"
+     id="filterOffcanvas" aria-labelledby="filterOffcanvasLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="filterOffcanvasLabel">
+            Filtruj ogłoszenia
+        </h5>
+        <button type="button" class="btn-close"
+                data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        @await Html.PartialAsync("_FilterForm", Model, mobileFilterViewData)
+    </div>
+</div>
 
-        @* ===== PANEL FILTRÓW ===== *@
-        <div class="col-lg-3 d-none d-lg-block">
-            @await Html.PartialAsync("_FilterForm", Model, desktopFilterViewData)
-        </div>
+<div class="row g-4">
+    <div class="col-lg-3 d-none d-lg-block">
+        @await Html.PartialAsync("_FilterForm", Model, desktopFilterViewData)
+    </div>
 
-        @* ===== LISTA OFERT ===== *@
-        <div class="col-lg-9">
-            <button class="btn btn-outline-secondary w-100 mb-3 d-lg-none"
+    <div class="col-lg-9">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+            <button class="btn btn-outline-primary w-100 d-lg-none"
                     data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
-                <i class="bi bi-funnel"></i> Filtruj ogłoszenia 🔽
+                <i class="bi bi-funnel me-1"></i> Filtruj ogłoszenia
             </button>
 
-            @* Wyniki *@
-            <div class="mb-3">
-                <span class="text-muted small">
-                    Znaleziono: <strong>@Model.Count()</strong> ofert
-                </span>
+            <div class="small text-muted">
+                Znaleziono: <strong>@totalCount</strong> ofert
             </div>
+        </div>
 
-            @if (!string.IsNullOrEmpty(noResultsMsg))
-            {
-                <div class="alert alert-info">@noResultsMsg</div>
-            }
+        @if (!string.IsNullOrEmpty(noResultsMsg))
+        {
+            <div class="alert alert-info">@noResultsMsg</div>
+        }
 
-            <div class="row g-3">
+        @if (!Model.Any())
+        {
+            <div class="card card-md">
+                <div class="card-body">
+                    <div class="empty">
+                        <div class="empty-icon"><i class="bi bi-search fs-1"></i></div>
+                        <p class="empty-title">Nie znaleziono pasujących ofert</p>
+                        <p class="empty-subtitle text-secondary">Zmień frazę wyszukiwania albo wyczyść filtry.</p>
+                        <div class="empty-action">
+                            <a asp-controller="Listings" asp-action="Index" class="btn btn-primary">Wyczyść filtry</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row listing-grid">
                 @foreach (var item in Model)
                 {
+                    var isSale = item.Listing.Price.HasValue;
+                    var badges = ListingPresentationHelper.GetListingBadges(item.Listing);
                     <div class="col-md-6 col-xl-4">
-                        <div class="card h-100 shadow-sm">
-                            @if (!string.IsNullOrEmpty(item.PhotoUrl))
-                            {
-                                <img src="@item.PhotoUrl" class="card-img-top"
-                                     alt="@item.Listing.Title"
-                                     style="height: 180px; object-fit: cover;">
-                            }
-                            else
-                            {
-                                <div class="bg-light d-flex align-items-center justify-content-center"
-                                     style="height: 180px;">
-                                    <span class="text-muted small">Brak zdjęcia</span>
-                                </div>
-                            }
+                        <article class="card listing-card h-100">
+                            <div class="ratio ratio-4x3 listing-card-media">
+                                @if (!string.IsNullOrEmpty(item.PhotoUrl))
+                                {
+                                    <img src="@item.PhotoUrl" class="listing-card-img"
+                                         alt="@item.Listing.Title">
+                                }
+                                else
+                                {
+                                    <div class="listing-card-placeholder">
+                                        <i class="bi bi-image"></i>
+                                        <span>Brak zdjęcia</span>
+                                    </div>
+                                }
+                            </div>
+
                             <div class="card-body d-flex flex-column">
-                                <h6 class="card-title mb-1">
+                                <div class="listing-statuses">
+                                    @foreach (var badge in badges)
+                                    {
+                                        <span class="badge @badge.CssClass">@badge.Label</span>
+                                    }
+                                </div>
+
+                                <h2 class="h5 card-title mb-2 text-break-anywhere">
                                     <a href="@Url.Action("Details", "Listings", new { slug = SlugHelper.GenerateSlug(item.Listing.Title), id = item.ListingId })"
-                                       class="text-decoration-none text-dark stretched-link">
+                                       class="text-decoration-none text-dark">
                                         @item.Listing.Title
                                     </a>
-                                </h6>
+                                </h2>
 
                                 @if (item.Listing.Tags.Any())
                                 {
-                                    <div class="mb-2 d-flex flex-wrap gap-1">
+                                    <div class="mb-3 d-flex flex-wrap gap-1">
                                         @foreach (var t in item.Listing.Tags.Take(3))
                                         {
-                                            <span class="badge bg-secondary bg-opacity-25 text-secondary fw-normal">@t.Tag.Name</span>
+                                            <span class="badge bg-blue-lt">@t.Tag.Name</span>
                                         }
                                     </div>
                                 }
 
-                                <div class="mt-auto d-flex justify-content-between align-items-center">
-                                    @if (item.Listing.Price.HasValue)
-                                    {
-                                        <strong class="text-primary">@item.Listing.Price.FormatPricePLN()</strong>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-info text-dark">Wymiana</span>
-                                    }
-                                    <div class="text-end">
-                                        @if (item.ReviewCount > 0)
-                                        {
-                                            <small class="text-muted d-block">⭐ @item.AverageRating.ToString("0.0") (@item.ReviewCount)</small>
-                                        }
-                                        <small class="text-muted">👁 @item.Listing.ViewCount</small>
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-end gap-2 mb-3">
+                                        <div>
+                                            @if (isSale)
+                                            {
+                                                <div class="listing-price fw-bold">@item.Listing.Price.FormatPricePLN()</div>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-green-lt">Otwarta wymiana</span>
+                                            }
+                                        </div>
+                                        <div class="text-end small text-muted">
+                                            @if (item.ReviewCount > 0)
+                                            {
+                                                <div><i class="bi bi-star-fill text-warning"></i> @item.AverageRating.ToString("0.0") (@item.ReviewCount)</div>
+                                            }
+                                            <div><i class="bi bi-eye"></i> @item.Listing.ViewCount</div>
+                                        </div>
                                     </div>
+
+                                    <a href="@Url.Action("Details", "Listings", new { slug = SlugHelper.GenerateSlug(item.Listing.Title), id = item.ListingId })"
+                                       class="btn btn-primary w-100">
+                                        Zobacz szczegóły
+                                    </a>
                                 </div>
                             </div>
-                            <div class="card-footer bg-white py-2">
-                                <div class="small text-muted">
-                                    <div>
-                                        <a asp-controller="UserProfile"
-                                           asp-action="Details"
-                                           asp-route-username="@item.Seller?.Username"
-                                           class="text-decoration-none">
-                                            @item.Seller?.Username
-                                        </a>
-                                    </div>
+
+                            <div class="card-footer bg-white">
+                                <div class="small">
+                                    <a asp-controller="UserProfile"
+                                       asp-action="Details"
+                                       asp-route-username="@item.Seller?.Username"
+                                       class="listing-meta text-decoration-none">
+                                        <i class="bi bi-person-circle"></i>
+                                        <span>@item.Seller?.Username</span>
+                                    </a>
 
                                     @if (!string.IsNullOrWhiteSpace(item.Seller?.Address))
                                     {
-                                        <div class="mt-1 text-truncate"
-                                             style="max-width: 100%;"
+                                        <div class="listing-meta mt-2 text-truncate"
                                              title="@item.Seller.Address">
-                                            @item.Seller.Address
+                                            <i class="bi bi-geo-alt"></i>
+                                            <span>@item.Seller.Address</span>
                                         </div>
                                     }
                                 </div>
                             </div>
-                        </div>
+                        </article>
                     </div>
                 }
             </div>
-        </div>
+
+            @if (totalPages > 1)
+            {
+                <nav class="mt-4" aria-label="Strony ofert">
+                    <ul class="pagination justify-content-center flex-wrap">
+                        <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                            <a class="page-link"
+                               href="@PageUrl(currentPage - 1)">
+                                Poprzednia
+                            </a>
+                        </li>
+
+                        @for (var pageNumber = 1; pageNumber <= totalPages; pageNumber++)
+                        {
+                            <li class="page-item @(pageNumber == currentPage ? "active" : "")">
+                                <a class="page-link"
+                                   href="@PageUrl(pageNumber)">
+                                    @pageNumber
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                            <a class="page-link"
+                               href="@PageUrl(currentPage + 1)">
+                                Następna
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
     </div>
 </div>
