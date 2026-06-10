@@ -107,7 +107,7 @@
                 @foreach (var listing in activeListings)
                 {
                     <div class="col-sm-6">
-                        <article class="card listing-card h-100">
+                        <article class="card listing-card h-100@(listing.IsFeatured ? " listing-card-featured" : "")">
                             <div class="ratio ratio-4x3 listing-card-media">
                                 @if (listing.IsFeatured)
                                 {

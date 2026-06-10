@@ -51,11 +51,10 @@ namespace ProjektZespolowyGr3.Controllers.Admin
                 query = query.Where(t => t.AssigneeId == assigneeFilter.Value);
             }
 
-            var totalTickets = await query.CountAsync();
+            // Stronicowanie odbywa się po stronie przeglądarki (admin-pagination.js),
+            // dlatego z bazy pobieramy wszystkie pasujące rekordy.
             var tickets = await query
                 .OrderByDescending(t => t.CreatedAt)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
                 .ToListAsync();
 
             ViewBag.CurrentFilter = searchString;
@@ -63,8 +62,6 @@ namespace ProjektZespolowyGr3.Controllers.Admin
             ViewBag.CategoryFilter = categoryFilter;
             ViewBag.AssigneeFilter = assigneeFilter;
             ViewBag.CurrentPageSize = pageSize;
-            ViewBag.CurrentPage = pageNumber;
-            ViewBag.TotalPages = (int)Math.Ceiling(totalTickets / (double)pageSize);
 
             // Lista adminów do przypisania
             var admins = await _context.Users

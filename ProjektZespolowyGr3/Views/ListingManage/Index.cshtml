@@ -67,7 +67,7 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-vcenter card-table">
+        <table class="table table-vcenter card-table" data-paginate="true" data-page-size="@(ViewBag.CurrentPageSize ?? 25)">
             <thead>
                 <tr>
                     <th>Tytuł</th>
@@ -135,3 +135,7 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/admin-pagination.js" asp-append-version="true"></script>
+}

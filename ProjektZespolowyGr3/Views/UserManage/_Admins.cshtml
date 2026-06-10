@@ -30,7 +30,7 @@
 </form>
 
 <div class="table-responsive">
-    <table class="table table-vcenter card-table">
+    <table class="table table-vcenter card-table" data-paginate="true" data-page-size="@(ViewBag.CurrentPageSize ?? 25)">
         <thead>
             <tr>
                 <th>Login</th>
