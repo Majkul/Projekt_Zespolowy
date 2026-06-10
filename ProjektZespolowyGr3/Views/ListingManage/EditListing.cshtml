@@ -268,51 +268,6 @@
             toggleIsPriceRequired();
             toggleExchangeFields();
 
-<<<<<<< HEAD
-    let shippingCount = @Model.ShippingOptions.Count;
-    function addShippingRow() {
-        const container = document.getElementById('shipping-options-container');
-        const row = document.createElement('div');
-        row.className = 'row g-2 mb-2 shipping-option-row';
-        row.innerHTML = `
-            <div class="col-7">
-                <input name="ShippingOptions[${shippingCount}].Name" class="form-control" placeholder="Np. InPost Paczkomat, DPD, Odbiór osobisty…" />
-            </div>
-            <div class="col-3">
-                <div class="input-group">
-                    <input name="ShippingOptions[${shippingCount}].Price" type="number" step="0.01" min="0" value="0" class="form-control" />
-                    <span class="input-group-text">PLN</span>
-                </div>
-            </div>
-            <div class="col-2">
-                <button type="button" class="btn btn-outline-danger w-100" onclick="removeShippingRow(this)">✕</button>
-            </div>`;
-        container.appendChild(row);
-        shippingCount++;
-    }
-    function removeShippingRow(btn) {
-        btn.closest('.shipping-option-row').remove();
-        reindexShippingRows();
-    }
-    function reindexShippingRows() {
-        const rows = document.querySelectorAll('.shipping-option-row');
-        rows.forEach((row, i) => {
-            const nameInput = row.querySelector('input[name*=".Name"]');
-            const priceInput = row.querySelector('input[name*=".Price"]');
-            if (nameInput) nameInput.name = `ShippingOptions[${i}].Name`;
-            if (priceInput) priceInput.name = `ShippingOptions[${i}].Price`;
-        });
-        shippingCount = rows.length;
-    }
-    function getInputId(field) {
-        switch (field) {
-            case 'SelectedTagIds':
-                return 'tagSelectEdit';
-            case 'SelectedExchangeAcceptedTagIds':
-                return 'tagSelectEditExchange';
-            default:
-                return 'input-' + field;
-=======
             const form = document.getElementById('edit-listing-form');
             form.addEventListener('submit', function (e) {
                 let changedFields = [];
@@ -343,6 +298,42 @@
             });
         });
 
+        let shippingCount = @Model.ShippingOptions.Count;
+        function addShippingRow() {
+            const container = document.getElementById('shipping-options-container');
+            const row = document.createElement('div');
+            row.className = 'row g-2 mb-2 shipping-option-row';
+            row.innerHTML = `
+                <div class="col-7">
+                    <input name="ShippingOptions[${shippingCount}].Name" class="form-control" placeholder="Np. InPost Paczkomat, DPD, Odbiór osobisty…" />
+                </div>
+                <div class="col-3">
+                    <div class="input-group">
+                        <input name="ShippingOptions[${shippingCount}].Price" type="number" step="0.01" min="0" value="0" class="form-control" />
+                        <span class="input-group-text">PLN</span>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <button type="button" class="btn btn-outline-danger w-100" onclick="removeShippingRow(this)">✕</button>
+                </div>`;
+            container.appendChild(row);
+            shippingCount++;
+        }
+        function removeShippingRow(btn) {
+            btn.closest('.shipping-option-row').remove();
+            reindexShippingRows();
+        }
+        function reindexShippingRows() {
+            const rows = document.querySelectorAll('.shipping-option-row');
+            rows.forEach((row, i) => {
+                const nameInput = row.querySelector('input[name*=".Name"]');
+                const priceInput = row.querySelector('input[name*=".Price"]');
+                if (nameInput) nameInput.name = `ShippingOptions[${i}].Name`;
+                if (priceInput) priceInput.name = `ShippingOptions[${i}].Price`;
+            });
+            shippingCount = rows.length;
+        }
+
         function getInputId(field) {
             switch (field) {
                 case 'SelectedTagIds':
@@ -352,7 +343,6 @@
                 default:
                     return 'input-' + field;
             }
->>>>>>> origin/fixy-2
         }
     </script>
 }
